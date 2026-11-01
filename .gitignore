@@ -1,0 +1,17 @@
+# Dependências
+node_modules/
+
+# Variáveis de ambiente e segredos
+.env
+.env.local
+.env.*.local
+
+# Ficheiros do sistema operativo e editores
+.DS_Store
+Thumbs.db
+.vscode/
+
+# Pastas de build ou downloads temporários
+downloads/
+dist/
+build/
