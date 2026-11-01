@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "builds": [
+    { "src": "api/relatorios.js", "use": "@vercel/node" }
+  ],
+  "routes": [
+    { "src": "/api/(.*)", "dest": "/api/relatorios.js" },
+    { "src": "/(.*)", "dest": "/$1" }
+  ]
+}

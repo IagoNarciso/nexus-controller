@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nexus Controller - Autenticação</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              greenDark: '#134E39',
+              greenPrimary: '#1B6349',
+              greenLight: '#248260',
+              bgLight: '#FFFFFF',
+              textSlate: '#475569'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .bg-pattern {
+      background-image: radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.05) 0%, transparent 40%);
+    }
+  </style>
+</head>
+
+<body class="bg-white min-h-screen font-sans flex text-slate-800">
+
+  <div class="w-full min-h-screen flex flex-col lg:flex-row">
+
+    <!-- LADO ESQUERDO: BANNER DE DESTAQUE -->
+    <div
+      class="lg:w-1/2 bg-brand-greenDark text-white p-8 lg:p-16 flex flex-col justify-between relative overflow-hidden bg-pattern">
+
+      <!-- LOGO NEXUS CONTROLLER -->
+      <div class="flex items-center space-x-3 z-10">
+        <div class="w-10 h-10 flex items-center justify-center">
+          <img src="logo.png" alt="Logo Nexus Controller" class="w-full h-full object-contain filter drop-shadow-md"
+            onerror="this.onerror=null; this.src='https://placehold.co/100x100/134E39/FFF?text=N';">
+        </div>
+        <span class="text-xl font-bold tracking-wide text-white">Nexus Controller</span>
+      </div>
+
+      <!-- CONTEÚDO CENTRAL -->
+      <div class="my-12 lg:my-0 z-10 max-w-xl">
+        <span class="text-xs font-semibold tracking-widest text-emerald-300 uppercase mb-3 block">
+          CONTROLE QUE IMPULSIONA
+        </span>
+        <h1 class="text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight mb-6">
+          Seu negócio.<br>Sob controle.
+        </h1>
+        <p class="text-emerald-100/80 text-base leading-relaxed mb-10">
+          Decisões mais inteligentes começam com uma visão clara do seu negócio.
+        </p>
+
+        <!-- CARD DE DEMONSTRAÇÃO -->
+        <div
+          class="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6 shadow-2xl relative overflow-hidden">
+          <span class="text-[10px] font-bold tracking-wider text-emerald-200 uppercase mb-2 block">
+            GESTÃO CENTRALIZADA
+          </span>
+          <h3 class="text-xl font-bold mb-4">Controle em tempo real</h3>
+
+          <div class="flex items-end justify-between pt-4 border-t border-white/10">
+            <div class="flex items-center text-xs text-emerald-200">
+              <i data-lucide="check" class="w-4 h-4 mr-1 text-emerald-400"></i>
+              Operação simples e segura
+            </div>
+            <div class="flex items-end space-x-1.5 h-12">
+              <div class="w-2 bg-emerald-300/40 rounded-t h-4"></div>
+              <div class="w-2 bg-emerald-300/60 rounded-t h-7"></div>
+              <div class="w-2 bg-emerald-300/80 rounded-t h-5"></div>
+              <div class="w-2 bg-emerald-300 rounded-t h-9"></div>
+              <div class="w-2 bg-emerald-200 rounded-t h-12"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="text-xs text-emerald-200/60 z-10 pt-6">
+        "A organização é o primeiro passo para o crescimento."
+      </div>
+    </div>
+
+    <!-- LADO DIREITO: FORMULÁRIOS DE AUTENTICAÇÃO -->
+    <div class="lg:w-1/2 bg-white p-8 lg:p-16 flex flex-col justify-between items-center overflow-y-auto">
+
+      <div class="w-full max-w-md my-auto space-y-6">
+
+        <div>
+          <div class="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-lg flex items-center justify-center mb-4">
+            <i data-lucide="check-check" class="w-5 h-5"></i>
+          </div>
+          <h2 id="form-title" class="text-3xl font-bold text-slate-900 tracking-tight">Bem-vindo de volta</h2>
+          <p id="form-subtitle" class="text-sm text-slate-500 mt-1.5">Acesse sua conta para continuar gerenciando sua
+            empresa.</p>
+        </div>
+
+        <div id="alert-msg" class="hidden p-4 rounded-xl text-sm border font-medium"></div>
+
+        <!-- FORMULÁRIO DE LOGIN -->
+        <form id="form-login" onsubmit="handleLogin(event)" class="space-y-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">E-mail
+              corporativo</label>
+            <div class="relative">
+              <i data-lucide="mail" class="w-5 h-5 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+              <input type="email" id="login-email" required placeholder="voce@empresa.com"
+                class="w-full pl-11 pr-4 py-3 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-greenDark outline-none">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">Senha</label>
+            <div class="relative">
+              <i data-lucide="lock" class="w-5 h-5 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+              <input type="password" id="login-password" required placeholder="Digite sua senha"
+                class="w-full pl-11 pr-11 py-3 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-greenDark outline-none">
+              <button type="button" onclick="togglePasswordVisibility('login-password', 'eye-icon-login')"
+                class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                <i id="eye-icon-login" data-lucide="eye" class="w-5 h-5"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between text-xs pt-1">
+            <label class="flex items-center text-slate-600 cursor-pointer">
+              <input type="checkbox"
+                class="w-4 h-4 rounded border-slate-300 text-brand-greenDark focus:ring-brand-greenDark mr-2">
+              Lembrar de mim
+            </label>
+            <a href="#" onclick="abrirModalRecuperacao(event)"
+              class="font-semibold text-brand-greenDark hover:underline">Esqueci minha senha</a>
+          </div>
+
+          <button type="submit"
+            class="w-full bg-brand-greenDark hover:bg-brand-greenPrimary text-white font-semibold py-3.5 rounded-xl text-sm shadow-lg transition-all flex items-center justify-center space-x-2 mt-2">
+            <span>Entrar na plataforma</span>
+            <i data-lucide="chevron-right" class="w-4 h-4"></i>
+          </button>
+        </form>
+
+        <!-- FORMULÁRIO DE CADASTRO -->
+        <form id="form-register" onsubmit="handleRegister(event)" class="space-y-3.5 hidden">
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-700 uppercase tracking-wider mb-1">Nome
+              Completo</label>
+            <input type="text" id="reg-name" required placeholder="Ex: Ana Silva"
+              class="w-full px-3.5 py-2.5 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-greenDark outline-none">
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-700 uppercase tracking-wider mb-1">Nome da
+              Empresa</label>
+            <input type="text" id="reg-company" required placeholder="Ex: Minha Empresa Ltda"
+              class="w-full px-3.5 py-2.5 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-greenDark outline-none">
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+  <label class="block text-[11px] font-semibold text-slate-700 uppercase tracking-wider mb-1">CNPJ</label>
+  <input type="text" id="reg-cnpj" required placeholder="00.000.000/0001-00" maxlength="18" oninput="mascaraCNPJ(this)"
+    class="w-full px-3.5 py-2.5 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-greenDark outline-none">
+</div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-700 uppercase tracking-wider mb-1">Região /
+                Unidade</label>
+              <input type="text" id="reg-region" required placeholder="Ex: São Paulo / SP"
+                class="w-full px-3.5 py-2.5 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-greenDark outline-none">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-700 uppercase tracking-wider mb-1">Código de
+              Convite (Chave Mestre)</label>
+            <input type="password" id="reg-invite-code" required placeholder="Chave de autorização corporativa"
+              class="w-full px-3.5 py-2.5 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-greenDark outline-none">
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-700 uppercase tracking-wider mb-1">E-mail
+              Corporativo</label>
+            <input type="email" id="reg-email" required placeholder="voce@empresa.com"
+              class="w-full px-3.5 py-2.5 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-greenDark outline-none">
+          </div>
+
+          <!-- CAMPO SENHA -->
+          <div class="space-y-1">
+            <label class="block text-xs font-semibold uppercase tracking-wider text-gray-600">Senha</label>
+            <div class="relative flex items-center">
+              <input type="password" id="reg-password" name="senha" required
+                class="w-full rounded-xl border border-gray-300 px-4 py-3 pr-12 text-sm text-gray-800 placeholder-gray-400 transition-colors focus:border-emerald-600 focus:outline-none focus:ring-1 focus:ring-emerald-600"
+                placeholder="••••••">
+              <button type="button" onclick="togglePassword('reg-password', 'icon-senha')"
+                class="absolute right-3 flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700 focus:outline-none">
+                <svg id="icon-senha" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+                    d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- CAMPO CONFIRMAR SENHA -->
+          <div class="space-y-1">
+            <label class="block text-xs font-semibold uppercase tracking-wider text-gray-600">Confirmar Senha</label>
+            <div class="relative flex items-center">
+              <input type="password" id="reg-confirm-password" name="confirmar_senha" required
+                class="w-full rounded-xl border border-gray-300 px-4 py-3 pr-12 text-sm text-gray-800 placeholder-gray-400 transition-colors focus:border-emerald-600 focus:outline-none focus:ring-1 focus:ring-emerald-600"
+                placeholder="Repita a senha">
+              <button type="button" onclick="togglePassword('reg-confirm-password', 'icon-confirmar')"
+                class="absolute right-3 flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700 focus:outline-none">
+                <svg id="icon-confirmar" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+                    d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <button type="submit"
+            class="w-full bg-brand-greenDark hover:bg-brand-greenPrimary text-white font-semibold py-3.5 rounded-xl text-sm shadow-lg transition-all mt-1">
+            Criar Minha Conta
+          </button>
+        </form>
+
+        <div class="relative flex items-center justify-center my-4">
+          <div class="border-t border-slate-200 w-full"></div>
+          <span class="bg-white px-3 text-[11px] font-medium text-slate-400 uppercase tracking-wider absolute">ou acesse
+            rapidamente</span>
+        </div>
+
+        <button type="button" onclick="loginDemo()"
+          class="w-full bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-semibold py-3 rounded-xl text-sm transition-all shadow-2xs">
+          Acessar conta de demonstração
+        </button>
+
+        <p class="text-center text-xs text-slate-500 pt-1">
+          <span id="toggle-text">Ainda não tem uma conta?</span>
+          <button type="button" onclick="toggleAuthMode()" id="toggle-btn"
+            class="font-bold text-brand-greenDark hover:underline ml-1">
+            Cadastre sua empresa
+          </button>
+        </p>
+      </div>
+
+      <div class="text-xs text-slate-400 text-center pt-6">
+        &copy; 2026 Nexus Controller &middot; <a href="#" class="hover:underline">Privacidade</a> &middot; <a href="#"
+          class="hover:underline">Termos de uso</a>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- MODAL DE REDEFINIÇÃO DE SENHA -->
+  <div id="modal-recuperacao"
+    class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+    <div
+      class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
+
+      <!-- Cabeçalho do Modal no Verde Corporativo -->
+      <div class="px-6 py-4 bg-[#0B3B24] text-white flex justify-between items-center">
+        <h3 class="font-semibold text-base">Redefinição de Senha</h3>
+        <button onclick="fecharModalRecuperacao()"
+          class="text-emerald-200 hover:text-white text-xl font-bold transition-colors">&times;</button>
+      </div>
+
+      <!-- Corpo do Formulário -->
+      <form id="form-recuperar-direto" onsubmit="enviarRecuperacaoDiretaModal(event)" class="p-6 space-y-4 bg-white">
+        <p class="text-xs text-slate-500 leading-relaxed">
+          Insira o seu e-mail, a nova senha desejada e a chave mestre corporativa fornecida pelo administrador para
+          atualizar o acesso.
+        </p>
+
+        <!-- Alerta interno do modal -->
+        <div id="rec-alert" class="hidden rounded-xl p-3 text-xs"></div>
+
+        <!-- Campo E-mail -->
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">E-mail
+            Corporativo</label>
+          <input type="email" id="rec-email" required placeholder="voce@empresa.com"
+            class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all">
+        </div>
+
+        <!-- Campo Nova Senha com Olho -->
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Nova Senha</label>
+          <div class="relative">
+            <input type="password" id="rec-nova-senha" required placeholder="••••••"
+              class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 pr-10 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all">
+            <button type="button" onclick="togglePassword('rec-nova-senha', 'icon-rec-pass')"
+              class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none">
+              <svg id="icon-rec-pass" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+                  d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21">
+                </path>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Campo Confirmar Nova Senha com Olho -->
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Confirmar Nova
+            Senha</label>
+          <div class="relative">
+            <input type="password" id="rec-confirma-senha" required placeholder="••••••"
+              class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 pr-10 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all">
+            <button type="button" onclick="togglePassword('rec-confirma-senha', 'icon-rec-conf')"
+              class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none">
+              <svg id="icon-rec-conf" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+                  d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21">
+                </path>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Campo Código de Convite (Chave Mestre) -->
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Código de Convite (Chave
+            Mestre)</label>
+          <input type="text" id="rec-codigo" required placeholder="Chave de autorização"
+            class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all">
+        </div>
+
+        <!-- Botão de Ação -->
+        <button type="submit"
+          class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2.5 rounded-xl transition-colors shadow-md text-sm mt-2">
+          Atualizar Senha
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Função auxiliar para validar se as senhas coincidem antes de enviar na recuperação
+    async function enviarRecuperacaoDiretaModal(event) {
+      event.preventDefault();
+      const novaSenha = document.getElementById('rec-nova-senha')?.value;
+      const confirmaSenha = document.getElementById('rec-confirma-senha')?.value;
+      const alertBox = document.getElementById('rec-alert');
+
+      if (novaSenha !== confirmaSenha) {
+        if (alertBox) {
+          alertBox.className = 'rounded-xl p-3 text-xs bg-red-50 text-red-700 border border-red-200 mb-3';
+          alertBox.textContent = 'As senhas não coincidem. Por favor, verifique.';
+          alertBox.classList.remove('hidden');
+        }
+        return;
+      }
+
+      if (typeof enviarRecuperacaoDireta === 'function') {
+        enviarRecuperacaoDireta(event);
+      }
+    }
+  </script>
+
+  <script src="js/auth.js?v=2.0"></script>
+  <script>
+    lucide.createIcons();
+
+    function togglePasswordVisibility(inputId, iconId) {
+      const input = document.getElementById(inputId);
+      const icon = document.getElementById(iconId);
+      if (input.type === 'password') {
+        input.type = 'text';
+        icon.setAttribute('data-lucide', 'eye-off');
+      } else {
+        input.type = 'password';
+        icon.setAttribute('data-lucide', 'eye');
+      }
+      lucide.createIcons();
+    }
+  </script>
+</body>
+
+</html>
