@@ -11,26 +11,27 @@ app.use(express.json());
 // Sobe um nível a partir de 'src' para servir os ficheiros estáticos da pasta 'public'
 app.use(express.static(path.join(__dirname, '../public')));
 
-// --- ESPIÃO DE ROTAS PARA DIAGNÓSTICO ---
-const inspecionarRota = (nome, caminho) => {
+// --- ESPIÃO DE ROTAS PARA DIAGNÓSTICO (Com caminhos absolutos seguros para a Vercel) ---
+const inspecionarRota = (nomeSubpasta) => {
   try {
-    const modulo = require(caminho);
-    console.log(`🕵️ [Espião] Rota '${nome}' carregada com sucesso. Tipo:`, typeof modulo);
+    const caminhoCompleto = path.join(__dirname, 'routes', nomeSubpasta);
+    const modulo = require(caminhoCompleto);
+    console.log(`🕵️ [Espião] Rota '${nomeSubpasta}' carregada com sucesso. Tipo:`, typeof modulo);
     return modulo;
   } catch (err) {
-    console.error(`❌ [Espião] Erro crítico ao carregar a rota '${nome}' do caminho '${caminho}':`, err.message);
+    console.error(`❌ [Espião] Erro crítico ao carregar a rota '${nomeSubpasta}':`, err.message);
     throw err;
   }
 };
 
-const authRoutes = inspecionarRota('auth', './routes/auth');
-const produtosRoutes = inspecionarRota('produtos', './routes/produtos');
-const movimentacoesRoutes = inspecionarRota('movimentacoes', './routes/movimentacoes');
-const solicitacoesRoutes = inspecionarRota('solicitacoes', './routes/solicitacoes');
-const utilizadoresRoutes = inspecionarRota('utilizadores', './routes/utilizadores');
-const dashboardRoutes = inspecionarRota('dashboard', './routes/dashboard');
-const fornecedoresRoutes = inspecionarRota('fornecedores', './routes/fornecedores');
-const relatoriosRoutes = inspecionarRota('relatorios', './routes/relatorios'); // 👈 Nova rota de relatórios por chat
+const authRoutes = inspecionarRota('auth');
+const produtosRoutes = inspecionarRota('produtos');
+const movimentacoesRoutes = inspecionarRota('movimentacoes');
+const solicitacoesRoutes = inspecionarRota('solicitacoes');
+const utilizadoresRoutes = inspecionarRota('utilizadores');
+const dashboardRoutes = inspecionarRota('dashboard');
+const fornecedoresRoutes = inspecionarRota('fornecedores');
+const relatoriosRoutes = inspecionarRota('relatorios'); // 👈 Nova rota de relatórios por chat
 
 app.use('/api/auth', authRoutes);
 app.use('/api/produtos', produtosRoutes);
