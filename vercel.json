@@ -7,6 +7,6 @@
   },
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/src/server.js" },
-    { "source": "/(.*)", "destination": "/src/server.js" }
+    { "source": "/((?!js/|css/|images/|login\\.html|dashboard\\.html|produtos\\.html|fornecedores\\.html|movimentacoes\\.html|solicitacoes\\.html|configuracoes\\.html).*)", "destination": "/src/server.js" }
   ]
 }
