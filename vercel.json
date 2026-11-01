@@ -1,8 +1,6 @@
 {
   "version": 2,
-  "routes": [
-    { "src": "/api/(.*)", "destination": "/src/server.js" },
-    { "src": "/", "destination": "/public/login.html" },
-    { "src": "/(.*)", "destination": "/public/$1" }
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/src/server.js" }
   ]
 }
