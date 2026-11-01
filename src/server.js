@@ -66,7 +66,12 @@ app.get('/relatorios.html', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/relatorios.html'));
 });
 
+// Inicialização local opcional e exportação obrigatória para a Vercel
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`🚀 Servidor Nexus Controller rodando em http://localhost:${PORT}`);
-});
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, () => {
+    console.log(`🚀 Servidor Nexus Controller rodando em http://localhost:${PORT}`);
+  });
+}
+
+module.exports = app;
