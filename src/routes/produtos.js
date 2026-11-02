@@ -156,7 +156,7 @@ router.get('/estoque-baixo', async (req, res) => {
   }
 });
 
-// 2. POST /api/produtos - Criar novo produto vinculado à empresa do utilizador (Com persistência de custo, fornecedor e min.)
+// 2. POST /api/produtos - Criar novo produto vinculado à empresa (Força o estado pendente para o fluxo de solicitações)
 router.post('/', async (req, res) => {
   const { 
     nome, 
@@ -183,9 +183,8 @@ router.post('/', async (req, res) => {
       return res.status(401).json({ error: 'Empresa do utilizador não identificada.' });
     }
 
-    // Identifica se quem está a cadastrar é operador para definir status pendente caso não venha explicitado
-    const isOperador = String(usuario.cargo || '').toLowerCase().trim() === 'operador';
-    const statusFinal = status || (isOperador ? 'pendente' : 'aprovado');
+    // Força todos os novos produtos a nascerem como 'pendente' para o fluxo de solicitações
+    const statusFinal = status || 'pendente';
 
     const { data, error } = await dbClient
       .from('produtos')
@@ -313,7 +312,7 @@ router.patch('/:id/status', async (req, res) => {
           .from('movimentacoes')
           .insert([
             {
-              usuario_id: usuario.id, // <-- ADICIONADO PARA PREENCHER A COLUNA OBRIGATÓRIA
+              usuario_id: usuario.id,
               empresa: usuario.empresa,
               produto_id: produtoAtualizado.id,
               tipo: 'compra',
