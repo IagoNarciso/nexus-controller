@@ -6,48 +6,79 @@ const auth = require('../middlewares/auth');
 // Usa o supabaseAdmin para evitar bloqueios de RLS nas consultas filtradas por empresa
 const dbClient = supabaseAdmin || supabase;
 
-// Função auxiliar segura e resiliente para descobrir a empresa do utilizador autenticado
-async function obterEmpresaUsuario(req) {
-  if (req.user?.empresa) {
-    return req.user.empresa;
-  }
-  if (req.user?.user_metadata?.empresa) {
-    return req.user.user_metadata.empresa;
-  }
+// Cache em memória para evitar consultar a tabela 'usuarios' repetidamente
+const cacheUsuarios = new Map();
+const TEMPO_CACHE_MS = 5 * 60 * 1000; // 5 minutos de validade
 
+// Função auxiliar otimizada para identificar o utilizador e a empresa
+async function obterDadosUsuario(req) {
   const usuarioId = req.user?.id || req.user?.sub || req.user?.userId;
   const usuarioEmail = req.user?.email;
+  const chaveCache = usuarioId || (usuarioEmail ? usuarioEmail.toLowerCase().trim() : null);
 
-  if (!usuarioId && !usuarioEmail) {
-    return null;
+  // 1. Retorno instantâneo (0ms): Verifica se o utilizador já está na memória
+  if (chaveCache && cacheUsuarios.has(chaveCache)) {
+    const itemCache = cacheUsuarios.get(chaveCache);
+    if (Date.now() - itemCache.timestamp < TEMPO_CACHE_MS) {
+      return itemCache.dados;
+    }
+    cacheUsuarios.delete(chaveCache);
   }
 
+  // 2. Retorno sem banco: Metadados já validados no Token JWT
+  if (req.user?.user_metadata?.empresa || req.user?.empresa) {
+    const empresaToken = req.user?.user_metadata?.empresa || req.user?.empresa;
+    const usuarioJwt = {
+      id: usuarioId,
+      nome: req.user?.user_metadata?.nome || 'Utilizador Nexus',
+      email: usuarioEmail,
+      cargo: req.user?.user_metadata?.cargo || req.user?.cargo || 'admin',
+      empresa: empresaToken,
+      cnpj: req.user?.user_metadata?.cnpj || null
+    };
+    if (chaveCache) cacheUsuarios.set(chaveCache, { dados: usuarioJwt, timestamp: Date.now() });
+    return usuarioJwt;
+  }
+
+  // 3. Busca no banco pelo ID exato
   if (usuarioId) {
-    const { data: usuarioPorId } = await dbClient
+    const { data: porId } = await dbClient
       .from('usuarios')
-      .select('empresa')
+      .select('id, nome, email, cargo, empresa, cnpj')
       .eq('id', usuarioId)
       .maybeSingle();
 
-    if (usuarioPorId && usuarioPorId.empresa) {
-      return usuarioPorId.empresa;
+    if (porId && porId.empresa) {
+      cacheUsuarios.set(chaveCache, { dados: porId, timestamp: Date.now() });
+      return porId;
     }
   }
 
+  // 4. Fallback por E-mail
   if (usuarioEmail) {
-    const { data: usuarioPorEmail } = await dbClient
+    const { data: porEmail } = await dbClient
       .from('usuarios')
-      .select('empresa')
+      .select('id, nome, email, cargo, empresa, cnpj')
       .ilike('email', usuarioEmail.trim())
       .maybeSingle();
 
-    if (usuarioPorEmail && usuarioPorEmail.empresa) {
-      return usuarioPorEmail.empresa;
+    if (porEmail && porEmail.empresa) {
+      cacheUsuarios.set(chaveCache, { dados: porEmail, timestamp: Date.now() });
+      return porEmail;
     }
   }
 
+  // 5. Fallback da conta demo
   if (usuarioEmail && usuarioEmail.toLowerCase() === 'admin@nexusdemo.com') {
-    return 'Nexus Demo';
+    const usuarioDemo = {
+      id: usuarioId || '7d537a13-38d1-4447-a4f4-3a214a9be799',
+      nome: 'Admin Demonstração',
+      email: 'admin@nexusdemo.com',
+      cargo: 'admin',
+      empresa: 'Nexus Demo'
+    };
+    if (chaveCache) cacheUsuarios.set(chaveCache, { dados: usuarioDemo, timestamp: Date.now() });
+    return usuarioDemo;
   }
 
   return null;
@@ -56,7 +87,8 @@ async function obterEmpresaUsuario(req) {
 // ROTA: GET /api/dashboard/estatisticas?mes=YYYY-MM&periodo=7
 router.get('/estatisticas', auth, async (req, res) => {
   try {
-    const empresaUsuario = await obterEmpresaUsuario(req);
+    const usuario = await obterDadosUsuario(req);
+    const empresaUsuario = usuario?.empresa;
 
     if (!empresaUsuario) {
       return res.status(401).json({ error: 'Empresa do utilizador não identificada.' });
@@ -96,6 +128,9 @@ router.get('/estatisticas', auth, async (req, res) => {
         .lt('created_at', fimPeriodo);
     }
 
+    // Otimização: Só descarrega do banco os dados das movimentações necessários para o período do gráfico
+    const dataLimiteGrafico = new Date(dataAtual.getFullYear(), dataAtual.getMonth() - qtdMeses + 1, 1).toISOString();
+
     const [resProdutos, resMovimentacoes, resSolicitacoes, resTodasMovimentacoes] = await Promise.all([
       dbClient
         .from('produtos')
@@ -114,6 +149,7 @@ router.get('/estatisticas', auth, async (req, res) => {
         .from('movimentacoes')
         .select('*')
         .eq('empresa', empresaUsuario)
+        .gte('created_at', dataLimiteGrafico) // <-- FILTRO APLICADO AQUI PARA POUPAR BANDA
     ]);
 
     if (resProdutos.error) throw resProdutos.error;

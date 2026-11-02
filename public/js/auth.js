@@ -46,17 +46,36 @@
   };
 })();
 
-// Função de Login Principal no Frontend (Atualizada para persistir o cargo e nome corretamente)
-async function handleLogin(event) {
+// Inicialização automática para preencher o e-mail lembrado ao carregar a página de login
+window.addEventListener('DOMContentLoaded', () => {
+  const emailSalvo = localStorage.getItem('nexus_lembrar_email');
+  if (emailSalvo) {
+    const inputEmail = document.getElementById('login-email');
+    const checkLembrar = document.getElementById('remember-me');
+    if (inputEmail) inputEmail.value = emailSalvo;
+    if (checkLembrar) checkLembrar.checked = true;
+  }
+});
+
+// Função de Login Principal no Frontend (Com suporte a Lembrar de Mim)
+async function handleLoginComLembrar(event) {
   if (event) event.preventDefault();
 
   const emailInput = document.getElementById('login-email')?.value;
   const passwordInput = document.getElementById('login-password')?.value;
+  const rememberCheck = document.getElementById('remember-me')?.checked;
   const alertMsg = document.getElementById('alert-msg');
 
   if (!emailInput || !passwordInput) {
     alert('Por favor, preencha o e-mail e a senha.');
     return;
+  }
+
+  // Gerencia a gravação ou remoção do e-mail no localStorage conforme o "Lembrar de mim"
+  if (rememberCheck) {
+    localStorage.setItem('nexus_lembrar_email', emailInput);
+  } else {
+    localStorage.removeItem('nexus_lembrar_email');
   }
 
   try {
@@ -108,6 +127,11 @@ async function handleLogin(event) {
       alertMsg.classList.remove('hidden');
     }
   }
+}
+
+// Mantém compatibilidade com a função antiga caso seja chamada noutros sítios
+async function handleLogin(event) {
+  return handleLoginComLembrar(event);
 }
 
 // Função de Registo de Nova Empresa/Utilizador

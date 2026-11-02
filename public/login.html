@@ -40,12 +40,14 @@
     <div
       class="lg:w-1/2 bg-brand-greenDark text-white p-8 lg:p-16 flex flex-col justify-between relative overflow-hidden bg-pattern">
 
-      <!-- LOGO NEXUS CONTROLLER -->
+      <!-- LOGO OFICIAL: CUBO CONECTADO MINIMALISTA -->
       <div class="flex items-center space-x-3 z-10">
-        <div class="w-10 h-10 flex items-center justify-center">
-          <img src="logo.png" alt="Logo Nexus Controller" class="w-full h-full object-contain filter drop-shadow-md"
-            onerror="this.onerror=null; this.src='https://placehold.co/100x100/134E39/FFF?text=N';">
-        </div>
+        <svg width="34" height="34" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" class="shrink-0 transition-transform duration-200 group-hover:scale-105">
+          <polygon points="50,8 88,30 88,72 50,94 12,72 12,30" class="stroke-emerald-400" stroke-width="7" stroke-linejoin="round" fill="none"/>
+          <polyline points="12,30 50,52 88,30" class="stroke-emerald-400" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          <line x1="50" y1="52" x2="50" y2="94" class="stroke-emerald-400" stroke-width="7" stroke-linecap="round"/>
+          <circle cx="50" cy="52" r="9" class="fill-emerald-400"/>
+        </svg>
         <span class="text-xl font-bold tracking-wide text-white">Nexus Controller</span>
       </div>
 
@@ -107,7 +109,7 @@
         <div id="alert-msg" class="hidden p-4 rounded-xl text-sm border font-medium"></div>
 
         <!-- FORMULÁRIO DE LOGIN -->
-        <form id="form-login" onsubmit="handleLogin(event)" class="space-y-4">
+        <form id="form-login" onsubmit="handleLoginComLembrar(event)" class="space-y-4">
           <div>
             <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">E-mail
               corporativo</label>
@@ -133,7 +135,7 @@
 
           <div class="flex items-center justify-between text-xs pt-1">
             <label class="flex items-center text-slate-600 cursor-pointer">
-              <input type="checkbox"
+              <input type="checkbox" id="remember-me"
                 class="w-4 h-4 rounded border-slate-300 text-brand-greenDark focus:ring-brand-greenDark mr-2">
               Lembrar de mim
             </label>
@@ -342,6 +344,35 @@
   </div>
 
   <script>
+    // Recupera o e-mail guardado no navegador ao abrir a página de login
+    window.addEventListener('DOMContentLoaded', () => {
+      const emailSalvo = localStorage.getItem('nexus_lembrar_email');
+      if (emailSalvo) {
+        const inputEmail = document.getElementById('login-email');
+        const checkLembrar = document.getElementById('remember-me');
+        if (inputEmail) inputEmail.value = emailSalvo;
+        if (checkLembrar) checkLembrar.checked = true;
+      }
+    });
+
+    // Intercepta o login para gerenciar a gravação ou remoção do e-mail no localStorage
+    async function handleLoginComLembrar(event) {
+      event.preventDefault();
+      const emailInput = document.getElementById('login-email').value;
+      const rememberCheck = document.getElementById('remember-me').checked;
+
+      if (rememberCheck) {
+        localStorage.setItem('nexus_lembrar_email', emailInput);
+      } else {
+        localStorage.removeItem('nexus_lembrar_email');
+      }
+
+      // Chama a função principal de login existente no auth.js se estiver disponível
+      if (typeof handleLogin === 'function') {
+        handleLogin(event);
+      }
+    }
+
     // Função auxiliar para validar se as senhas coincidem antes de enviar na recuperação
     async function enviarRecuperacaoDiretaModal(event) {
       event.preventDefault();

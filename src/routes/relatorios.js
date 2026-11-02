@@ -4,23 +4,105 @@ const { supabaseAdmin } = require('../config/supabase');
 const autenticarToken = require('../middlewares/auth');
 const PDFDocument = require('pdfkit');
 
+// Cache em memória para evitar consultar a tabela 'usuarios' em todas as requisições
+const cacheUsuarios = new Map();
+const TEMPO_CACHE_MS = 5 * 60 * 1000; // 5 minutos de validade
+
+// Função auxiliar otimizada para identificar o utilizador logado e a sua respetiva empresa
+async function obterDadosUsuario(req) {
+  const usuarioId = req.user?.id || req.user?.sub || req.user?.userId;
+  const usuarioEmail = req.user?.email;
+  const chaveCache = usuarioId || (usuarioEmail ? usuarioEmail.toLowerCase().trim() : null);
+
+  // 1. Retorno instantâneo (0ms): Verifica se o utilizador já está na memória do servidor
+  if (chaveCache && cacheUsuarios.has(chaveCache)) {
+    const itemCache = cacheUsuarios.get(chaveCache);
+    if (Date.now() - itemCache.timestamp < TEMPO_CACHE_MS) {
+      return itemCache.dados;
+    }
+    cacheUsuarios.delete(chaveCache);
+  }
+
+  // 2. Retorno sem consulta ao banco: Usa os metadados já validados no Token JWT
+  if (req.user?.user_metadata?.empresa || req.user?.empresa) {
+    const empresaToken = req.user?.user_metadata?.empresa || req.user?.empresa;
+    const usuarioJwt = {
+      id: usuarioId,
+      nome: req.user?.user_metadata?.nome || 'Utilizador Nexus',
+      email: usuarioEmail,
+      cargo: req.user?.user_metadata?.cargo || req.user?.cargo || 'admin',
+      empresa: empresaToken,
+      cnpj: req.user?.user_metadata?.cnpj || null
+    };
+    if (chaveCache) {
+      cacheUsuarios.set(chaveCache, { dados: usuarioJwt, timestamp: Date.now() });
+    }
+    return usuarioJwt;
+  }
+
+  // 3. Busca no banco pelo ID exato (apenas se não estiver em cache nem no JWT)
+  if (usuarioId) {
+    const { data: porId } = await supabaseAdmin
+      .from('usuarios')
+      .select('id, nome, email, cargo, empresa, cnpj')
+      .eq('id', usuarioId)
+      .maybeSingle();
+
+    if (porId && porId.empresa) {
+      cacheUsuarios.set(chaveCache, { dados: porId, timestamp: Date.now() });
+      return porId;
+    }
+  }
+
+  // 4. Fallback por E-mail
+  if (usuarioEmail) {
+    const { data: porEmail } = await supabaseAdmin
+      .from('usuarios')
+      .select('id, nome, email, cargo, empresa, cnpj')
+      .ilike('email', usuarioEmail.trim())
+      .maybeSingle();
+
+    if (porEmail && porEmail.empresa) {
+      cacheUsuarios.set(chaveCache, { dados: porEmail, timestamp: Date.now() });
+      return porEmail;
+    }
+  }
+
+  // 5. Fallback para a conta de demonstração
+  if (usuarioEmail && usuarioEmail.toLowerCase() === 'admin@nexusdemo.com') {
+    const usuarioDemo = {
+      id: usuarioId || '7d537a13-38d1-4447-a4f4-3a214a9be799',
+      nome: 'Admin Demonstração',
+      email: 'admin@nexusdemo.com',
+      cargo: 'admin',
+      empresa: 'Nexus Demo',
+      cnpj: null
+    };
+    if (chaveCache) {
+      cacheUsuarios.set(chaveCache, { dados: usuarioDemo, timestamp: Date.now() });
+    }
+    return usuarioDemo;
+  }
+
+  return null;
+}
+
 // Rota de Chat / Consultas Inteligentes para Relatórios
 router.post('/chat-analise', autenticarToken, async (req, res) => {
   const { mensagem } = req.body;
-  const usuarioId = req.user?.id || req.user?.sub || req.user?.userId;
 
   if (!mensagem || !mensagem.trim()) {
     return res.status(400).json({ resposta: 'Por favor, digite uma pergunta ou comando para análise.' });
   }
 
   try {
-    const { data: usuario } = await supabaseAdmin
-      .from('usuarios')
-      .select('empresa')
-      .eq('id', usuarioId)
-      .maybeSingle();
+    const usuario = await obterDadosUsuario(req);
 
-    const empresaNome = usuario?.empresa || 'Nexus Controller';
+    if (!usuario) {
+      return res.status(401).json({ resposta: 'Empresa do utilizador não identificada.' });
+    }
+
+    const empresaNome = usuario.empresa || 'Nexus Controller';
     const textoQuery = mensagem.toLowerCase();
 
     if (textoQuery.includes('estoque baixo') || textoQuery.includes('critico') || textoQuery.includes('crítico')) {
@@ -49,6 +131,7 @@ router.post('/chat-analise', autenticarToken, async (req, res) => {
       const { data: movimentacoes, error } = await supabaseAdmin
         .from('movimentacoes')
         .select('*')
+        .eq('empresa', empresaNome) // <-- ISOLAMENTO MULTI-EMPRESA APLICADO
         .order('created_at', { ascending: false })
         .limit(5);
 
@@ -104,27 +187,26 @@ router.post('/chat-analise', autenticarToken, async (req, res) => {
 
 // Rota para Gerar e Descarregar o Relatório em PDF (Com Logótipo Vetorial e Resumo Executivo)
 router.get('/exportar-pdf', autenticarToken, async (req, res) => {
-  const usuarioId = req.user?.id || req.user?.sub || req.user?.userId;
-
   try {
-    const { data: usuario } = await supabaseAdmin
-      .from('usuarios')
-      .select('empresa')
-      .eq('id', usuarioId)
-      .maybeSingle();
+    const usuario = await obterDadosUsuario(req);
 
-    const empresaNome = usuario?.empresa || 'Nexus Controller';
+    if (!usuario) {
+      return res.status(401).json({ error: 'Empresa do utilizador não identificada.' });
+    }
 
-    // 1. Busca produtos
+    const empresaNome = usuario.empresa || 'Nexus Controller';
+
+    // 1. Busca produtos da empresa
     const { data: produtos } = await supabaseAdmin
       .from('produtos')
       .select('*')
       .eq('empresa', empresaNome);
 
-    // 2. Busca movimentações para totalizar entradas e saídas
+    // 2. Busca movimentações estritamente da empresa para totalizar entradas e saídas
     const { data: movimentacoes } = await supabaseAdmin
       .from('movimentacoes')
-      .select('*');
+      .select('*')
+      .eq('empresa', empresaNome);
 
     // Cálculos estatísticos globais
     const totalProdutos = produtos?.length || 0;
@@ -136,8 +218,8 @@ router.get('/exportar-pdf', autenticarToken, async (req, res) => {
     if (movimentacoes) {
       movimentacoes.forEach(m => {
         const tipo = (m.tipo || '').toLowerCase();
-        if (tipo === 'entrada') totalEntradas += (m.quantidade || 0);
-        if (tipo === 'saida' || tipo === 'saída') totalSaidas += (m.quantidade || 0);
+        if (tipo === 'entrada' || tipo === 'compra' || tipo === 'reposicao') totalEntradas += (m.quantidade || 0);
+        if (tipo === 'saida' || tipo === 'saída' || tipo === 'venda' || tipo === 'retirada') totalSaidas += (m.quantidade || 0);
       });
     }
 
@@ -150,17 +232,16 @@ router.get('/exportar-pdf', autenticarToken, async (req, res) => {
     // --- CABEÇALHO COM LOGÓTIPO VETORIAL ---
     const startY = doc.y;
 
-    // Desenha o Cubo Conectado no canto superior direito (Centro: X=515, Y=startY+18)
+    // Desenha o Cubo Conectado no canto superior direito
     const cx = 515;
     const cy = startY + 18;
     const r = 18;
-    const dx = r * 0.866; // ~15.6
-    const dy = r * 0.5;   // 9
+    const dx = r * 0.866; 
+    const dy = r * 0.5;   
 
     doc.save();
     doc.lineWidth(2).strokeColor('#0F392B').lineJoin('round').lineCap('round');
     
-    // Hexágono externo do cubo
     doc.polygon(
       [cx, cy - r],
       [cx + dx, cy - dy],
@@ -170,21 +251,18 @@ router.get('/exportar-pdf', autenticarToken, async (req, res) => {
       [cx - dx, cy - dy]
     ).stroke();
 
-    // Arestas internas (Eixo Y)
     doc.moveTo(cx - dx, cy - dy).lineTo(cx, cy).lineTo(cx + dx, cy - dy).stroke();
     doc.moveTo(cx, cy).lineTo(cx, cy + r).stroke();
 
-    // Nó central (Nexus) em verde esmeralda
     doc.circle(cx, cy, 3.2).fill('#10B981');
     doc.restore();
 
-    // Textos do Cabeçalho (Alinhados à esquerda)
+    // Textos do Cabeçalho
     doc.fontSize(20).fillColor('#0F392B').font('Helvetica-Bold').text('Nexus Controller', 50, startY, { align: 'left' });
     doc.fontSize(10).fillColor('#4B5563').font('Helvetica').text(`Relatório Analítico Completo de Inventário — ${empresaNome}`, { align: 'left' });
     doc.fontSize(8).fillColor('#9CA3AF').text(`Data de Emissão: ${new Date().toLocaleDateString('pt-BR')}`, { align: 'left' });
     doc.moveDown(1);
 
-    // Linha divisória superior
     doc.strokeColor('#E5E7EB').lineWidth(1).moveTo(50, doc.y).lineTo(545, doc.y).stroke();
     doc.moveDown(1);
 
@@ -211,15 +289,12 @@ router.get('/exportar-pdf', autenticarToken, async (req, res) => {
         const precoCusto = p.preco_custo || 0;
         const valorTotalItem = (p.estoque || 0) * precoVenda;
 
-        // Nome do produto e SKU
         doc.fontSize(9).fillColor('#111827').font('Helvetica-Bold').text(`${index + 1}. ${p.nome}`, { continued: true });
         doc.font('Helvetica').fillColor('#4B5563').text(` (SKU: ${p.sku || 'N/D'})`, { continued: false });
         
-        // Detalhes de estoque, custos e valores
         doc.text(`    Estoque: ${p.estoque} un. (Mín: ${p.quantidade_minima || 12}) | Custo: R$ ${precoCusto.toFixed(2)} | Venda: R$ ${precoVenda.toFixed(2)}`, { continued: false });
         doc.text(`    Valor Total do Item: R$ ${valorTotalItem.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} — Estado: `, { continued: true });
 
-        // Status colorido
         doc.font('Helvetica-Bold').fillColor(isCritico ? '#DC2626' : '#059669').text(statusTexto);
         doc.moveDown(0.6);
       });

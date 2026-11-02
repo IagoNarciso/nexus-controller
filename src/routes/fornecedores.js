@@ -8,12 +8,43 @@ const dbClient = supabaseAdmin || supabase;
 
 router.use(authMiddleware);
 
-// Função auxiliar para identificar o utilizador logado e a sua respetiva empresa
+// Cache em memória para evitar consultar a tabela 'usuarios' em todas as requisições
+const cacheUsuarios = new Map();
+const TEMPO_CACHE_MS = 5 * 60 * 1000; // 5 minutos de validade
+
+// Função auxiliar otimizada para identificar o utilizador logado e a sua respetiva empresa
 async function obterDadosUsuario(req) {
   const usuarioId = req.user?.id || req.user?.sub || req.user?.userId;
   const usuarioEmail = req.user?.email;
+  const chaveCache = usuarioId || (usuarioEmail ? usuarioEmail.toLowerCase().trim() : null);
 
-  // 1. Tenta buscar na tabela pública de utilizadores usando o dbClient (sem bloqueio de RLS)
+  // 1. Retorno instantâneo (0ms): Verifica se o utilizador já está na memória do servidor
+  if (chaveCache && cacheUsuarios.has(chaveCache)) {
+    const itemCache = cacheUsuarios.get(chaveCache);
+    if (Date.now() - itemCache.timestamp < TEMPO_CACHE_MS) {
+      return itemCache.dados;
+    }
+    cacheUsuarios.delete(chaveCache);
+  }
+
+  // 2. Retorno sem consulta ao banco: Usa os metadados já validados no Token JWT
+  if (req.user?.user_metadata?.empresa || req.user?.empresa) {
+    const empresaToken = req.user?.user_metadata?.empresa || req.user?.empresa;
+    const usuarioJwt = {
+      id: usuarioId,
+      nome: req.user?.user_metadata?.nome || 'Utilizador Nexus',
+      email: usuarioEmail,
+      cargo: req.user?.user_metadata?.cargo || req.user?.cargo || 'admin',
+      empresa: empresaToken,
+      cnpj: req.user?.user_metadata?.cnpj || null
+    };
+    if (chaveCache) {
+      cacheUsuarios.set(chaveCache, { dados: usuarioJwt, timestamp: Date.now() });
+    }
+    return usuarioJwt;
+  }
+
+  // 3. Busca no banco pelo ID exato (apenas se não estiver em cache nem no JWT)
   if (usuarioId) {
     const { data: porId } = await dbClient
       .from('usuarios')
@@ -22,10 +53,12 @@ async function obterDadosUsuario(req) {
       .maybeSingle();
 
     if (porId && porId.empresa) {
+      cacheUsuarios.set(chaveCache, { dados: porId, timestamp: Date.now() });
       return porId;
     }
   }
 
+  // 4. Fallback por E-mail
   if (usuarioEmail) {
     const { data: porEmail } = await dbClient
       .from('usuarios')
@@ -34,26 +67,14 @@ async function obterDadosUsuario(req) {
       .maybeSingle();
 
     if (porEmail && porEmail.empresa) {
+      cacheUsuarios.set(chaveCache, { dados: porEmail, timestamp: Date.now() });
       return porEmail;
     }
   }
 
-  // 2. Fallback seguro: aproveita os dados já sincronizados pelo authMiddleware em req.user
-  const empresaToken = req.user?.empresa || req.user?.user_metadata?.empresa;
-  if (usuarioId && empresaToken) {
-    return {
-      id: usuarioId,
-      nome: req.user?.user_metadata?.nome || 'Utilizador Nexus',
-      email: usuarioEmail,
-      cargo: req.user?.cargo || req.user?.user_metadata?.cargo || 'Administrador',
-      empresa: empresaToken,
-      cnpj: req.user?.user_metadata?.cnpj || null
-    };
-  }
-
-  // 3. Fallback para a conta de demonstração
+  // 5. Fallback para a conta de demonstração
   if (usuarioEmail && usuarioEmail.toLowerCase() === 'admin@nexusdemo.com') {
-    return {
+    const usuarioDemo = {
       id: usuarioId || '7d537a13-38d1-4447-a4f4-3a214a9be799',
       nome: 'Admin Demonstração',
       email: 'admin@nexusdemo.com',
@@ -61,6 +82,10 @@ async function obterDadosUsuario(req) {
       empresa: 'Nexus Demo',
       cnpj: null
     };
+    if (chaveCache) {
+      cacheUsuarios.set(chaveCache, { dados: usuarioDemo, timestamp: Date.now() });
+    }
+    return usuarioDemo;
   }
 
   return null;

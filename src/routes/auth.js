@@ -3,6 +3,10 @@ const router = express.Router();
 const { supabase, supabaseAdmin } = require('../config/supabase'); 
 const autenticarToken = require('../middlewares/auth');
 
+// Cache em memória para os dados do perfil do utilizador (válido por 5 minutos)
+const cachePerfil = new Map();
+const TEMPO_CACHE_MS = 5 * 60 * 1000;
+
 // Rota de Login Flexível e Blindada
 router.post('/login', async (req, res) => {
   console.log('Dados recebidos no login:', req.body);
@@ -26,6 +30,11 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ error: error.message });
     }
 
+    // Limpa o cache do utilizador ao fazer login para garantir dados frescos
+    if (data.user?.id) {
+      cachePerfil.delete(data.user.id);
+    }
+
     const nomeUsuario = data.user?.user_metadata?.nome || data.user?.email?.split('@')[0] || 'Utilizador';
 
     return res.status(200).json({
@@ -39,7 +48,7 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// Rota de Registo de Administrador com Convite Corporativo (Tipo 'registro' ou 'convite')
+// Rota de Registo de Administrador com Convite Corporativo
 router.post('/register', async (req, res) => {
   const { nome, empresa, cnpj, regiao, email, password, senha, codigoConvite } = req.body;
   const userPassword = password || senha;
@@ -52,7 +61,6 @@ router.post('/register', async (req, res) => {
     return res.status(403).json({ error: 'O código de convite corporativo é obrigatório.' });
   }
 
-  // Validação rigorosa do tamanho do CNPJ padrão brasileiro (14 dígitos)
   const cnpjLimpo = cnpj ? cnpj.replace(/\D/g, '') : '';
   if (cnpjLimpo.length !== 14) {
     return res.status(400).json({ error: 'O CNPJ deve conter exatamente 14 dígitos numéricos válidos.' });
@@ -61,7 +69,6 @@ router.post('/register', async (req, res) => {
   try {
     const codigoLimpo = codigoConvite.trim();
 
-    // 1. Valida o código de convite na tabela convites_empresas usando o admin
     const { data: conviteData, error: conviteError } = await supabaseAdmin
       .from('convites_empresas')
       .select('*')
@@ -74,12 +81,10 @@ router.post('/register', async (req, res) => {
       return res.status(403).json({ error: 'Código de registo inválido, expirado ou já utilizado.' });
     }
 
-    // Verifica se o código tem data de expiração e se já expirou
     if (conviteData.expires_at && new Date() > new Date(conviteData.expires_at)) {
       return res.status(403).json({ error: 'Este código de convite já expirou.' });
     }
 
-    // 2. Cria o utilizador no Auth do Supabase via supabaseAdmin
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email: email.trim(),
       password: userPassword,
@@ -99,7 +104,6 @@ router.post('/register', async (req, res) => {
 
     const userId = authData.user?.id;
 
-    // 3. Insere explicitamente na tabela `usuarios` via supabaseAdmin
     const payloadUsuario = {
       id: userId,
       nome: nome || 'Utilizador',
@@ -121,7 +125,6 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ error: 'Erro ao salvar dados do utilizador: ' + dbError.message });
     }
 
-    // 4. Inativa o código de convite para uso único
     await supabaseAdmin
       .from('convites_empresas')
       .update({ ativo: false })
@@ -137,7 +140,7 @@ router.post('/register', async (req, res) => {
   }
 });
 
-// Rota de Redefinição Direta de Senha por Chave de Recuperação Específica (Tipo 'recuperacao')
+// Rota de Redefinição Direta de Senha
 router.post('/recuperar-senha-direta', async (req, res) => {
   const { email, novaSenha, codigoConvite } = req.body;
 
@@ -146,7 +149,6 @@ router.post('/recuperar-senha-direta', async (req, res) => {
   }
 
   try {
-    // 1. Valida se a chave existe, está ativa e é estritamente do tipo 'recuperacao'
     const { data: conviteData, error: conviteError } = await supabaseAdmin
       .from('convites_empresas')
       .select('*')
@@ -159,12 +161,10 @@ router.post('/recuperar-senha-direta', async (req, res) => {
       return res.status(403).json({ error: 'Código de recuperação inválido, expirado ou incorreto.' });
     }
 
-    // Verifica se já passou das 24 horas de validade
     if (conviteData.expires_at && new Date() > new Date(conviteData.expires_at)) {
       return res.status(403).json({ error: 'Este código de recuperação expirou após 24 horas.' });
     }
 
-    // 2. Lista os utilizadores do Supabase Auth para encontrar o ID correspondente ao e-mail
     const { data: usuariosList, error: listError } = await supabaseAdmin.auth.admin.listUsers();
     
     if (listError) throw listError;
@@ -175,20 +175,20 @@ router.post('/recuperar-senha-direta', async (req, res) => {
       return res.status(404).json({ error: 'E-mail corporativo não encontrado no sistema.' });
     }
 
-    // 3. Atualiza a senha diretamente no Supabase Auth
     const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(utilizadorAuth.id, {
       password: novaSenha
     });
 
     if (updateError) throw updateError;
 
-    // Atualiza também na tabela usuarios para manter sincronizado
+    // Limpa o cache do utilizador redefinido
+    cachePerfil.delete(utilizadorAuth.id);
+
     await supabaseAdmin
       .from('usuarios')
       .update({ senha: novaSenha })
       .eq('id', utilizadorAuth.id);
 
-    // 4. Inativa o código de recuperação após o uso único por segurança
     await supabaseAdmin
       .from('convites_empresas')
       .update({ ativo: false })
@@ -201,7 +201,7 @@ router.post('/recuperar-senha-direta', async (req, res) => {
   }
 });
 
-// Rota para o Administrador gerar uma nova Chave de Recuperação válida por 24 horas
+// Rota para o Administrador gerar uma nova Chave de Recuperação
 router.post('/gerar-chave-recuperacao', autenticarToken, async (req, res) => {
   const adminId = req.user?.id || req.user?.sub || req.user?.userId;
 
@@ -223,8 +223,6 @@ router.post('/gerar-chave-recuperacao', autenticarToken, async (req, res) => {
 
     const randomSuffix = Math.random().toString(36).substring(2, 8).toUpperCase();
     const codigoRecuperacao = `REC-${randomSuffix}`;
-
-    // Define a data de expiração para exatamente 24 horas no futuro
     const dataExpiracao = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
 
     const { data, error: insertError } = await supabaseAdmin
@@ -254,11 +252,21 @@ router.post('/gerar-chave-recuperacao', autenticarToken, async (req, res) => {
   }
 });
 
-// Rota para buscar o perfil do utilizador logado de forma flexível
+// Rota Otimizada com Cache em Memória para buscar o perfil do utilizador logado
 router.get('/perfil', autenticarToken, async (req, res) => {
   try {
     const usuarioId = req.user?.id || req.user?.sub || req.user?.userId;
     const usuarioEmail = req.user?.email;
+    const chaveCache = usuarioId || (usuarioEmail ? usuarioEmail.toLowerCase().trim() : null);
+
+    // 1. Retorna instantaneamente da memória se estiver em cache (0ms)
+    if (chaveCache && cachePerfil.has(chaveCache)) {
+      const itemCache = cachePerfil.get(chaveCache);
+      if (Date.now() - itemCache.timestamp < TEMPO_CACHE_MS) {
+        return res.json(itemCache.dados);
+      }
+      cachePerfil.delete(chaveCache);
+    }
 
     let query = supabaseAdmin.from('usuarios').select('*');
 
@@ -276,7 +284,7 @@ router.get('/perfil', autenticarToken, async (req, res) => {
       return res.status(404).json({ error: 'Utilizador não encontrado na base de dados.' });
     }
 
-    return res.json({
+    const perfilFormatado = {
       id: usuario.id,
       nome: usuario.nome || 'Utilizador Nexus',
       email: usuario.email,
@@ -285,14 +293,21 @@ router.get('/perfil', autenticarToken, async (req, res) => {
       cnpj: usuario.cnpj || '12.345.678/0001-99',
       regiao: usuario.regiao || 'Nacional / PR',
       data_cadastro: usuario.data_cadastro || usuario.created_at
-    });
+    };
+
+    // Guarda no cache antes de retornar
+    if (chaveCache) {
+      cachePerfil.set(chaveCache, { dados: perfilFormatado, timestamp: Date.now() });
+    }
+
+    return res.json(perfilFormatado);
   } catch (err) {
     console.error('Erro interno ao buscar perfil:', err);
     return res.status(500).json({ error: 'Erro interno no servidor.' });
   }
 });
 
-// Rota protegida para cadastrar novo funcionário de forma 100% automática (Exclusiva para Administradores)
+// Rota protegida para cadastrar novo funcionário
 router.post('/cadastrar', autenticarToken, async (req, res) => {
   const { nome, empresa, cnpj, regiao, cpf, data_nascimento, email, cargo, senha } = req.body;
   const adminId = req.user?.id || req.user?.sub || req.user?.userId;
@@ -367,7 +382,7 @@ router.post('/cadastrar', autenticarToken, async (req, res) => {
   }
 });
 
-// Rota para Exclusão Segura de Funcionário (Preserva integralmente o histórico de movimentações e produtos)
+// Rota para Exclusão Segura de Funcionário
 router.delete('/excluir', autenticarToken, async (req, res) => {
   const { nome, cpf, email, senha_admin } = req.body;
   const adminId = req.user?.id || req.user?.sub || req.user?.userId;
@@ -392,7 +407,6 @@ router.delete('/excluir', autenticarToken, async (req, res) => {
       return res.status(403).json({ error: 'Acesso negado: apenas administradores podem excluir funcionários.' });
     }
 
-    // Valida a senha do administrador na tabela ou via Supabase Auth
     if (admin.senha && admin.senha !== senha_admin) {
       return res.status(401).json({ error: 'Senha de administrador incorreta.' });
     } else if (!admin.senha) {
@@ -423,7 +437,9 @@ router.delete('/excluir', autenticarToken, async (req, res) => {
       });
     }
 
-    // Remove apenas o registo do utilizador. As tabelas de movimentações e produtos mantêm-se intactas.
+    // Limpa o cache do funcionário excluído
+    cachePerfil.delete(funcionario.id);
+
     const { error: erroExclusao } = await supabaseAdmin
       .from('usuarios')
       .delete()
@@ -433,7 +449,6 @@ router.delete('/excluir', autenticarToken, async (req, res) => {
       return res.status(400).json({ error: erroExclusao.message });
     }
 
-    // Remove também do Supabase Auth para liberar o e-mail e revogar o acesso de login
     await supabaseAdmin.auth.admin.deleteUser(funcionario.id);
 
     return res.status(200).json({ message: 'Funcionário excluído com sucesso! Todo o histórico de movimentações e produtos foi preservado.' });
