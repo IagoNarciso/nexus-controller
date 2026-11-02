@@ -156,7 +156,7 @@ router.get('/estoque-baixo', async (req, res) => {
   }
 });
 
-// 2. POST /api/produtos - Criar novo produto vinculado à empresa (Força o estado pendente para o fluxo de solicitações)
+// 2. POST /api/produtos - Criar novo produto vinculado à empresa (Força estritamente o estado pendente)
 router.post('/', async (req, res) => {
   const { 
     nome, 
@@ -166,8 +166,7 @@ router.post('/', async (req, res) => {
     estoque, 
     preco_custo, 
     quantidade_minima, 
-    fornecedor, 
-    status 
+    fornecedor 
   } = req.body;
 
   if (!nome || preco_venda === undefined) {
@@ -183,8 +182,8 @@ router.post('/', async (req, res) => {
       return res.status(401).json({ error: 'Empresa do utilizador não identificada.' });
     }
 
-    // Força todos os novos produtos a nascerem como 'pendente' para o fluxo de solicitações
-    const statusFinal = status || 'pendente';
+    // Força obrigatoriamente o status como 'pendente', ignorando qualquer parâmetro externo
+    const statusFinal = 'pendente';
 
     const { data, error } = await dbClient
       .from('produtos')
