@@ -9,40 +9,28 @@ const dbClient = supabaseAdmin || supabase;
 // Proteger todas as rotas de produtos
 router.use(authMiddleware);
 
-// Função auxiliar resiliente para identificar o utilizador logado e a sua respetiva empresa
+// Cache em memória para evitar consultar a tabela 'usuarios' em todas as requisições
+const cacheUsuarios = new Map();
+const TEMPO_CACHE_MS = 5 * 60 * 1000; // 5 minutos de validade
+
+// Função auxiliar otimizada para identificar o utilizador logado e a sua respetiva empresa
 async function obterDadosUsuario(req) {
   const usuarioId = req.user?.id || req.user?.sub || req.user?.userId;
   const usuarioEmail = req.user?.email;
+  const chaveCache = usuarioId || (usuarioEmail ? usuarioEmail.toLowerCase().trim() : null);
 
-  // 1. Tenta buscar pelo ID exato usando o dbClient (sem bloqueio de RLS)
-  if (usuarioId) {
-    const { data: usuarioPorId } = await dbClient
-      .from('usuarios')
-      .select('*')
-      .eq('id', usuarioId)
-      .maybeSingle();
-
-    if (usuarioPorId && usuarioPorId.empresa) {
-      return usuarioPorId;
+  // 1. Retorno instantâneo (0ms): Verifica se o utilizador já está na memória do servidor
+  if (chaveCache && cacheUsuarios.has(chaveCache)) {
+    const itemCache = cacheUsuarios.get(chaveCache);
+    if (Date.now() - itemCache.timestamp < TEMPO_CACHE_MS) {
+      return itemCache.dados;
     }
+    cacheUsuarios.delete(chaveCache);
   }
 
-  // 2. Fallback robusto por E-mail
-  if (usuarioEmail) {
-    const { data: usuarioPorEmail } = await dbClient
-      .from('usuarios')
-      .select('*')
-      .ilike('email', usuarioEmail.trim())
-      .maybeSingle();
-
-    if (usuarioPorEmail && usuarioPorEmail.empresa) {
-      return usuarioPorEmail;
-    }
-  }
-
-  // 3. Fallback pelos metadados já validados no middleware
+  // 2. Retorno sem consulta ao banco: Usa os metadados já validados no Token JWT
   if (req.user?.user_metadata?.empresa) {
-    return {
+    const usuarioJwt = {
       id: usuarioId,
       nome: req.user.user_metadata.nome || 'Utilizador',
       email: usuarioEmail,
@@ -50,11 +38,43 @@ async function obterDadosUsuario(req) {
       empresa: req.user.user_metadata.empresa,
       cnpj: req.user.user_metadata.cnpj || null
     };
+    if (chaveCache) {
+      cacheUsuarios.set(chaveCache, { dados: usuarioJwt, timestamp: Date.now() });
+    }
+    return usuarioJwt;
   }
 
-  // 4. Fallback direto de segurança para a conta demo oficial do TCC
+  // 3. Busca no banco pelo ID exato (apenas se não estiver em cache nem no JWT)
+  if (usuarioId) {
+    const { data: usuarioPorId } = await dbClient
+      .from('usuarios')
+      .select('id, nome, email, cargo, empresa, cnpj')
+      .eq('id', usuarioId)
+      .maybeSingle();
+
+    if (usuarioPorId && usuarioPorId.empresa) {
+      cacheUsuarios.set(chaveCache, { dados: usuarioPorId, timestamp: Date.now() });
+      return usuarioPorId;
+    }
+  }
+
+  // 4. Fallback robusto por E-mail
+  if (usuarioEmail) {
+    const { data: usuarioPorEmail } = await dbClient
+      .from('usuarios')
+      .select('id, nome, email, cargo, empresa, cnpj')
+      .ilike('email', usuarioEmail.trim())
+      .maybeSingle();
+
+    if (usuarioPorEmail && usuarioPorEmail.empresa) {
+      cacheUsuarios.set(chaveCache, { dados: usuarioPorEmail, timestamp: Date.now() });
+      return usuarioPorEmail;
+    }
+  }
+
+  // 5. Fallback direto de segurança para a conta demo oficial do TCC
   if (usuarioEmail && usuarioEmail.toLowerCase() === 'admin@nexusdemo.com') {
-    return {
+    const usuarioDemo = {
       id: usuarioId || '7d537a13-38d1-4447-a4f4-3a214a9be799',
       nome: 'Admin Demonstração',
       email: 'admin@nexusdemo.com',
@@ -62,6 +82,10 @@ async function obterDadosUsuario(req) {
       empresa: 'Nexus Demo',
       cnpj: null
     };
+    if (chaveCache) {
+      cacheUsuarios.set(chaveCache, { dados: usuarioDemo, timestamp: Date.now() });
+    }
+    return usuarioDemo;
   }
 
   return null;
@@ -100,7 +124,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// 1.1. GET /api/produtos/pendentes (Com código espião)
+// 1.1. GET /api/produtos/pendentes - Listar produtos que aguardam moderação
 router.get('/pendentes', async (req, res) => {
   try {
     const usuario = await obterDadosUsuario(req);
@@ -109,8 +133,6 @@ router.get('/pendentes', async (req, res) => {
       return res.status(401).json({ error: 'Empresa do utilizador não identificada.' });
     }
 
-    console.log('🕵️ [ESPIÃO BACKEND] A procurar pendentes para a empresa:', usuario.empresa);
-
     const { data, error } = await dbClient
       .from('produtos')
       .select('*')
@@ -118,20 +140,16 @@ router.get('/pendentes', async (req, res) => {
       .eq('status', 'pendente')
       .order('created_at', { ascending: false });
 
-    if (error) {
-      console.error('🕵️ [ESPIÃO BACKEND] Erro do Supabase:', error);
-      throw error;
-    }
+    if (error) throw error;
 
-    console.log('🕵️ [ESPIÃO BACKEND] Produtos pendentes encontrados:', data);
     return res.status(200).json(data);
   } catch (err) {
-    console.error('🕵️ [ESPIÃO BACKEND] Erro interno:', err);
+    console.error('Erro ao carregar produtos pendentes:', err);
     return res.status(500).json({ error: 'Erro ao carregar produtos pendentes.' });
   }
 });
 
-// 1.2. GET /api/produtos/estoque-baixo - Listar apenas produtos com estoque crítico (<= 12) na empresa
+// 1.2. GET /api/produtos/estoque-baixo - Listar produtos com estoque crítico (<= 12)
 router.get('/estoque-baixo', async (req, res) => {
   try {
     const usuario = await obterDadosUsuario(req);
@@ -215,7 +233,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-// 3. PUT /api/produtos/:id - Editar produto existente (Restrito à mesma empresa, atualizando custos e fornecedor)
+// 3. PUT /api/produtos/:id - Editar produto existente (Restrito à mesma empresa)
 router.put('/:id', async (req, res) => {
   const { id } = req.params;
   const { 
@@ -301,7 +319,7 @@ router.patch('/:id/status', async (req, res) => {
 
     const produtoAtualizado = data[0];
 
-    // Se aprovado, gera automaticamente o registo financeiro de compra/entrada para atualizar os gastos do dashboard
+    // Se aprovado, gera automaticamente o registo financeiro de compra/entrada
     if (status === 'aprovado') {
       const quantidadeEstoque = parseInt(produtoAtualizado.estoque || produtoAtualizado.quantidade || 0, 10);
       const precoUnitario = parseFloat(produtoAtualizado.preco_venda || produtoAtualizado.preco || 0);
