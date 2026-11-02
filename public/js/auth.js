@@ -134,7 +134,7 @@ async function handleLogin(event) {
   return handleLoginComLembrar(event);
 }
 
-// Função de Registo de Nova Empresa/Utilizador
+// Função de Registo de Nova Empresa/Utilizador com Validação de Segurança de Senha
 async function handleRegister(event) {
   event.preventDefault();
 
@@ -147,6 +147,21 @@ async function handleRegister(event) {
   const senha = document.getElementById('reg-password')?.value;
   const confirmarSenha = document.getElementById('reg-confirm-password')?.value;
   const alertMsg = document.getElementById('alert-msg');
+
+  // Validação rigorosa dos requisitos de segurança da senha
+  const temTamanho = senha.length >= 6;
+  const temMaiuscula = /[A-Z]/.test(senha);
+  const temNumero = /[0-9]/.test(senha);
+  const temEspecial = /[^A-Za-z0-9]/.test(senha);
+
+  if (!temTamanho || !temMaiuscula || !temNumero || !temEspecial) {
+    if (alertMsg) {
+      alertMsg.className = 'p-4 rounded-xl text-sm border font-medium bg-red-50 text-red-700 border-red-200';
+      alertMsg.textContent = 'A senha não atende aos requisitos de segurança (mínimo de 6 caracteres, 1 maiúscula, 1 número e 1 caractere especial).';
+      alertMsg.classList.remove('hidden');
+    }
+    return;
+  }
 
   if (senha !== confirmarSenha) {
     if (alertMsg) {

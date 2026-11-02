@@ -192,11 +192,11 @@
               class="w-full px-3.5 py-2.5 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-greenDark outline-none">
           </div>
 
-          <!-- CAMPO SENHA -->
+          <!-- CAMPO SENHA COM CHECKLIST DE SEGURANÇA -->
           <div class="space-y-1">
             <label class="block text-xs font-semibold uppercase tracking-wider text-gray-600">Senha</label>
             <div class="relative flex items-center">
-              <input type="password" id="reg-password" name="senha" required
+              <input type="password" id="reg-password" name="senha" required oninput="validarForcaSenha(this.value)"
                 class="w-full rounded-xl border border-gray-300 px-4 py-3 pr-12 text-sm text-gray-800 placeholder-gray-400 transition-colors focus:border-emerald-600 focus:outline-none focus:ring-1 focus:ring-emerald-600"
                 placeholder="••••••">
               <button type="button" onclick="togglePassword('reg-password', 'icon-senha')"
@@ -206,6 +206,21 @@
                     d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
                 </svg>
               </button>
+            </div>
+            <!-- Checklist visual dos requisitos de senha -->
+            <div id="password-requirements" class="grid grid-cols-2 gap-1 pt-1 text-[11px] text-slate-400">
+              <div id="req-length" class="flex items-center space-x-1">
+                <span>• Mínimo de 6 caracteres</span>
+              </div>
+              <div id="req-upper" class="flex items-center space-x-1">
+                <span>• 1 letra maiúscula</span>
+              </div>
+              <div id="req-number" class="flex items-center space-x-1">
+                <span>• 1 número</span>
+              </div>
+              <div id="req-special" class="flex items-center space-x-1">
+                <span>• 1 caractere especial</span>
+              </div>
             </div>
           </div>
 
@@ -367,10 +382,27 @@
         localStorage.removeItem('nexus_lembrar_email');
       }
 
-      // Chama a função principal de login existente no auth.js se estiver disponível
       if (typeof handleLogin === 'function') {
         handleLogin(event);
       }
+    }
+
+    // Validação visual da força da senha em tempo real
+    function validarForcaSenha(senha) {
+      const reqLength = document.getElementById('req-length');
+      const reqUpper = document.getElementById('req-upper');
+      const reqNumber = document.getElementById('req-number');
+      const reqSpecial = document.getElementById('req-special');
+
+      const temTamanho = senha.length >= 6;
+      const temMaiuscula = /[A-Z]/.test(senha);
+      const temNumero = /[0-9]/.test(senha);
+      const temEspecial = /[^A-Za-z0-9]/.test(senha);
+
+      if (reqLength) reqLength.style.color = temTamanho ? '#059669' : '#9CA3AF';
+      if (reqUpper) reqUpper.style.color = temMaiuscula ? '#059669' : '#9CA3AF';
+      if (reqNumber) reqNumber.style.color = temNumero ? '#059669' : '#9CA3AF';
+      if (reqSpecial) reqSpecial.style.color = temEspecial ? '#059669' : '#9CA3AF';
     }
 
     // Função auxiliar para validar se as senhas coincidem antes de enviar na recuperação

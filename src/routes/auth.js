@@ -7,6 +7,15 @@ const autenticarToken = require('../middlewares/auth');
 const cachePerfil = new Map();
 const TEMPO_CACHE_MS = 5 * 60 * 1000;
 
+// Função auxiliar para validar requisitos de segurança da senha
+function validarRequisitosSenha(senha) {
+  const temTamanho = senha.length >= 6;
+  const temMaiuscula = /[A-Z]/.test(senha);
+  const temNumero = /[0-9]/.test(senha);
+  const temEspecial = /[^A-Za-z0-9]/.test(senha);
+  return temTamanho && temMaiuscula && temNumero && temEspecial;
+}
+
 // Rota de Login Flexível e Blindada
 router.post('/login', async (req, res) => {
   console.log('Dados recebidos no login:', req.body);
@@ -55,6 +64,13 @@ router.post('/register', async (req, res) => {
 
   if (!email || !userPassword) {
     return res.status(400).json({ error: 'E-mail e senha são obrigatórios.' });
+  }
+
+  // Validação backend de segurança da senha
+  if (!validarRequisitosSenha(userPassword)) {
+    return res.status(400).json({ 
+      error: 'A senha deve conter no mínimo 6 caracteres, 1 letra maiúscula, 1 número e 1 caractere especial.' 
+    });
   }
 
   if (!codigoConvite || !codigoConvite.trim()) {
@@ -146,6 +162,12 @@ router.post('/recuperar-senha-direta', async (req, res) => {
 
   if (!email || !novaSenha || !codigoConvite) {
     return res.status(400).json({ error: 'Preencha o e-mail, a nova senha e o código de recuperação.' });
+  }
+
+  if (!validarRequisitosSenha(novaSenha)) {
+    return res.status(400).json({ 
+      error: 'A nova senha deve conter no mínimo 6 caracteres, 1 letra maiúscula, 1 número e 1 caractere especial.' 
+    });
   }
 
   try {
@@ -243,7 +265,7 @@ router.post('/gerar-chave-recuperacao', autenticarToken, async (req, res) => {
     if (insertError) throw insertError;
 
     return res.status(201).json({ 
-      message: 'Chave de recuperação gerada com sucesso (válida por 24 horas)!', 
+      message: 'Chave de recuperação gerada com sucesso (válida por 24 horas)టా!', 
       codigo: data.codigo 
     });
   } catch (err) {
@@ -314,6 +336,12 @@ router.post('/cadastrar', autenticarToken, async (req, res) => {
 
   if (!nome || !email || !senha) {
     return res.status(400).json({ error: 'Preencha todos os campos obrigatórios (nome, email e senha).' });
+  }
+
+  if (!validarRequisitosSenha(senha)) {
+    return res.status(400).json({ 
+      error: 'A senha do funcionário deve conter no mínimo 6 caracteres, 1 letra maiúscula, 1 número e 1 caractere especial.' 
+    });
   }
 
   try {
