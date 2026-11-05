@@ -84,6 +84,26 @@ async function obterDadosUsuario(req) {
   return null;
 }
 
+// Função auxiliar para extrair o preço de custo/aquisição do produto
+function obterPrecoCustoProduto(p) {
+  if (!p) return 0;
+  const possiveisCustos = [
+    p.preco_custo,
+    p.custo,
+    p.preco_compra,
+    p.valor_custo,
+    p.valor_compra,
+    p.custo_unitario
+  ];
+
+  for (const val of possiveisCustos) {
+    const num = parseFloat(val);
+    if (!isNaN(num) && num > 0) return num;
+  }
+
+  return parseFloat(p.preco_venda || p.preco || 0);
+}
+
 // ROTA: GET /api/dashboard/estatisticas?mes=YYYY-MM&periodo=7
 router.get('/estatisticas', auth, async (req, res) => {
   try {
@@ -95,7 +115,7 @@ router.get('/estatisticas', auth, async (req, res) => {
     }
 
     const dataAtual = new Date();
-    const mesParam = req.query.mes; // Ex: '2026-10' ou 'todos'
+    const mesParam = req.query.mes; // Ex: '2026-11' ou 'todos'
 
     // Captura o período do gráfico enviado pelo frontend (padrão para 7 se inválido)
     const periodoParam = parseInt(req.query.periodo || 7, 10);
@@ -149,7 +169,7 @@ router.get('/estatisticas', auth, async (req, res) => {
         .from('movimentacoes')
         .select('*')
         .eq('empresa', empresaUsuario)
-        .gte('created_at', dataLimiteGrafico) // <-- FILTRO APLICADO AQUI PARA POUPAR BANDA
+        .gte('created_at', dataLimiteGrafico)
     ]);
 
     if (resProdutos.error) throw resProdutos.error;
@@ -169,21 +189,28 @@ router.get('/estatisticas', auth, async (req, res) => {
     let valorTotalEstoque = 0;
     const categoriasMap = {};
     const mapaNomesProdutos = {};
+    const mapaProdutosPorId = {};
+    const mapaProdutosPorNome = {};
 
     produtos.forEach(p => {
       mapaNomesProdutos[p.id] = p.nome;
-      const qtd = p.estoque ?? p.quantidade ?? 0;
-      const min = p.quantidade_minima ?? 12;
-      const preco = parseFloat(p.preco_venda || p.preco || 0);
+      mapaProdutosPorId[String(p.id)] = p;
+      if (p.nome) {
+        mapaProdutosPorNome[p.nome.trim().toLowerCase()] = p;
+      }
+
+      const qtd = Number(p.estoque ?? p.quantidade ?? 0);
+      const min = Number(p.quantidade_minima ?? 12);
+      const precoVenda = parseFloat(p.preco_venda || p.preco || 0);
 
       totalEstoque += qtd;
-      valorTotalEstoque += (qtd * preco);
+      valorTotalEstoque += (qtd * precoVenda);
       
       if (qtd <= min) qtdEstoqueBaixo++;
 
       const cat = p.categoria || 'Geral';
       if (!categoriasMap[cat]) categoriasMap[cat] = 0;
-      categoriasMap[cat] += (qtd * preco);
+      categoriasMap[cat] += (qtd * precoVenda);
     });
 
     const itensZerados = produtos.filter(p => (p.estoque ?? p.quantidade ?? 0) <= 0).length;
@@ -201,14 +228,41 @@ router.get('/estatisticas', auth, async (req, res) => {
     let totalUnidadesVendidas = 0;
     const vendasPorProduto = {};
 
+    // Mapas auxiliares para evitar duplicidade caso o produto tenha estoque inicial sem movimentação
+    const entradasPorProdutoHistorico = {};
+    const saidasPorProdutoHistorico = {};
+
+    todasMovimentacoes.forEach(m => {
+      const prodId = m.produto_id ? String(m.produto_id) : null;
+      const tipo = (m.tipo || '').toLowerCase();
+      const qtd = parseInt(m.quantidade || 0, 10);
+      if (!prodId || qtd <= 0) return;
+
+      if (tipo === 'compra' || tipo === 'entrada') {
+        entradasPorProdutoHistorico[prodId] = (entradasPorProdutoHistorico[prodId] || 0) + qtd;
+      } else if (tipo === 'venda' || tipo === 'saida' || tipo === 'retirada') {
+        saidasPorProdutoHistorico[prodId] = (saidasPorProdutoHistorico[prodId] || 0) + qtd;
+      }
+    });
+
     movimentacoes.forEach(m => {
       const tipoOperacao = (m.tipo || '').toLowerCase();
-      const quantidadeOperacao = parseInt(m.quantidade || 0);
-      const valorUnitario = parseFloat(m.valor_unitario || 0);
-      const valorDaOperacao = valorUnitario * quantidadeOperacao;
+      const quantidadeOperacao = parseInt(m.quantidade || 0, 10);
+      const valorUnitarioMov = parseFloat(m.valor_unitario || 0);
+
+      // Localiza o produto associado pelo ID ou pelo nome
+      const prodAssociado =
+        (m.produto_id && mapaProdutosPorId[String(m.produto_id)]) ||
+        (m.produto_nome && mapaProdutosPorNome[String(m.produto_nome).trim().toLowerCase()]) ||
+        (m.nome_produto && mapaProdutosPorNome[String(m.nome_produto).trim().toLowerCase()]) ||
+        null;
 
       if (tipoOperacao === 'venda' || tipoOperacao === 'saida') {
-        totalVendasMes += valorDaOperacao;
+        const precoVendaUnit = valorUnitarioMov > 0
+          ? valorUnitarioMov
+          : parseFloat(prodAssociado?.preco_venda || prodAssociado?.preco || 0);
+
+        totalVendasMes += (precoVendaUnit * quantidadeOperacao);
         totalUnidadesVendidas += quantidadeOperacao;
 
         if (m.produto_id) {
@@ -216,10 +270,44 @@ router.get('/estatisticas', auth, async (req, res) => {
         }
       } 
       else if (tipoOperacao === 'compra' || tipoOperacao === 'entrada') {
-        totalGastosMes += valorDaOperacao;
+        // Prioriza o preço de custo da compra (e não o preço de venda)
+        const custoNoMovimento = parseFloat(m.preco_custo ?? m.custo ?? m.valor_custo ?? 0);
+        const custoNoProduto = obterPrecoCustoProduto(prodAssociado);
+
+        const custoUnitarioReal = custoNoMovimento > 0
+          ? custoNoMovimento
+          : (custoNoProduto > 0 ? custoNoProduto : valorUnitarioMov);
+
+        totalGastosMes += (custoUnitarioReal * quantidadeOperacao);
       } 
       else if (tipoOperacao === 'retirada') {
         totalUnidadesVendidas += quantidadeOperacao; 
+      }
+    });
+
+    // Contabiliza o investimento de produtos criados no período que já entraram com estoque inicial direto
+    produtos.forEach(p => {
+      const prodId = String(p.id);
+      const qtdAtual = Number(p.estoque ?? p.quantidade ?? 0);
+      const entHist = entradasPorProdutoHistorico[prodId] || 0;
+      const saiHist = saidasPorProdutoHistorico[prodId] || 0;
+
+      // Se o produto tem saldo que não veio de uma linha em 'movimentacoes', é estoque inicial de cadastro
+      const estoqueInicialDireto = Math.max(0, qtdAtual + saiHist - entHist);
+
+      if (estoqueInicialDireto > 0) {
+        const dataCriacaoStr = p.data_cadastro || p.created_at;
+        let pertenceAoPeriodo = true;
+
+        if (inicioPeriodo && fimPeriodo && dataCriacaoStr) {
+          const dataCriacaoISO = new Date(dataCriacaoStr).toISOString();
+          pertenceAoPeriodo = dataCriacaoISO >= inicioPeriodo && dataCriacaoISO < fimPeriodo;
+        }
+
+        if (pertenceAoPeriodo) {
+          const custoUnitario = obterPrecoCustoProduto(p);
+          totalGastosMes += (estoqueInicialDireto * custoUnitario);
+        }
       }
     });
 
@@ -250,7 +338,7 @@ router.get('/estatisticas', auth, async (req, res) => {
         const dataMov = new Date(m.created_at);
         if (dataMov.getFullYear() === anoM && (dataMov.getMonth() + 1) === mesM) {
           const t = (m.tipo || '').toLowerCase();
-          const qtd = parseInt(m.quantidade || 0);
+          const qtd = parseInt(m.quantidade || 0, 10);
           if (t === 'compra' || t === 'entrada') entMes += qtd;
           if (t === 'venda' || t === 'saida' || t === 'retirada') saiMes += qtd;
         }

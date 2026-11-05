@@ -100,6 +100,22 @@ function gerarSKU(categoria) {
   return `${prefixo}-${numeroAleatorio}`;
 }
 
+// Helper para extrair o preço de custo real do produto (priorizando sempre o custo sobre a venda)
+function obterCustoUnitario(produto) {
+  if (!produto) return 0;
+  const custo = parseFloat(
+    produto.preco_custo ??
+    produto.custo ??
+    produto.preco_compra ??
+    produto.valor_custo ??
+    0
+  );
+  if (!isNaN(custo) && custo > 0) {
+    return custo;
+  }
+  return parseFloat(produto.preco_venda || produto.preco || 0);
+}
+
 // 1. GET /api/produtos - Listar produtos da empresa do utilizador logado
 router.get('/', async (req, res) => {
   try {
@@ -182,7 +198,8 @@ router.post('/', async (req, res) => {
     categoria, 
     preco_venda, 
     estoque, 
-    preco_custo, 
+    preco_custo,
+    custo,
     quantidade_minima, 
     fornecedor 
   } = req.body;
@@ -192,6 +209,10 @@ router.post('/', async (req, res) => {
   }
 
   const skuFinal = (sku && sku.trim() !== '') ? sku.trim() : gerarSKU(categoria);
+  const precoCustoFinal = parseFloat(preco_custo ?? custo ?? 0) || 0;
+  const precoVendaFinal = parseFloat(preco_venda) || 0;
+  const estoqueFinal = parseInt(estoque, 10) || 0;
+  const qtdMinimaFinal = parseInt(quantidade_minima, 10) || 12;
 
   try {
     const usuario = await obterDadosUsuario(req);
@@ -203,30 +224,33 @@ router.post('/', async (req, res) => {
     // Força obrigatoriamente o status como 'pendente', ignorando qualquer parâmetro externo
     const statusFinal = 'pendente';
 
+    const novoProdutoPayload = {
+      nome: nome.trim(),
+      sku: skuFinal,
+      categoria: categoria || 'Geral',
+      preco_venda: precoVendaFinal,
+      estoque: estoqueFinal,
+      preco_custo: precoCustoFinal,
+      quantidade_minima: qtdMinimaFinal,
+      fornecedor: fornecedor ? fornecedor.trim() : null,
+      usuario_id: usuario.id,
+      empresa: usuario.empresa, // <-- HERANÇA OBRIGATÓRIA DA EMPRESA
+      cnpj: usuario.cnpj || null,
+      ativo: true,
+      status: statusFinal 
+    };
+
     const { data, error } = await dbClient
       .from('produtos')
-      .insert([
-        {
-          nome: nome.trim(),
-          sku: skuFinal,
-          categoria: categoria || 'Geral',
-          preco_venda: parseFloat(preco_venda) || 0,
-          estoque: parseInt(estoque, 10) || 0,
-          preco_custo: parseFloat(preco_custo) || 0,
-          quantidade_minima: parseInt(quantidade_minima, 10) || 12,
-          fornecedor: fornecedor ? fornecedor.trim() : null,
-          usuario_id: usuario.id,
-          empresa: usuario.empresa, // <-- HERANÇA OBRIGATÓRIA DA EMPRESA
-          cnpj: usuario.cnpj || null,
-          ativo: true,
-          status: statusFinal 
-        }
-      ])
+      .insert([novoProdutoPayload])
       .select();
 
     if (error) throw error;
 
-    return res.status(201).json(data[0]);
+    return res.status(201).json({
+      ...data[0],
+      preco_custo: data[0]?.preco_custo ?? precoCustoFinal
+    });
   } catch (err) {
     console.error('Erro ao criar produto:', err);
     return res.status(500).json({ error: 'Erro ao cadastrar produto no banco de dados.' });
@@ -243,7 +267,8 @@ router.put('/:id', async (req, res) => {
     preco_venda, 
     estoque, 
     ativo, 
-    preco_custo, 
+    preco_custo,
+    custo,
     quantidade_minima, 
     fornecedor 
   } = req.body;
@@ -262,7 +287,9 @@ router.put('/:id', async (req, res) => {
     if (preco_venda !== undefined) updatePayload.preco_venda = parseFloat(preco_venda);
     if (estoque !== undefined) updatePayload.estoque = parseInt(estoque, 10);
     if (ativo !== undefined) updatePayload.ativo = ativo;
-    if (preco_custo !== undefined) updatePayload.preco_custo = parseFloat(preco_custo) || 0;
+    if (preco_custo !== undefined || custo !== undefined) {
+      updatePayload.preco_custo = parseFloat(preco_custo ?? custo) || 0;
+    }
     if (quantidade_minima !== undefined) updatePayload.quantidade_minima = parseInt(quantidade_minima, 10) || 12;
     if (fornecedor !== undefined) updatePayload.fornecedor = fornecedor ? fornecedor.trim() : null;
     
@@ -281,7 +308,19 @@ router.put('/:id', async (req, res) => {
       return res.status(404).json({ error: 'Produto não encontrado na sua empresa ou não autorizado.' });
     }
 
-    return res.status(200).json(data[0]);
+    const produtoEditado = data[0];
+
+    // Se o preço de custo foi atualizado, sincroniza também a movimentação de compra inicial deste produto
+    if (updatePayload.preco_custo !== undefined && updatePayload.preco_custo > 0) {
+      await dbClient
+        .from('movimentacoes')
+        .update({ valor_unitario: updatePayload.preco_custo })
+        .eq('produto_id', id)
+        .eq('empresa', usuario.empresa)
+        .in('tipo', ['compra', 'entrada']);
+    }
+
+    return res.status(200).json(produtoEditado);
   } catch (err) {
     console.error('Erro ao atualizar produto:', err);
     return res.status(500).json({ error: 'Erro ao atualizar produto no banco de dados.' });
@@ -319,12 +358,12 @@ router.patch('/:id/status', async (req, res) => {
 
     const produtoAtualizado = data[0];
 
-    // Se aprovado, gera automaticamente o registo financeiro de compra/entrada
+    // Se aprovado, gera automaticamente o registo financeiro de compra/entrada USANDO O PREÇO DE CUSTO
     if (status === 'aprovado') {
       const quantidadeEstoque = parseInt(produtoAtualizado.estoque || produtoAtualizado.quantidade || 0, 10);
-      const precoUnitario = parseFloat(produtoAtualizado.preco_venda || produtoAtualizado.preco || 0);
+      const custoUnitarioCompra = obterCustoUnitario(produtoAtualizado);
 
-      if (quantidadeEstoque > 0 && precoUnitario > 0) {
+      if (quantidadeEstoque > 0 && custoUnitarioCompra > 0) {
         const { error: erroMov } = await dbClient
           .from('movimentacoes')
           .insert([
@@ -334,7 +373,7 @@ router.patch('/:id/status', async (req, res) => {
               produto_id: produtoAtualizado.id,
               tipo: 'compra',
               quantidade: quantidadeEstoque,
-              valor_unitario: precoUnitario,
+              valor_unitario: custoUnitarioCompra, // <-- CORRIGIDO: Usa o Preço de Custo e não o de Venda!
               observacao: `Aprovação automática de entrada do produto: ${produtoAtualizado.nome}`,
               lida: false
             }

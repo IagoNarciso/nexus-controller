@@ -101,9 +101,23 @@ function obterMetaLocalProdutos() {
 
 function salvarMetaLocalProduto(chave, dadosMeta) {
   if (!chave) return;
+  const chaveNormalizada = String(chave).trim();
+  if (!chaveNormalizada) return;
+
   const metaAtual = obterMetaLocalProdutos();
-  metaAtual[chave] = { ...(metaAtual[chave] || {}), ...dadosMeta };
+  metaAtual[chaveNormalizada] = { ...(metaAtual[chaveNormalizada] || {}), ...dadosMeta };
   localStorage.setItem('nexus_produtos_meta', JSON.stringify(metaAtual));
+}
+
+function obterMetaPorProduto(p, metaLocal) {
+  if (!p || !metaLocal) return {};
+  const chaveNome = (p.nome || '').toLowerCase().trim();
+  return (
+    metaLocal[p.id] ||
+    (p.sku && metaLocal[p.sku]) ||
+    (chaveNome && metaLocal[`nome:${chaveNome}`]) ||
+    {}
+  );
 }
 
 function gerarSKU(categoria) {
@@ -265,7 +279,6 @@ async function inicializarPaginaProdutos() {
   if (!isOperador) {
     await carregarProdutosPendentes();
   } else {
-    // Garante que o badge do menu lateral fica oculto para o operador
     const badgeMenuProdutos = document.getElementById('badgeMenuProdutos');
     if (badgeMenuProdutos) badgeMenuProdutos.classList.add('hidden');
   }
@@ -475,7 +488,7 @@ async function carregarNotificacoesTopo() {
 
       const criticos = produtos.filter((p) => {
         if (p.status === 'pendente' || p.status === 'rejeitado') return false;
-        const meta = metaLocal[p.id] || metaLocal[p.sku] || {};
+        const meta = obterMetaPorProduto(p, metaLocal);
         const estoque = Number(p.estoque ?? p.quantidade ?? 0);
         const min = Number(p.quantidade_minima ?? p.estoque_minimo ?? meta.quantidade_minima ?? 12);
         return p.ativo !== false && estoque <= min;
@@ -543,10 +556,23 @@ async function carregarProdutos() {
       const apenasAprovados = dadosApi.filter((p) => p.status !== 'pendente' && p.status !== 'rejeitado');
 
       produtosCache = apenasAprovados.map((p) => {
-        const meta = metaLocal[p.id] || metaLocal[p.sku] || {};
+        const meta = obterMetaPorProduto(p, metaLocal);
+        const custoBanco = Number(p.preco_custo ?? p.custo ?? p.preco_compra ?? 0);
+        const custoMeta = Number(meta.preco_custo ?? 0);
+        const precoCustoReal = custoBanco > 0 ? custoBanco : custoMeta;
+
+        // Sincroniza o ID do produto no cache local caso tenha sido salvo apenas por SKU ou nome
+        if (precoCustoReal > 0 && p.id) {
+          salvarMetaLocalProduto(p.id, {
+            preco_custo: precoCustoReal,
+            quantidade_minima: p.quantidade_minima ?? p.estoque_minimo ?? meta.quantidade_minima ?? 12,
+            fornecedor: p.fornecedor ?? p.fornecedor_nome ?? meta.fornecedor ?? ''
+          });
+        }
+
         return {
           ...p,
-          preco_custo: p.preco_custo ?? meta.preco_custo ?? 0,
+          preco_custo: precoCustoReal,
           quantidade_minima: p.quantidade_minima ?? p.estoque_minimo ?? meta.quantidade_minima ?? 12,
           fornecedor: p.fornecedor ?? p.fornecedor_nome ?? meta.fornecedor ?? ''
         };
@@ -948,9 +974,9 @@ function renderizarTabela(produtos) {
 
       const infoFornecedorHTML = fornecedor
         ? `<p class="text-[10px] text-slate-400 dark:text-slate-500 font-normal mt-0.5 flex items-center space-x-1">
-           <i class="fa-solid fa-truck-field text-[9px]"></i>
-           <span class="truncate max-w-[140px]" title="${fornecedor}">${fornecedor}</span>
-         </p>`
+             <i class="fa-solid fa-truck-field text-[9px]"></i>
+             <span class="truncate max-w-[140px]" title="${fornecedor}">${fornecedor}</span>
+           </p>`
         : '';
 
       return `
@@ -1095,6 +1121,7 @@ function setupModalEvents() {
     e.preventDefault();
 
     const id = document.getElementById('prodId').value;
+    const nomeProduto = document.getElementById('prodNome').value.trim();
     const categoria = document.getElementById('prodCategoria').value.trim();
     const fornecedor = (document.getElementById('prodFornecedor')?.value || '').trim();
     let sku = document.getElementById('prodSku').value;
@@ -1121,11 +1148,12 @@ function setupModalEvents() {
     const isOperador = String(rawRole).toLowerCase().trim() === 'operador';
 
     const bodyData = {
-      nome: document.getElementById('prodNome').value.trim(),
+      nome: nomeProduto,
       sku: sku,
       categoria: categoria,
       fornecedor: fornecedor,
       preco_custo: precoCustoVal,
+      custo: precoCustoVal,
       preco_venda: precoVendaVal,
       estoque: estoqueVal,
       quantidade_minima: estoqueMinVal,
@@ -1154,9 +1182,18 @@ function setupModalEvents() {
         quantidade_minima: estoqueMinVal,
         fornecedor: fornecedor
       };
-      const chaveId = id || responseData.id || responseData.produto?.id;
+
+      const chaveId =
+        id ||
+        responseData.id ||
+        responseData.produto?.id ||
+        responseData.data?.id ||
+        (Array.isArray(responseData) ? responseData[0]?.id : null) ||
+        (Array.isArray(responseData.data) ? responseData.data[0]?.id : null);
+
       if (chaveId) salvarMetaLocalProduto(chaveId, metaObj);
-      salvarMetaLocalProduto(sku, metaObj);
+      if (sku) salvarMetaLocalProduto(sku, metaObj);
+      if (nomeProduto) salvarMetaLocalProduto(`nome:${nomeProduto.toLowerCase()}`, metaObj);
 
       fecharModal();
       await carregarProdutos();
