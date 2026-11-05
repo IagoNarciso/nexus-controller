@@ -331,114 +331,6 @@ function setupModalSuporte() {
   });
 }
 
-// Verifica se uma data ISO/string pertence ao mês selecionado (YYYY-MM)
-function dataPertenceAoMes(dataStr, mesFiltro) {
-  if (!mesFiltro || mesFiltro === 'todos') return true;
-  if (!dataStr) return true;
-
-  const str = String(dataStr);
-  if (str.startsWith(mesFiltro)) return true;
-
-  const d = new Date(dataStr);
-  if (isNaN(d.getTime())) return false;
-
-  const anoMesLocal = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-  return anoMesLocal === mesFiltro;
-}
-
-// Extrai o preço de custo/aquisição real do produto (evitando usar o preço de venda)
-function obterPrecoCustoProduto(p) {
-  if (!p) return 0;
-  const custo = Number(
-    p.preco_custo ??
-    p.custo ??
-    p.valor_custo ??
-    p.preco_compra ??
-    p.valor_compra ??
-    0
-  );
-  if (custo > 0) return custo;
-  return Number(p.preco_venda ?? p.preco ?? 0);
-}
-
-// Calcula o investimento real em compras/entradas no mês baseando-se no preço de custo
-async function calcularGastosReaisPorCusto(mesSelecionado, valorBackend = 0) {
-  try {
-    const [resProdutos, resMov] = await Promise.allSettled([
-      fetchSeguraDashboard('/api/produtos'),
-      fetchSeguraDashboard('/api/movimentacoes')
-    ]);
-
-    if (resProdutos.status !== 'fulfilled' || !resProdutos.value || !resProdutos.value.ok) {
-      return Number(valorBackend || 0);
-    }
-
-    const produtosRaw = await resProdutos.value.json();
-    const produtos = Array.isArray(produtosRaw)
-      ? produtosRaw.filter((p) => p.status !== 'pendente' && p.status !== 'rejeitado' && p.ativo !== false)
-      : [];
-
-    if (produtos.length === 0) return 0;
-
-    let movimentacoes = [];
-    if (resMov.status === 'fulfilled' && resMov.value && resMov.value.ok) {
-      const movRaw = await resMov.value.json();
-      if (Array.isArray(movRaw)) {
-        movimentacoes = movRaw;
-      } else if (Array.isArray(movRaw?.movimentacoes)) {
-        movimentacoes = movRaw.movimentacoes;
-      }
-    }
-
-    const entradasPorProdutoTotal = new Map();
-    const saidasPorProdutoTotal = new Map();
-    const entradasPorProdutoNoMes = new Map();
-
-    movimentacoes.forEach((m) => {
-      const tipo = String(m.tipo || m.tipo_movimentacao || '').toLowerCase();
-      const qtd = Number(m.quantidade ?? m.qtd ?? 0);
-      const prodId = String(m.produto_id ?? m.id_produto ?? '');
-      const dataMov = m.data_movimentacao || m.created_at || m.data;
-
-      if (!prodId || qtd <= 0) return;
-
-      if (tipo === 'entrada') {
-        entradasPorProdutoTotal.set(prodId, (entradasPorProdutoTotal.get(prodId) || 0) + qtd);
-        if (dataPertenceAoMes(dataMov, mesSelecionado)) {
-          entradasPorProdutoNoMes.set(prodId, (entradasPorProdutoNoMes.get(prodId) || 0) + qtd);
-        }
-      } else if (tipo === 'saida' || tipo === 'saída') {
-        saidasPorProdutoTotal.set(prodId, (saidasPorProdutoTotal.get(prodId) || 0) + qtd);
-      }
-    });
-
-    let totalInvestimentoCusto = 0;
-
-    produtos.forEach((p) => {
-      const prodId = String(p.id);
-      const custoUnitario = obterPrecoCustoProduto(p);
-      const qtdAtual = Number(p.estoque ?? p.quantidade ?? 0);
-
-      const totalEntradasMov = entradasPorProdutoTotal.get(prodId) || 0;
-      const totalSaidasMov = saidasPorProdutoTotal.get(prodId) || 0;
-      const entradasMesMov = entradasPorProdutoNoMes.get(prodId) || 0;
-
-      // Estoque inicial registado diretamente na criação do produto (sem duplicar com movimentações)
-      const estoqueInicialDireto = Math.max(0, qtdAtual + totalSaidasMov - totalEntradasMov);
-      const dataCriacaoProd = p.data_cadastro || p.created_at || p.data;
-      const criadoNesteMes = dataPertenceAoMes(dataCriacaoProd, mesSelecionado);
-
-      const qtdInvestidaNoPeriodo = entradasMesMov + (criadoNesteMes ? estoqueInicialDireto : 0);
-      totalInvestimentoCusto += qtdInvestidaNoPeriodo * custoUnitario;
-    });
-
-    return totalInvestimentoCusto;
-  } catch (err) {
-    console.warn('Erro ao recalcular gastos pelo preço de custo, utilizando valor padrão:', err);
-    return Number(valorBackend || 0);
-  }
-}
-
 // Função unificada para buscar e atualizar as estatísticas do painel via API
 async function carregarDadosDashboard(mesSelecionado = '', periodoGrafico = '7') {
   if (isRedirectingDashboard) return;
@@ -472,7 +364,6 @@ async function carregarDadosDashboard(mesSelecionado = '', periodoGrafico = '7')
   const dotStatus = document.getElementById('dotStatusSistema');
 
   try {
-    // MONTA A URL PASSANDO TANTO O MÊS QUANTO O PERÍODO DO GRÁFICO
     let url = `/api/dashboard/estatisticas?periodo=${encodeURIComponent(periodoGrafico)}`;
     if (mesSelecionado) {
       url += `&mes=${encodeURIComponent(mesSelecionado)}`;
@@ -498,7 +389,6 @@ async function carregarDadosDashboard(mesSelecionado = '', periodoGrafico = '7')
 
     window.dadosMovimentacaoGlobal = data.movimentacao || {};
 
-    // Renderiza os gráficos com os dados dinâmicos recebidos do backend
     renderizarGraficoMovimentacao(window.dadosMovimentacaoGlobal, periodoGrafico);
     renderizarGraficoCategoria(data.categorias || null);
 
@@ -509,10 +399,9 @@ async function carregarDadosDashboard(mesSelecionado = '', periodoGrafico = '7')
       });
     }
 
-    // Calcula e exibe o Total de Compras / Gastos (Mês) sempre baseado no preço de custo
+    // Exibe o Total de Compras / Gastos (Mês) vindo diretamente e de forma estável do backend
     if (elGastosMes) {
-      const gastosReaisCusto = await calcularGastosReaisPorCusto(mesSelecionado, data.totalGastosMes);
-      elGastosMes.textContent = Number(gastosReaisCusto || 0).toLocaleString('pt-BR', {
+      elGastosMes.textContent = Number(data.totalGastosMes || 0).toLocaleString('pt-BR', {
         style: 'currency',
         currency: 'BRL'
       });
@@ -655,7 +544,7 @@ async function carregarDadosDashboard(mesSelecionado = '', periodoGrafico = '7')
 
     if (listaMaisVendidos) {
       if (
-         !data.maisVendidos ||
+        !data.maisVendidos ||
         data.maisVendidos.length === 0 ||
         data.maisVendidos.every((p) => p.totalVendido === 0)
       ) {
