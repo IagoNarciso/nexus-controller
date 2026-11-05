@@ -2,7 +2,6 @@ let isRedirectingConfig = false;
 
 // Função centralizada para requisições autenticadas e prevenção de loop 401
 async function fetchSeguraConfig(url, options = {}) {
-  // Procura o token em qualquer uma das chaves possíveis gravadas no login
   const token = 
     localStorage.getItem('token') || 
     localStorage.getItem('access_token') || 
@@ -61,14 +60,14 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   carregarInfoUtilizador();
-  carregarPreferenciasSalvas(); // Carrega as preferências guardadas nos inputs
-  aplicarControlePermissoes(); // Esconde secções restritas se for Operador
+  carregarPreferenciasSalvas(); 
+  aplicarControlePermissoes(); 
   carregarConfiguracoes();
   setupFormConfiguracoes();
   setupFormNovoOperador();
-  setupFormExcluirOperador(); // Configura a exclusão segura de funcionários
-  setupGerarChaveRecuperacao(); // Configura geração de chave 24h se o botão existir na tela
-  setupCustomDropdown(); // Configura o dropdown customizado de cargos
+  setupFormExcluirOperador(); 
+  setupGerarChaveRecuperacao(); 
+  setupCustomDropdown(); 
   setupCpfMask();
   setupDataNascimentoMask();
   setupModalSuporte();
@@ -113,11 +112,8 @@ function aplicarControlePermissoes() {
     'Administrador';
 
   const roleLower = String(rawRole).toLowerCase().trim();
-  
-  // Validação estrita: só é operador se o cargo for explicitamente operador ou operator
   const isOperador = roleLower === 'operador' || roleLower === 'operator';
 
-  // Se for Operador, ocultamos a secção de Gerenciamento de Utilizadores e a de Segurança/Chave
   if (isOperador) {
     const secaoGerenciamento =
       document.getElementById('secaoGerenciamentoUtilizadores') ||
@@ -132,7 +128,6 @@ function aplicarControlePermissoes() {
       secaoChave.remove();
     }
   } else {
-    // Garante que para Administrador o cargo fica correto e o painel visível
     localStorage.setItem('nexus_user_role', 'Administrador');
     const secaoChave = document.getElementById('secaoSegurancaChave');
     if (secaoChave) {
@@ -141,7 +136,7 @@ function aplicarControlePermissoes() {
   }
 }
 
-// Carrega as preferências salvas no localStorage para marcar os checkboxes corretamente
+// Carrega as preferências salvas no localStorage
 function carregarPreferenciasSalvas() {
   try {
     const prefsSalvas = JSON.parse(localStorage.getItem('nexus_prefs'));
@@ -183,7 +178,6 @@ function carregarInfoUtilizador() {
     userObj.email || 
     'utilizador@nexus.com';
 
-  // Sincroniza o cargo de forma rigorosa unificada com a topbar
   const rawCargo = 
     localStorage.getItem('nexus_user_role') || 
     userObj.role || 
@@ -207,7 +201,6 @@ function carregarInfoUtilizador() {
   const regiaoUtilizador = localStorage.getItem('nexus_user_regiao') || 'Nacional / PR';
   const dataCriacaoUtilizador = localStorage.getItem('nexus_user_datacriacao') || '21/10/2026';
 
-  // Iniciais
   const iniciais =
     nomeUtilizador
       .split(' ')
@@ -246,7 +239,7 @@ function carregarInfoUtilizador() {
     }
   }
 
-  // 3. Preencher Inputs do Formulário (Dados Pessoais e Corporativos)
+  // 3. Preencher Inputs do Formulário
   const inputNome = document.getElementById('cfgNome');
   const inputEmail = document.getElementById('cfgEmail');
   const inputEmpresa = document.getElementById('cfgEmpresa');
@@ -262,10 +255,11 @@ function carregarInfoUtilizador() {
   if (inputDataCriacao) inputDataCriacao.value = dataCriacaoUtilizador;
 }
 
-// 1. Carregar Dados Reais do Banco de Dados / API
+// 1. Carregar Dados Reais do Servidor via /api/utilizadores/perfil
 async function carregarConfiguracoes() {
   try {
-    let res = await fetchSeguraConfig('/api/utilizador/perfil');
+    // CORRIGIDO: Utiliza a rota correta no plural configurada em src/routes/utilizadores.js
+    let res = await fetchSeguraConfig('/api/utilizadores/perfil');
     if (res && res.status === 404) {
       res = await fetchSeguraConfig('/api/auth/perfil');
     }
@@ -278,7 +272,6 @@ async function carregarConfiguracoes() {
       const nomeServidor = data.nome || localStorage.getItem('nexus_user_name') || 'Utilizador Nexus';
       const emailServidor = data.email || localStorage.getItem('nexus_user_email') || 'utilizador@nexus.com';
       
-      // Normaliza o cargo recebido do servidor para evitar conflitos de texto
       const rawCargoServidor = data.cargo || data.role || localStorage.getItem('nexus_user_role') || 'Administrador';
       const cargoServidorLower = String(rawCargoServidor).toLowerCase().trim();
       let cargoServidor = 'Administrador';
@@ -311,11 +304,10 @@ async function carregarConfiguracoes() {
       aplicarControlePermissoes();
     }
   } catch (err) {
-    console.warn('Erro ao carregar perfil, utilizando cache local:', err);
+    console.warn('Erro ao carregar perfil do servidor, utilizando cache local:', err);
   }
 }
 
-// Função auxiliar para exibir notificação flutuante moderna (Toast)
 function mostrarNotificacaoToast(mensagem, tipo = 'sucesso') {
   let container = document.getElementById('toastContainerNtf');
   if (!container) {
@@ -346,7 +338,6 @@ function mostrarNotificacaoToast(mensagem, tipo = 'sucesso') {
   }, 3500);
 }
 
-// Função auxiliar para exibir o Modal de Confirmação Customizado (substitui o window.confirm)
 function mostrarConfirmacaoCustomizada(mensagem) {
   return new Promise((resolve) => {
     const modal = document.getElementById('modalConfirmacaoCustom');
@@ -356,7 +347,6 @@ function mostrarConfirmacaoCustomizada(mensagem) {
     const btnNao = document.getElementById('btnCancelarConfirmacao');
 
     if (!modal || !content) {
-      // Fallback de segurança caso o modal não exista no HTML
       resolve(confirm(mensagem));
       return;
     }
@@ -364,7 +354,6 @@ function mostrarConfirmacaoCustomizada(mensagem) {
     if (texto) texto.textContent = mensagem;
     modal.classList.remove('hidden');
     
-    // Animação suave de entrada
     setTimeout(() => {
       content.classList.remove('scale-95', 'opacity-0');
       content.classList.add('scale-100', 'opacity-100');
@@ -387,7 +376,6 @@ function mostrarConfirmacaoCustomizada(mensagem) {
   });
 }
 
-// 2. Salvar Alterações do Formulário de Perfil e Preferências
 function setupFormConfiguracoes() {
   const form = document.getElementById('formConfiguracoes');
   if (!form) return;
@@ -412,7 +400,7 @@ function setupFormConfiguracoes() {
     };
 
     try {
-      const res = await fetchSeguraConfig('/api/utilizador/perfil', {
+      const res = await fetchSeguraConfig('/api/utilizadores/perfil', {
         method: 'PUT',
         body: JSON.stringify(payload)
       });
@@ -440,7 +428,6 @@ function setupFormConfiguracoes() {
   });
 }
 
-// 3. Cadastrar Novo Operador/Utilizador com Verificação de E-mail Único
 function setupFormNovoOperador() {
   const form = document.getElementById('formNovoOperador');
   if (!form) return;
@@ -504,7 +491,6 @@ function setupFormNovoOperador() {
   });
 }
 
-// 4. Controlo interativo do dropdown personalizado de cargos
 function setupCustomDropdown() {
   const btn = document.getElementById('btnDropdownCargo');
   const menu = document.getElementById('menuDropdownCargo');
@@ -534,7 +520,6 @@ function setupCustomDropdown() {
   });
 }
 
-// 5. Excluir Funcionário com Validação de Dados e Confirmação Customizada
 function setupFormExcluirOperador() {
   const form = document.getElementById('formExcluirOperador');
   if (!form) return;
@@ -559,7 +544,6 @@ function setupFormExcluirOperador() {
       return;
     }
 
-    // Utiliza o modal customizado em vez do confirm() nativo
     const confirmado = await mostrarConfirmacaoCustomizada(
       `Tem a certeza de que deseja excluir permanentemente o acesso do funcionário "${nome}" (${email})?`
     );
