@@ -756,33 +756,6 @@ async function moderarProduto(id, novoStatus) {
   await executarModeracao(id, novoStatus);
 }
 
-  const modalConfirmacao = document.getElementById('modalConfirmacaoAprovacao');
-  if (!modalConfirmacao) {
-    if (!confirm(`Tem a certeza de que deseja ${acaoTexto} este produto?`)) return;
-    await executarModeracao(id, novoStatus);
-    return;
-  }
-
-  modalConfirmacao.classList.remove('hidden');
-
-  const btnCancelar = document.getElementById('btnCancelarConfirmacao');
-
-  const limparEventos = () => {
-    btnAceitar.replaceWith(btnAceitar.cloneNode(true));
-    btnCancelar.replaceWith(btnCancelar.cloneNode(true));
-    modalConfirmacao.classList.add('hidden');
-  };
-
-  document.getElementById('btnAceitarConfirmacao').addEventListener('click', async () => {
-    limparEventos();
-    await executarModeracao(id, novoStatus);
-  });
-
-  document.getElementById('btnCancelarConfirmacao').addEventListener('click', () => {
-    limparEventos();
-  });
-}
-
 async function executarModeracao(id, novoStatus) {
   try {
     const res = await fetchSeguraProdutos(`/api/produtos/${id}/status`, {
