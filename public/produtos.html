@@ -147,7 +147,7 @@
       </div>
 
       <button id="logoutBtn"
-        class="w-full flex items-center space-x-3 px-3 py-2 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-rose-400 transition-colors">
+        class="w-full flex items-center space-x-3 px-3 py-2 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-rose-400 transition-colors cursor-pointer">
         <i class="fa-solid fa-right-from-bracket text-sm"></i>
         <span>Sair da conta</span>
       </button>
@@ -474,14 +474,79 @@
     </div>
   </div>
 
-  <!-- Outros Modais (Exclusão, Aprovação, Solicitação, Suporte) omitidos ou mantidos íntegros -->
+  <!-- MODAL DE CONFIRMAÇÃO PERSONALIZADO (Substitui o window.confirm nativo) -->
+  <div id="modalConfirmacaoCustom" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs hidden">
+    <div id="modalConfirmacaoContent" class="bg-white dark:bg-[#121E1A] border border-slate-200 dark:border-[#1C2C26] rounded-2xl p-6 w-full max-w-md shadow-2xl transform scale-95 opacity-0 transition-all duration-200">
+      <div class="flex items-center space-x-3 mb-4">
+        <div class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-200/50 dark:border-emerald-800/50">
+          <i class="fa-solid fa-circle-question text-lg"></i>
+        </div>
+        <div>
+          <h3 class="text-sm font-bold text-slate-800 dark:text-slate-100">Confirmação de Ação</h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400">Nexus Controller - Moderação</p>
+        </div>
+      </div>
+      
+      <p id="modalConfirmacaoTexto" class="text-xs text-slate-600 dark:text-slate-300 mb-6 leading-relaxed">
+        Tem a certeza de que deseja realizar esta ação?
+      </p>
+
+      <div class="flex items-center justify-end space-x-3">
+        <button type="button" id="btnCancelarConfirmacao" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#182B24] transition-colors cursor-pointer">
+          Cancelar
+        </button>
+        <button type="button" id="btnAceitarConfirmacao" class="px-4 py-2 rounded-xl text-xs font-semibold text-white bg-[#236E50] hover:bg-[#1b5840] transition-colors shadow-lg shadow-emerald-900/20 cursor-pointer">
+          Confirmar
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- Scripts -->
   <script src="js/produtos.js"></script>
   <script src="js/solicitacoes.js"></script>
 
-  <!-- Controlador estrito de abas -->
+  <!-- Controlador estrito de abas e helper global de confirmação -->
   <script>
+    // Função global moderna para substituir o window.confirm
+    window.mostrarConfirmacaoCustomizada = function(mensagem) {
+      return new Promise((resolve) => {
+        const modal = document.getElementById('modalConfirmacaoCustom');
+        const content = document.getElementById('modalConfirmacaoContent');
+        const texto = document.getElementById('modalConfirmacaoTexto');
+        const btnSim = document.getElementById('btnAceitarConfirmacao');
+        const btnNao = document.getElementById('btnCancelarConfirmacao');
+
+        if (!modal || !content) {
+          resolve(confirm(mensagem)); // Fallback de segurança
+          return;
+        }
+
+        if (texto) texto.textContent = mensagem;
+        modal.classList.remove('hidden');
+        
+        setTimeout(() => {
+          content.classList.remove('scale-95', 'opacity-0');
+          content.classList.add('scale-100', 'opacity-100');
+        }, 10);
+
+        const fechar = (resposta) => {
+          content.classList.remove('scale-100', 'opacity-100');
+          content.classList.add('scale-95', 'opacity-0');
+          setTimeout(() => {
+            modal.classList.add('hidden');
+            resolve(resposta);
+          }, 150);
+        };
+
+        btnSim.onclick = () => fechar(true);
+        btnNao.onclick = () => fechar(false);
+        modal.onclick = (e) => {
+          if (e.target === modal) fechar(false);
+        };
+      });
+    };
+
     (function () {
       const tabCatalogo = document.getElementById('tabCatalogo');
       const tabSolicitacoes = document.getElementById('tabSolicitacoes');
@@ -503,7 +568,6 @@
       tabAprovacoes?.addEventListener('click', () => ativarAba('aprovacoes'));
 
       document.addEventListener('DOMContentLoaded', () => {
-        // Inicialização padrão de cargos e temas
         const elUserRole = document.getElementById('userRole');
         if (elUserRole) {
           let userObj = {};

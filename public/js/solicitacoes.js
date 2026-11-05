@@ -2,7 +2,6 @@ let isRedirectingSolicitacoes = false;
 
 // Função centralizada para requisições autenticadas e prevenção de loop 401
 async function fetchSeguraSolicitacoes(url, options = {}) {
-  // Procura o token em qualquer uma das chaves possíveis gravadas no login
   const token = 
     localStorage.getItem('token') || 
     localStorage.getItem('access_token') || 
@@ -64,7 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupSolicitacaoEvents();
 });
 
-// 1. Alternar entre as abas Catálogo e Solicitações
+// 1. Alternar entre as abas Catálogo, Solicitações e Aprovações
 function setupAbasNavegacao() {
   const tabCatalogo = document.getElementById('tabCatalogo');
   const tabSolicitacoes = document.getElementById('tabSolicitacoes');
@@ -203,63 +202,20 @@ async function carregarSolicitacoes() {
   }
 }
 
-// 3. Função Auxiliar para Exibir o Modal Personalizado de Confirmação
-function mostrarModalConfirmacao(mensagem, status) {
-  return new Promise((resolve) => {
-    const modal = document.getElementById('modalConfirmacaoAprovacao');
-    const textoMsg = document.getElementById('textoMensagemConfirmacao');
-    const btnAceitar = document.getElementById('btnAceitarConfirmacao');
-    const btnCancelar = document.getElementById('btnCancelarConfirmacao');
-
-    if (!modal || !btnAceitar || !btnCancelar) {
-      resolve(confirm(mensagem));
-      return;
-    }
-
-    const tituloModal = modal.querySelector('h3');
-    const subtituloModal = modal.querySelector('p.text-\\[11px\\]');
-
-    if (status === 'cancelada') {
-      if (tituloModal) tituloModal.textContent = 'Cancelar Solicitação';
-      if (subtituloModal) subtituloModal.textContent = 'Esta ação irá cancelar o pedido de reposição.';
-      btnAceitar.textContent = 'Sim, Cancelar';
-      btnAceitar.className =
-        'px-4 py-2.5 text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-xl transition-colors shadow-xs cursor-pointer';
-    } else {
-      if (tituloModal) tituloModal.textContent = 'Aprovar Solicitação';
-      if (subtituloModal) subtituloModal.textContent = 'Esta ação irá atualizar o estoque do produto.';
-      btnAceitar.textContent = 'Sim, Aprovar';
-      btnAceitar.className =
-        'px-4 py-2.5 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl transition-colors shadow-xs cursor-pointer';
-    }
-
-    if (textoMsg && mensagem) {
-      textoMsg.textContent = mensagem;
-    }
-
-    modal.classList.remove('hidden');
-
-    const fecharEResolver = (resultado) => {
-      modal.classList.add('hidden');
-      btnAceitar.replaceWith(btnAceitar.cloneNode(true));
-      btnCancelar.replaceWith(btnCancelar.cloneNode(true));
-      resolve(resultado);
-    };
-
-    document.getElementById('btnAceitarConfirmacao').addEventListener('click', () => fecharEResolver(true));
-    document.getElementById('btnCancelarConfirmacao').addEventListener('click', () => fecharEResolver(false));
-
-    modal.onclick = (e) => {
-      if (e.target === modal) fecharEResolver(false);
-    };
-  });
+// 3. Função Auxiliar para Exibir o Modal Personalizado de Confirmação (Usa a função global unificada do HTML)
+async function mostrarModalConfirmacaoPersonalizado(mensagem, status) {
+  if (typeof window.mostrarConfirmacaoCustomizada === 'function') {
+    return await window.mostrarConfirmacaoCustomizada(mensagem);
+  }
+  // Fallback caso a função global não exista
+  return confirm(mensagem);
 }
 
 // 4. Aprovar ou Cancelar Solicitação
 async function alterarStatusSolicitacao(id, status) {
   const acaoTexto = status === 'aprovada' ? 'aprovar e dar entrada no estoque' : 'cancelar';
 
-  const confirmado = await mostrarModalConfirmacao(`Deseja realmente ${acaoTexto} esta solicitação?`, status);
+  const confirmado = await mostrarModalConfirmacaoPersonalizado(`Deseja realmente ${acaoTexto} esta solicitação?`, status);
   if (!confirmado) return;
 
   try {
