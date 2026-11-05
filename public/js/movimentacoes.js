@@ -202,21 +202,24 @@ function setupBotoesNaoVistas() {
   }
 
   if (btnMarcarTodas) {
-    btnMarcarTodas.addEventListener('click', async () => {
+    btnMarcarTodas.addEventListener('click', () => {
+      if (!listaMovimentacoesCache || listaMovimentacoesCache.length === 0) return;
+      
+      // Marca todas as movimentações atuais como lidas localmente
+      const idsNaoLidos = listaMovimentacoesCache.map(m => String(m.id));
+      let idsVistos = [];
       try {
-        const res = await fetchSeguraMovimentacoes('/api/movimentacoes/marcar-todas-lidas', {
-          method: 'PATCH'
-        });
-        if (res && res.ok) {
-          await carregarHistoricoMovimentacoes();
-          await atualizarBadgeNaoLidas();
-          mostrarNotificacaoToastMov('Todas as movimentações foram marcadas como vistas!', 'sucesso');
-        } else {
-          alert('Erro ao marcar movimentações como vistas.');
-        }
-      } catch (err) {
-        console.error('Erro ao marcar todas como lidas:', err);
-      }
+        idsVistos = JSON.parse(localStorage.getItem('nexus_movimentacoes_vistas_ids') || '[]');
+      } catch (e) {}
+
+      const novosVistos = [...new Set([...idsVistos, ...idsNaoLidos])];
+      localStorage.setItem('nexus_movimentacoes_vistas_ids', JSON.stringify(novosVistos));
+
+      // Atualiza o estado visual e os contadores
+      listaMovimentacoesCache.forEach(m => m.lida = true);
+      renderizarTabelaMovimentacoes(listaMovimentacoesCache);
+      atualizarBadgeNaoLidas();
+      mostrarNotificacaoToastMov('Todas as movimentações foram marcadas como vistas!', 'sucesso');
     });
   }
 }
@@ -238,35 +241,33 @@ async function atualizarBadgeNaoLidas() {
   const badgeCount = document.getElementById('badgeNaoVistasCount');
 
   try {
-    const res = await fetchSeguraMovimentacoes('/api/movimentacoes/nao-lidas', {
-      method: 'GET'
-    });
-    if (!res) return;
+    let idsVistos = [];
+    try {
+      idsVistos = JSON.parse(localStorage.getItem('nexus_movimentacoes_vistas_ids') || '[]');
+    } catch (e) {}
 
-    if (res.ok) {
-      const data = await res.json();
-      const total = data.totalNaoLidas || 0;
+    // Conta quantas na cache atual possuem m.lida === false ou não estão no localStorage
+    const naoLidasCount = listaMovimentacoesCache.filter(m => !m.lida && !idsVistos.includes(String(m.id))).length;
 
-      if (badge) {
-        if (total > 0) {
-          badge.textContent = total;
-          badge.classList.remove('hidden');
-        } else {
-          badge.classList.add('hidden');
-        }
+    if (badge) {
+      if (naoLidasCount > 0) {
+        badge.textContent = naoLidasCount;
+        badge.classList.remove('hidden');
+      } else {
+        badge.classList.add('hidden');
       }
+    }
 
-      if (badgeCount) {
-        if (total > 0) {
-          badgeCount.textContent = total;
-          badgeCount.classList.remove('hidden');
-        } else {
-          badgeCount.classList.add('hidden');
-        }
+    if (badgeCount) {
+      if (naoLidasCount > 0) {
+        badgeCount.textContent = naoLidasCount;
+        badgeCount.classList.remove('hidden');
+      } else {
+        badgeCount.classList.add('hidden');
       }
     }
   } catch (err) {
-    console.error('Erro ao buscar total de movimentações não lidas:', err);
+    console.error('Erro ao atualizar contagem:', err);
   }
 }
 
