@@ -741,24 +741,20 @@ async function moderarProduto(id, novoStatus) {
   const isAprovacao = novoStatus === 'aprovado';
   const acaoTexto = isAprovacao ? 'aprovar' : 'rejeitar';
 
-  const textoMsg = document.getElementById('textoMensagemConfirmacao');
-  const btnAceitar = document.getElementById('btnAceitarConfirmacao');
-
-  if (textoMsg) {
-    textoMsg.textContent = `Deseja realmente ${acaoTexto} este produto?`;
+  // Utiliza o modal customizado unificado do HTML
+  const mensagem = `Deseja realmente ${acaoTexto} este produto?`;
+  
+  let confirmado = false;
+  if (typeof window.mostrarConfirmacaoCustomizada === 'function') {
+    confirmado = await window.mostrarConfirmacaoCustomizada(mensagem);
+  } else {
+    confirmado = confirm(mensagem);
   }
 
-  if (btnAceitar) {
-    btnAceitar.textContent = isAprovacao ? 'Sim, Aprovar' : 'Sim, Rejeitar';
+  if (!confirmado) return;
 
-    if (isAprovacao) {
-      btnAceitar.className =
-        'px-4 py-2.5 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl transition-colors shadow-xs cursor-pointer';
-    } else {
-      btnAceitar.className =
-        'px-4 py-2.5 text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-xl transition-colors shadow-xs cursor-pointer';
-    }
-  }
+  await executarModeracao(id, novoStatus);
+}
 
   const modalConfirmacao = document.getElementById('modalConfirmacaoAprovacao');
   if (!modalConfirmacao) {
