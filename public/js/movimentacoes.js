@@ -4,6 +4,26 @@ let listaMovimentacoesCache = [];
 let filtroPeriodoAtual = 'este_mes';
 let filtroApenasNaoVistas = false;
 
+const CHAVE_MOVIMENTACOES_VISTAS = 'nexus_movimentacoes_vistas_ids';
+
+function obterIdsVistosLocal() {
+  try {
+    return JSON.parse(localStorage.getItem(CHAVE_MOVIMENTACOES_VISTAS) || '[]');
+  } catch (e) {
+    return [];
+  }
+}
+
+function salvarIdsVistosLocal(novosIds) {
+  try {
+    const atuais = obterIdsVistosLocal();
+    const combinados = [...new Set([...atuais, ...novosIds.map(String)])];
+    localStorage.setItem(CHAVE_MOVIMENTACOES_VISTAS, JSON.stringify(combinados));
+  } catch (e) {
+    console.error('Erro ao salvar IDs vistos no localStorage:', e);
+  }
+}
+
 async function fetchSeguraMovimentacoes(url, options = {}) {
   const token = 
     localStorage.getItem('token') || 
@@ -112,8 +132,8 @@ function carregarInfoUtilizador() {
 }
 
 function setupUserDropdown() {
-  const btn = document.getElementById('userMenuBtn');
-  const dropdown = document.getElementById('userDropdown');
+  const btn = document.getElementById('userMenuBtn') || document.getElementById('btnPerfilMenu');
+  const dropdown = document.getElementById('userDropdown') || document.getElementById('dropdownPerfil');
 
   if (!btn || !dropdown) return;
 
@@ -202,23 +222,43 @@ function setupBotoesNaoVistas() {
   }
 
   if (btnMarcarTodas) {
-    btnMarcarTodas.addEventListener('click', () => {
+    btnMarcarTodas.addEventListener('click', async () => {
       if (!listaMovimentacoesCache || listaMovimentacoesCache.length === 0) return;
-      
-      // Marca todas as movimentações atuais como lidas localmente
-      const idsNaoLidos = listaMovimentacoesCache.map(m => String(m.id));
-      let idsVistos = [];
-      try {
-        idsVistos = JSON.parse(localStorage.getItem('nexus_movimentacoes_vistas_ids') || '[]');
-      } catch (e) {}
 
-      const novosVistos = [...new Set([...idsVistos, ...idsNaoLidos])];
-      localStorage.setItem('nexus_movimentacoes_vistas_ids', JSON.stringify(novosVistos));
+      const pendentes = listaMovimentacoesCache.filter((m) => !m.lida);
+      const todosIds = listaMovimentacoesCache.map((m) => String(m.id));
 
-      // Atualiza o estado visual e os contadores
-      listaMovimentacoesCache.forEach(m => m.lida = true);
-      renderizarTabelaMovimentacoes(listaMovimentacoesCache);
-      atualizarBadgeNaoLidas();
+      // 1. Salva imediatamente no localStorage para persistência local garantida
+      salvarIdsVistosLocal(todosIds);
+
+      // 2. Atualiza no banco de dados usando a rota individual existente para cada item não lido
+      if (pendentes.length > 0) {
+        btnMarcarTodas.disabled = true;
+        try {
+          await Promise.all(
+            pendentes.map((m) =>
+              fetchSeguraMovimentacoes(`/api/movimentacoes/${m.id}/visualizar`, {
+                method: 'PATCH'
+              }).catch(() => null)
+            )
+          );
+        } finally {
+          btnMarcarTodas.disabled = false;
+        }
+      }
+
+      // 3. Atualiza o estado em memória e a interface
+      listaMovimentacoesCache.forEach((m) => {
+        m.lida = true;
+      });
+
+      if (filtroApenasNaoVistas) {
+        filtroApenasNaoVistas = false;
+        btnFiltro?.classList.remove('bg-emerald-50', 'dark:bg-emerald-950/50', 'border-emerald-300', 'dark:border-emerald-700', 'text-emerald-700', 'dark:text-emerald-300');
+      }
+
+      aplicarFiltroBuscaMovimentacoes();
+      await atualizarBadgeNaoLidas();
       mostrarNotificacaoToastMov('Todas as movimentações foram marcadas como vistas!', 'sucesso');
     });
   }
@@ -241,13 +281,10 @@ async function atualizarBadgeNaoLidas() {
   const badgeCount = document.getElementById('badgeNaoVistasCount');
 
   try {
-    let idsVistos = [];
-    try {
-      idsVistos = JSON.parse(localStorage.getItem('nexus_movimentacoes_vistas_ids') || '[]');
-    } catch (e) {}
-
-    // Conta quantas na cache atual possuem m.lida === false ou não estão no localStorage
-    const naoLidasCount = listaMovimentacoesCache.filter(m => !m.lida && !idsVistos.includes(String(m.id))).length;
+    const idsVistos = obterIdsVistosLocal();
+    const naoLidasCount = listaMovimentacoesCache.filter(
+      (m) => !m.lida && !idsVistos.includes(String(m.id))
+    ).length;
 
     if (badge) {
       if (naoLidasCount > 0) {
@@ -267,7 +304,7 @@ async function atualizarBadgeNaoLidas() {
       }
     }
   } catch (err) {
-    console.error('Erro ao atualizar contagem:', err);
+    console.error('Erro ao atualizar contagem de movimentações não lidas:', err);
   }
 }
 
@@ -303,6 +340,13 @@ async function carregarHistoricoMovimentacoes() {
 
     const dados = await res.json();
     let movimentacoes = Array.isArray(dados) ? dados : [];
+    const idsVistos = obterIdsVistosLocal();
+
+    // Sincroniza o status vindo do banco com os IDs já marcados como vistos no navegador
+    movimentacoes = movimentacoes.map((m) => ({
+      ...m,
+      lida: Boolean(m.lida || idsVistos.includes(String(m.id)))
+    }));
 
     const agora = new Date();
     const mesAtual = agora.getMonth();
@@ -335,6 +379,7 @@ async function carregarHistoricoMovimentacoes() {
     }
 
     aplicarFiltroBuscaMovimentacoes();
+    await atualizarBadgeNaoLidas();
   } catch (err) {
     console.error('Erro ao carregar histórico:', err);
     if (badgeTotal) badgeTotal.textContent = 'Erro ao carregar';
@@ -374,7 +419,7 @@ function renderizarTabelaMovimentacoes(movimentacoes) {
       }
 
       const obsTexto = m.observacao ? m.observacao : '-';
-      const bgClass = !m.lida ? 'bg-amber-50/60 font-medium' : '';
+      const bgClass = !m.lida ? 'bg-amber-50/60 dark:bg-amber-950/20 font-medium' : '';
       const indicacaoNovo = !m.lida
         ? `<span class="w-2 h-2 rounded-full bg-amber-500 inline-block mr-1.5" title="Não visualizada"></span>`
         : '';
@@ -507,6 +552,8 @@ async function visualizarMovimentacao(id) {
     }
 
     if (!m.lida) {
+      salvarIdsVistosLocal([m.id]);
+      m.lida = true;
       await fetchSeguraMovimentacoes(`/api/movimentacoes/${id}/visualizar`, {
         method: 'PATCH'
       });
