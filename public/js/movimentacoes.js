@@ -2,6 +2,7 @@ let isRedirectingMovimentacoes = false;
 let listaProdutosCache = [];
 let listaMovimentacoesCache = [];
 let filtroPeriodoAtual = 'este_mes';
+let filtroApenasNaoVistas = false;
 
 async function fetchSeguraMovimentacoes(url, options = {}) {
   const token = 
@@ -71,6 +72,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   setupModalDetalhesEvents();
   setupDropdownFiltroPeriodo();
   setupUserDropdown();
+  setupBotoesNaoVistas();
 
   await carregarProdutosSelect();
   await carregarHistoricoMovimentacoes();
@@ -183,6 +185,42 @@ function setupDropdownFiltroPeriodo() {
   });
 }
 
+function setupBotoesNaoVistas() {
+  const btnFiltro = document.getElementById('btnFiltroNaoVistas');
+  const btnMarcarTodas = document.getElementById('btnMarcarTodasVistas');
+
+  if (btnFiltro) {
+    btnFiltro.addEventListener('click', () => {
+      filtroApenasNaoVistas = !filtroApenasNaoVistas;
+      if (filtroApenasNaoVistas) {
+        btnFiltro.classList.add('bg-emerald-50', 'dark:bg-emerald-950/50', 'border-emerald-300', 'dark:border-emerald-700', 'text-emerald-700', 'dark:text-emerald-300');
+      } else {
+        btnFiltro.classList.remove('bg-emerald-50', 'dark:bg-emerald-950/50', 'border-emerald-300', 'dark:border-emerald-700', 'text-emerald-700', 'dark:text-emerald-300');
+      }
+      aplicarFiltroBuscaMovimentacoes();
+    });
+  }
+
+  if (btnMarcarTodas) {
+    btnMarcarTodas.addEventListener('click', async () => {
+      try {
+        const res = await fetchSeguraMovimentacoes('/api/movimentacoes/marcar-todas-lidas', {
+          method: 'PATCH'
+        });
+        if (res && res.ok) {
+          await carregarHistoricoMovimentacoes();
+          await atualizarBadgeNaoLidas();
+          mostrarNotificacaoToastMov('Todas as movimentações foram marcadas como vistas!', 'sucesso');
+        } else {
+          alert('Erro ao marcar movimentações como vistas.');
+        }
+      } catch (err) {
+        console.error('Erro ao marcar todas como lidas:', err);
+      }
+    });
+  }
+}
+
 function mudarFiltroPeriodo(tipoFiltro, textoLabel) {
   filtroPeriodoAtual = tipoFiltro;
   const label = document.getElementById('textoPeriodoSelecionado');
@@ -197,7 +235,7 @@ window.mudarFiltroPeriodo = mudarFiltroPeriodo;
 
 async function atualizarBadgeNaoLidas() {
   const badge = document.getElementById('badgeMovimentacoes');
-  if (!badge) return;
+  const badgeCount = document.getElementById('badgeNaoVistasCount');
 
   try {
     const res = await fetchSeguraMovimentacoes('/api/movimentacoes/nao-lidas', {
@@ -207,11 +245,24 @@ async function atualizarBadgeNaoLidas() {
 
     if (res.ok) {
       const data = await res.json();
-      if (data.totalNaoLidas > 0) {
-        badge.textContent = data.totalNaoLidas;
-        badge.classList.remove('hidden');
-      } else {
-        badge.classList.add('hidden');
+      const total = data.totalNaoLidas || 0;
+
+      if (badge) {
+        if (total > 0) {
+          badge.textContent = total;
+          badge.classList.remove('hidden');
+        } else {
+          badge.classList.add('hidden');
+        }
+      }
+
+      if (badgeCount) {
+        if (total > 0) {
+          badgeCount.textContent = total;
+          badgeCount.classList.remove('hidden');
+        } else {
+          badgeCount.classList.add('hidden');
+        }
       }
     }
   } catch (err) {
@@ -302,16 +353,11 @@ function renderizarTabelaMovimentacoes(movimentacoes) {
     return;
   }
 
-  // Nome do utilizador atualmente logado como fallback inteligente para registos antigos
-  const nomeUtilizadorLogado = localStorage.getItem('nexus_user_name') || 'Administrador';
-
   tbody.innerHTML = movimentacoes
     .map((m) => {
       const dataFormatada = m.created_at ? new Date(m.created_at).toLocaleString('pt-BR') : '---';
       const prodNome = m.produtos?.nome || m.produto_nome || 'Produto Indisponível';
       const idCurto = m.id ? String(m.id).substring(0, 6) : `---`;
-
-      // Captura o nome da relação associada do backend. Se não existir, exibe um valor neutro ou "Desconhecido" em vez do utilizador da sessão atual.
       const nomeSolicitante = m.usuarios?.nome || m.usuario_nome || 'Sistema / Não identificado';
 
       let badgeTipo = `<span class="px-2.5 py-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 dark:bg-emerald-950/60 rounded-full border border-emerald-200 dark:border-emerald-800/50">Venda</span>`;
@@ -356,6 +402,8 @@ function aplicarFiltroBuscaMovimentacoes() {
   const termo = (document.getElementById('inputSearchMovimentacoes')?.value || '').toLowerCase().trim();
 
   const filtrados = listaMovimentacoesCache.filter((m) => {
+    if (filtroApenasNaoVistas && m.lida) return false;
+
     const prodNome = (m.produtos?.nome || m.produto_nome || '').toLowerCase();
     const obs = (m.observacao || '').toLowerCase();
     const tipo = (m.tipo || '').toLowerCase();
@@ -365,6 +413,32 @@ function aplicarFiltroBuscaMovimentacoes() {
   });
 
   renderizarTabelaMovimentacoes(filtrados);
+}
+
+function mostrarNotificacaoToastMov(mensagem, tipo = 'sucesso') {
+  let container = document.getElementById('toastContainerNtf');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'toastContainerNtf';
+    container.className = 'fixed bottom-5 right-5 z-50 flex flex-col space-y-2';
+    document.body.appendChild(container);
+  }
+
+  const toast = document.createElement('div');
+  const corBg = tipo === 'sucesso' ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white';
+
+  toast.className = `px-4 py-3 rounded-2xl shadow-xl text-xs font-semibold flex items-center space-x-2 transition-all transform translate-y-2 opacity-0 ${corBg}`;
+  toast.innerHTML = `
+    <i class="fa-solid ${tipo === 'sucesso' ? 'fa-circle-check' : 'fa-circle-exclamation'} text-sm"></i>
+    <span>${mensagem}</span>
+  `;
+
+  container.appendChild(toast);
+  setTimeout(() => toast.classList.remove('translate-y-2', 'opacity-0'), 10);
+  setTimeout(() => {
+    toast.classList.add('translate-y-2', 'opacity-0');
+    setTimeout(() => toast.remove(), 300);
+  }, 3500);
 }
 
 async function visualizarMovimentacao(id) {

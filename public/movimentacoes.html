@@ -117,7 +117,7 @@
   <!-- CONTEÚDO PRINCIPAL -->
   <div class="flex-1 flex flex-col min-w-0 overflow-y-auto">
 
-    <!-- TOPBAR PADRONIZADA: LUA -> SINO -> BARRA DIVISÓRIA -> PERFIL -->
+    <!-- TOPBAR PADRONIZADA -->
     <header class="h-16 bg-white dark:bg-[#0E1A16] border-b border-slate-200 dark:border-[#1C2C26] px-6 flex items-center justify-between sticky top-0 z-10 transition-colors">
       <div class="flex items-center space-x-2 text-xs font-medium text-slate-500 dark:text-slate-400">
         <a href="dashboard.html" class="hover:text-slate-800 dark:hover:text-slate-200">Nexus Controller</a>
@@ -156,7 +156,7 @@
           </div>
         </div>
 
-        <!-- PERFIL DO UTILIZADOR COM BARRA DIVISÓRIA ANTES -->
+        <!-- PERFIL DO UTILIZADOR -->
         <div class="relative border-l border-slate-200 dark:border-[#1C2C26] pl-3">
           <button id="btnPerfilMenu" type="button" class="flex items-center space-x-3 pl-1 focus:outline-none cursor-pointer group">
             <div id="userAvatar"
@@ -199,8 +199,21 @@
         </div>
 
         <div class="flex items-center space-x-3 flex-wrap gap-2">
-          <!-- BARRA DE PESQUISA ADICIONADA -->
-          <div class="relative flex items-center w-64">
+          
+          <!-- NOVO: BOTÃO DE FILTRO DE NÃO VISTAS E MARCAR TODAS -->
+          <button type="button" id="btnFiltroNaoVistas" class="inline-flex items-center space-x-1.5 px-3 py-2.5 bg-white dark:bg-[#121E1A] hover:bg-slate-50 dark:hover:bg-[#172722] text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold transition-colors cursor-pointer border border-slate-200 dark:border-[#1C2C26] shadow-2xs">
+            <i class="fa-solid fa-eye-slash text-amber-500 text-xs"></i>
+            <span>Não Vistas</span>
+            <span id="badgeNaoVistasCount" class="ml-1 px-1.5 py-0.2 bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 rounded-full text-[10px] font-bold hidden">0</span>
+          </button>
+
+          <button type="button" id="btnMarcarTodasVistas" class="inline-flex items-center justify-center space-x-1.5 px-3 py-2.5 bg-white dark:bg-[#121E1A] hover:bg-slate-50 dark:hover:bg-[#172722] text-xs font-medium text-emerald-700 dark:text-emerald-400 rounded-xl transition-colors cursor-pointer border border-slate-200 dark:border-[#1C2C26] shadow-2xs" title="Marcar todas as movimentações como vistas">
+            <i class="fa-solid fa-check-double text-xs"></i>
+            <span>Marcar vistas</span>
+          </button>
+
+          <!-- BARRA DE PESQUISA -->
+          <div class="relative flex items-center w-56">
             <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
               <i class="fa-solid fa-magnifying-glass text-xs"></i>
             </div>
@@ -217,14 +230,11 @@
               <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 ml-1"></i>
             </button>
 
-            <!-- Opções do Dropdown de Período (Preenchidas dinamicamente pelo JS) -->
+            <!-- Opções do Dropdown de Período -->
             <div id="dropdownFiltroPeriodo"
               class="absolute right-0 mt-2 w-52 bg-white dark:bg-[#121E1A] border border-slate-200 dark:border-[#1C2C26] rounded-2xl shadow-xl hidden z-30 overflow-hidden text-xs py-1.5 divide-y divide-slate-100 dark:divide-[#1C2C26]">
               <div class="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Selecionar Período</div>
-              
-              <!-- Container onde o JS vai injetar os meses -->
               <div id="listaOpcoesPeriodoMov"></div>
-
             </div>
           </div>
 
@@ -267,12 +277,11 @@
     </main>
   </div>
 
-  <!-- MODAL DE NOVA MOVIMENTAÇÃO (REFINADO & PREMIUM) -->
+  <!-- MODAL DE NOVA MOVIMENTAÇÃO -->
   <div id="modalMovimentacao"
     class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs hidden p-4">
     <div class="bg-white dark:bg-[#121E1A] rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden border border-slate-200/80 dark:border-[#1C2C26] animate-in fade-in zoom-in-95 duration-200">
-
-      <!-- Cabeçalho Moderno -->
+      
       <div class="px-6 py-5 border-b border-slate-100 dark:border-[#1C2C26] flex justify-between items-center bg-slate-50/50 dark:bg-[#15241F]/40">
         <div class="flex items-center space-x-3">
           <div class="w-10 h-10 rounded-2xl bg-emerald-100 dark:bg-emerald-950/80 text-[#0F392B] dark:text-emerald-400 flex items-center justify-center border border-emerald-200/60 dark:border-emerald-800/50 shadow-xs">
@@ -290,7 +299,6 @@
 
       <form id="formMovimentacao" class="p-6 space-y-4 text-xs">
         
-        <!-- Selecionar Produto (Dropdown Customizado) -->
         <div class="space-y-1.5 relative" id="wrapperCustomSelectMov">
           <label class="block font-semibold text-slate-700 dark:text-slate-300">Produto *</label>
           
@@ -312,7 +320,6 @@
           </div>
         </div>
 
-        <!-- Tipo de Movimentação -->
         <div class="space-y-1.5">
           <label class="block font-semibold text-slate-700 dark:text-slate-300">Tipo de Movimentação *</label>
           <div class="grid grid-cols-3 gap-2.5">
@@ -337,7 +344,6 @@
           </div>
         </div>
 
-        <!-- Quantidade, Valor Unitário e Desconto (%) -->
         <div class="grid grid-cols-3 gap-3">
           <div>
             <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Quantidade *</label>
@@ -356,7 +362,6 @@
           </div>
         </div>
 
-        <!-- Exibição do Valor Total Calculado -->
         <div id="boxTotalCalculado"
           class="flex items-center justify-between p-3.5 bg-emerald-50/60 dark:bg-emerald-950/40 border border-emerald-100 dark:border-emerald-900/40 rounded-xl text-xs">
           <span class="font-semibold text-slate-600 dark:text-slate-300"><i class="fa-solid fa-calculator text-emerald-600 dark:text-emerald-400 mr-1.5"></i>
@@ -364,14 +369,12 @@
           <span id="labelTotalComDesconto" class="font-bold text-emerald-700 dark:text-emerald-400 text-sm">R$ 0,00</span>
         </div>
 
-        <!-- Observação -->
         <div class="space-y-1.5">
           <label class="block font-semibold text-slate-700 dark:text-slate-300">Observação</label>
           <textarea id="movObservacao" rows="2.5" placeholder="Ex: Venda no balcão / Perda por avaria"
             class="w-full px-3.5 py-3 rounded-xl border border-slate-200 dark:border-[#1C2C26] bg-slate-50/50 dark:bg-[#15241F]/50 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#0F392B] resize-none"></textarea>
         </div>
 
-        <!-- Ações -->
         <div class="pt-5 flex justify-end space-x-3 border-t border-slate-100 dark:border-[#1C2C26]">
           <button type="button" id="btnCancelarModalMov"
             class="px-4.5 py-2.5 font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#172722] rounded-xl transition-colors cursor-pointer">Cancelar</button>
@@ -379,7 +382,6 @@
             class="px-5 py-2.5 font-semibold text-white bg-[#0F392B] hover:bg-[#0a271d] dark:hover:bg-[#144737] rounded-xl shadow-md shadow-emerald-950/20 transition-all cursor-pointer">Registrar Movimentação</button>
         </div>
       </form>
-
     </div>
   </div>
 
@@ -388,7 +390,6 @@
     class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs hidden p-4">
     <div class="bg-white dark:bg-[#121E1A] rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden border border-slate-200/80 dark:border-[#1C2C26] animate-in fade-in zoom-in-95 duration-200">
 
-      <!-- Cabeçalho do Modal -->
       <div class="px-6 py-5 border-b border-slate-100 dark:border-[#1C2C26] flex justify-between items-center bg-slate-50/50 dark:bg-[#15241F]/40">
         <div class="flex items-center space-x-3">
           <div class="w-10 h-10 rounded-2xl bg-emerald-100 dark:bg-emerald-950/80 text-[#0F392B] dark:text-emerald-400 flex items-center justify-center border border-emerald-200/60 dark:border-emerald-800/50 shadow-xs">
@@ -404,10 +405,7 @@
         </button>
       </div>
 
-      <!-- Conteúdo dos Detalhes -->
       <div class="p-6 space-y-4 text-xs">
-        
-        <!-- Info Produto e Tipo -->
         <div class="grid grid-cols-2 gap-3 p-4 bg-slate-50 dark:bg-[#15241F]/40 rounded-2xl border border-slate-100 dark:border-[#1C2C26]">
           <div>
             <span class="block text-[10px] font-bold text-slate-400 uppercase">Produto</span>
@@ -419,7 +417,6 @@
           </div>
         </div>
 
-        <!-- Grid de Valores e Quantidade -->
         <div class="grid grid-cols-3 gap-3">
           <div class="p-3 bg-slate-50 dark:bg-[#15241F]/40 rounded-xl border border-slate-100 dark:border-[#1C2C26]">
             <span class="block text-[10px] font-bold text-slate-400 uppercase">Quantidade</span>
@@ -435,43 +432,34 @@
           </div>
         </div>
 
-        <!-- Total Final em Destaque -->
         <div class="flex items-center justify-between p-4 bg-emerald-50/60 dark:bg-emerald-950/40 border border-emerald-100 dark:border-emerald-900/40 rounded-2xl">
           <span class="font-semibold text-slate-600 dark:text-slate-300">Valor Total da Operação:</span>
           <span id="detalhesValorTotal" class="font-bold text-emerald-700 dark:text-emerald-400 text-base">R$ 0,00</span>
         </div>
 
-        <!-- Observação -->
         <div class="space-y-1">
           <span class="block text-[10px] font-bold text-slate-400 uppercase">Observação</span>
           <p id="detalhesObservacao" class="p-3 bg-slate-50 dark:bg-[#15241F]/40 rounded-xl text-slate-600 dark:text-slate-300 italic min-h-[40px]">-</p>
         </div>
-
       </div>
 
-      <!-- Rodapé com Botão de Fechar -->
       <div class="px-6 py-4 bg-slate-50/50 dark:bg-[#15241F]/40 border-t border-slate-100 dark:border-[#1C2C26] flex items-center justify-end space-x-2">
         <button type="button" id="btnFecharDetalhesModal"
           class="px-5 py-2.5 font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-[#1C2C26] rounded-xl transition-colors cursor-pointer text-xs">
           Fechar
         </button>
       </div>
-
     </div>
   </div>
 
-  <!-- MODAL DE SUPORTE (POP-UP FLUTUANTE) -->
+  <!-- MODAL DE SUPORTE -->
   <div id="modalSuporte" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs hidden transition-opacity">
     <div class="bg-white dark:bg-[#121E1A] border border-slate-200 dark:border-[#1C2C26] rounded-2xl shadow-xl w-full max-w-md p-6 relative animate-in fade-in zoom-in-95 duration-200">
-      
-      <!-- Botão Fechar (X) -->
       <button id="btnFecharSuporte" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg cursor-pointer">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
         </svg>
       </button>
-
-      <!-- Cabeçalho -->
       <div class="flex items-center gap-3 mb-4">
         <div class="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -483,8 +471,6 @@
           <p class="text-xs text-slate-400">Como você prefere falar conosco?</p>
         </div>
       </div>
-
-      <!-- Lista de Contatos -->
       <div class="space-y-3 mt-4 text-xs">
         <div class="p-3 rounded-xl bg-slate-50 dark:bg-[#14231E] border border-slate-100 dark:border-[#1C2C26] flex items-center justify-between">
           <div class="flex items-center gap-3">
@@ -495,7 +481,6 @@
             </div>
           </div>
         </div>
-
         <div class="p-3 rounded-xl bg-slate-50 dark:bg-[#14231E] border border-slate-100 dark:border-[#1C2C26] flex items-center justify-between">
           <div class="flex items-center gap-3">
             <span class="p-2 rounded-lg bg-emerald-500/10 text-emerald-500">💬</span>
@@ -505,7 +490,6 @@
             </div>
           </div>
         </div>
-
         <div class="p-3 rounded-xl bg-slate-50 dark:bg-[#14231E] border border-slate-100 dark:border-[#1C2C26] flex items-center justify-between">
           <div class="flex items-center gap-3">
             <span class="p-2 rounded-lg bg-emerald-500/10 text-emerald-500">🕒</span>
@@ -516,8 +500,6 @@
           </div>
         </div>
       </div>
-
-      <!-- Rodapé Modal -->
       <div class="mt-6 flex justify-end">
         <button id="btnFecharSuporteModal" type="button" class="px-4 py-2 bg-slate-100 dark:bg-[#14231E] hover:bg-slate-200 dark:hover:bg-[#1C2C26] text-slate-700 dark:text-slate-300 font-medium rounded-xl transition-colors text-xs cursor-pointer">
           Fechar
@@ -532,7 +514,6 @@
   <!-- Script de Sincronização e Prevenção de Duplicação na Topbar -->
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      // 1. Remove botões de tema duplicados caso o theme.js injete um extra
       const botoesTema = document.querySelectorAll('#btnThemeToggle, #themeToggleBtn');
       if (botoesTema.length > 1) {
         for (let i = 1; i < botoesTema.length; i++) {
@@ -540,7 +521,6 @@
         }
       }
 
-      // 2. Extrai o cargo dinâmico do localStorage ou JWT
       const elUserRole = document.getElementById('userRole');
       if (elUserRole) {
         let userObj = {};
@@ -590,6 +570,7 @@
       }
     });
   </script>
+
   <!-- Script Gerador de Períodos Dinâmicos -->
   <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -601,21 +582,17 @@
         const data = new Date();
         const mesesNomes = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
         
-        // Mês atual (Ex: Nov/2026)
         const mes0 = data.getMonth();
         const ano0 = data.getFullYear();
         
-        // Mês -1
         data.setMonth(data.getMonth() - 1);
         const mes1 = data.getMonth();
         const ano1 = data.getFullYear();
 
-        // Mês -2
         data.setMonth(data.getMonth() - 1);
         const mes2 = data.getMonth();
         const ano2 = data.getFullYear();
 
-        // Mês -3
         data.setMonth(data.getMonth() - 1);
         const mes3 = data.getMonth();
         const ano3 = data.getFullYear();
@@ -640,7 +617,6 @@
           `;
         }
 
-        // Define o texto inicial do botão principal
         const txtPeriodo = document.getElementById('textoPeriodoSelecionado');
         if (txtPeriodo && txtPeriodo.innerText === 'Este mês') {
           txtPeriodo.innerText = label0;
