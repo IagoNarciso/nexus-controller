@@ -741,12 +741,13 @@ async function moderarProduto(id, novoStatus) {
   const isAprovacao = novoStatus === 'aprovado';
   const acaoTexto = isAprovacao ? 'aprovar' : 'rejeitar';
 
-  // Utiliza o modal customizado unificado do HTML
+  // Utiliza o modal customizado unificado do HTML passando o tipo correto ('sucesso' ou 'perigo')
   const mensagem = `Deseja realmente ${acaoTexto} este produto?`;
+  const tipoModal = isAprovacao ? 'sucesso' : 'perigo';
   
   let confirmado = false;
   if (typeof window.mostrarConfirmacaoCustomizada === 'function') {
-    confirmado = await window.mostrarConfirmacaoCustomizada(mensagem);
+    confirmado = await window.mostrarConfirmacaoCustomizada(mensagem, tipoModal);
   } else {
     confirmado = confirm(mensagem);
   }

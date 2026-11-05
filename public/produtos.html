@@ -474,11 +474,11 @@
     </div>
   </div>
 
-  <!-- MODAL DE CONFIRMAÇÃO PERSONALIZADO (Substitui o window.confirm nativo) -->
+  <!-- MODAL DE CONFIRMAÇÃO PERSONALIZADO (Com diferenciação visual para sucesso ou perigo) -->
   <div id="modalConfirmacaoCustom" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs hidden">
     <div id="modalConfirmacaoContent" class="bg-white dark:bg-[#121E1A] border border-slate-200 dark:border-[#1C2C26] rounded-2xl p-6 w-full max-w-md shadow-2xl transform scale-95 opacity-0 transition-all duration-200">
       <div class="flex items-center space-x-3 mb-4">
-        <div class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-200/50 dark:border-emerald-800/50">
+        <div class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-200/50 dark:border-emerald-800/50 transition-colors">
           <i class="fa-solid fa-circle-question text-lg"></i>
         </div>
         <div>
@@ -508,14 +508,16 @@
 
   <!-- Controlador estrito de abas e helper global de confirmação -->
   <script>
-    // Função global moderna para substituir o window.confirm
-    window.mostrarConfirmacaoCustomizada = function(mensagem) {
+    // Função global moderna com suporte a cores e ícones dinâmicos ('sucesso' ou 'perigo')
+    window.mostrarConfirmacaoCustomizada = function(mensagem, tipo = 'sucesso') {
       return new Promise((resolve) => {
         const modal = document.getElementById('modalConfirmacaoCustom');
         const content = document.getElementById('modalConfirmacaoContent');
         const texto = document.getElementById('modalConfirmacaoTexto');
         const btnSim = document.getElementById('btnAceitarConfirmacao');
         const btnNao = document.getElementById('btnCancelarConfirmacao');
+        const iconeContainer = modal?.querySelector('.w-10.h-10');
+        const iconeElemento = iconeContainer?.querySelector('i');
 
         if (!modal || !content) {
           resolve(confirm(mensagem)); // Fallback de segurança
@@ -523,6 +525,32 @@
         }
 
         if (texto) texto.textContent = mensagem;
+
+        // Modifica dinamicamente as cores e ícones entre Aprovação (sucesso) e Rejeição/Exclusão (perigo)
+        if (tipo === 'perigo') {
+          if (iconeContainer) {
+            iconeContainer.className = 'w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center border border-rose-200/50 dark:border-rose-800/50 transition-colors';
+          }
+          if (iconeElemento) {
+            iconeElemento.className = 'fa-solid fa-triangle-exclamation text-lg';
+          }
+          if (btnSim) {
+            btnSim.className = 'px-4 py-2 rounded-xl text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 transition-colors shadow-lg shadow-rose-900/20 cursor-pointer';
+            btnSim.textContent = 'Confirmar Rejeição';
+          }
+        } else {
+          if (iconeContainer) {
+            iconeContainer.className = 'w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-200/50 dark:border-emerald-800/50 transition-colors';
+          }
+          if (iconeElemento) {
+            iconeElemento.className = 'fa-solid fa-circle-question text-lg';
+          }
+          if (btnSim) {
+            btnSim.className = 'px-4 py-2 rounded-xl text-xs font-semibold text-white bg-[#236E50] hover:bg-[#1b5840] transition-colors shadow-lg shadow-emerald-900/20 cursor-pointer';
+            btnSim.textContent = 'Confirmar Aprovação';
+          }
+        }
+
         modal.classList.remove('hidden');
         
         setTimeout(() => {
