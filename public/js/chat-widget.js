@@ -166,10 +166,10 @@
       if (permitirPdf) {
         htmlConteudo += `
           <div class="mt-3 pt-2 border-t border-slate-200 dark:border-[#1C2C26]">
-            <a href="/api/relatorios/exportar-pdf" target="_blank" class="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-[#0F392B] dark:bg-emerald-600 text-white rounded-xl text-[10px] font-semibold hover:opacity-90 transition-opacity">
+            <button type="button" onclick="baixarRelatorioInventarioPDF()" class="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-[#0F392B] dark:bg-emerald-600 text-white rounded-xl text-[10px] font-semibold hover:opacity-90 transition-opacity cursor-pointer">
               <i class="fa-solid fa-file-pdf"></i>
               <span>Baixar Relatório em PDF</span>
-            </a>
+            </button>
           </div>
         `;
       }
@@ -203,4 +203,131 @@
     formatado = formatado.replace(/\n/g, '<br>');
     return formatado;
   }
+
+  // Função para carregar o jsPDF sob demanda e gerar o PDF do inventário diretamente no navegador
+  async function carregarJsPDFSeNecessarioChat() {
+    if (window.jspdf && window.jspdf.jsPDF) return window.jspdf.jsPDF;
+
+    return new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+      script.onload = () => resolve(window.jspdf.jsPDF);
+      script.onerror = () => reject(new Error('Falha ao carregar biblioteca de PDF.'));
+      document.head.appendChild(script);
+    });
+  }
+
+  async function baixarRelatorioInventarioPDF() {
+    try {
+      const token =
+        localStorage.getItem('token') ||
+        localStorage.getItem('access_token') ||
+        localStorage.getItem('nexus_token');
+
+      const res = await fetch('/api/produtos', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!res.ok) throw new Error('Falha ao obter dados do inventário.');
+
+      const todosProdutos = await res.json();
+      const produtos = (Array.isArray(todosProdutos) ? todosProdutos : []).filter((p) => {
+        const status = String(p.status || p.estado || '').toLowerCase();
+        return status === 'aprovado' || status === 'ativo' || p.aprovado === true || !p.status;
+      });
+
+      const jsPDF = await carregarJsPDFSeNecessarioChat();
+      const doc = new jsPDF();
+
+      const dataAtual = new Date().toLocaleString('pt-BR');
+      let totalUnidades = 0;
+      let valorTotalEstoque = 0;
+
+      produtos.forEach((p) => {
+        const qtd = Number(p.estoque ?? p.quantidade ?? 0);
+        const preco = Number(p.preco_venda ?? p.preco ?? 0);
+        totalUnidades += qtd;
+        valorTotalEstoque += qtd * preco;
+      });
+
+      // Cabeçalho Institucional Nexus Controller
+      doc.setFillColor(15, 57, 43); // #0F392B
+      doc.rect(0, 0, 210, 32, 'F');
+
+      doc.setTextColor(255, 255, 255);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(15);
+      doc.text('NEXUS CONTROLLER - RELATORIO DE INVENTARIO', 14, 16);
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      doc.text(`Gerado em: ${dataAtual}`, 14, 24);
+
+      // Resumo Geral
+      doc.setTextColor(30, 41, 59);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(12);
+      doc.text('Resumo Geral do Estoque', 14, 44);
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
+      doc.text(`• Total de Itens Cadastrados: ${produtos.length}`, 14, 52);
+      doc.text(`• Estoque Total Fisico: ${totalUnidades} unidades`, 14, 58);
+      doc.text(
+        `• Valor Estimado em Estoque: R$ ${valorTotalEstoque.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+        14,
+        64
+      );
+
+      // Linha divisória
+      doc.setDrawColor(203, 213, 225);
+      doc.line(14, 70, 196, 70);
+
+      // Cabeçalho da Tabela
+      let y = 80;
+      doc.setFillColor(241, 245, 249);
+      doc.rect(14, y - 6, 182, 8, 'F');
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9);
+      doc.text('PRODUTO', 16, y);
+      doc.text('CATEGORIA', 90, y);
+      doc.text('QTD', 135, y);
+      doc.text('PRECO UN.', 155, y);
+      doc.text('SUBTOTAL', 178, y);
+
+      y += 8;
+      doc.setFont('helvetica', 'normal');
+
+      produtos.forEach((p) => {
+        if (y > 275) {
+          doc.addPage();
+          y = 20;
+        }
+
+        const nome = String(p.nome || 'Sem nome').substring(0, 38);
+        const categoria = String(p.categoria || p.categorias?.nome || 'Geral').substring(0, 20);
+        const qtd = Number(p.estoque ?? p.quantidade ?? 0);
+        const preco = Number(p.preco_venda ?? p.preco ?? 0);
+        const subtotal = qtd * preco;
+
+        doc.text(nome, 16, y);
+        doc.text(categoria, 90, y);
+        doc.text(`${qtd} un.`, 135, y);
+        doc.text(`R$ ${preco.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, 155, y);
+        doc.text(`R$ ${subtotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, 178, y);
+
+        y += 7;
+      });
+
+      doc.save(`relatorio-inventario-nexus-${new Date().toISOString().slice(0, 10)}.pdf`);
+    } catch (error) {
+      console.error('Erro ao gerar PDF:', error);
+      alert('Não foi possível gerar o relatório em PDF no momento.');
+    }
+  }
+  window.baixarRelatorioInventarioPDF = baixarRelatorioInventarioPDF;
 })();
