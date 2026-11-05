@@ -420,7 +420,7 @@
     </main>
   </div>
 
-  <!-- MODAL DE CADASTRO / EDIÇÃO -->
+  <!-- MODAL DE CADASTRO / EDIÇÃO DE PRODUTO -->
   <div id="modalProduto" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
     <div class="bg-white dark:bg-[#121E1A] w-full max-w-lg rounded-2xl shadow-xl border border-slate-100 dark:border-[#1C2C26] overflow-hidden">
       <div class="px-6 py-4 border-b border-slate-100 dark:border-[#1C2C26] flex items-center justify-between">
@@ -486,6 +486,73 @@
         <div class="pt-4 border-t border-slate-100 dark:border-[#1C2C26] flex items-center justify-end space-x-2">
           <button type="button" id="btnCancelarModal" class="px-4 py-2 font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#172722] rounded-xl cursor-pointer">Cancelar</button>
           <button type="submit" class="px-4 py-2 font-semibold text-white bg-[#0F392B] hover:bg-[#0a271d] rounded-xl shadow-xs cursor-pointer">Salvar Produto</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL DE NOVA SOLICITAÇÃO DE REPOSIÇÃO -->
+  <div id="modalSolicitacao" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-white dark:bg-[#121E1A] w-full max-w-lg rounded-2xl shadow-xl border border-slate-100 dark:border-[#1C2C26] overflow-hidden">
+      <div class="px-6 py-4 border-b border-slate-100 dark:border-[#1C2C26] flex items-center justify-between">
+        <h3 class="text-base font-bold text-slate-800 dark:text-slate-100">Nova Solicitação de Reposição</h3>
+        <button id="btnFecharModalSol" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg cursor-pointer">
+          <i class="fa-solid fa-xmark text-base"></i>
+        </button>
+      </div>
+      <form id="formSolicitacao" class="p-6 space-y-4 text-xs">
+        
+        <!-- Seletor Personalizado de Produto -->
+        <div class="relative">
+          <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Produto *</label>
+          <input type="hidden" id="solProdutoId" required />
+          <button type="button" id="btnToggleCustomSelect" class="w-full px-3 py-2 border border-slate-200 dark:border-[#1C2C26] rounded-xl bg-white dark:bg-[#14231E] text-left flex items-center justify-between cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#0F392B]">
+            <span id="textoProdutoSelecionado" class="truncate text-slate-400">Selecione o produto...</span>
+            <i id="iconeSetaSelect" class="fa-solid fa-chevron-down text-slate-400 transition-transform text-[10px]"></i>
+          </button>
+          <div id="dropdownCustomOptions" class="absolute left-0 right-0 mt-1 bg-white dark:bg-[#121E1A] border border-slate-200 dark:border-[#1C2C26] rounded-xl shadow-xl hidden z-50 max-h-48 overflow-y-auto divide-y divide-slate-100 dark:divide-[#1C2C26]">
+            <!-- Preenchido via JS -->
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label for="solQuantidade" class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Quantidade *</label>
+            <input type="number" min="1" id="solQuantidade" required value="1" placeholder="Ex: 10"
+              class="w-full px-3 py-2 border border-slate-200 dark:border-[#1C2C26] rounded-xl bg-white dark:bg-[#14231E] text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#0F392B]" />
+          </div>
+
+          <!-- Seletor Personalizado de Prioridade -->
+          <div class="relative">
+            <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Prioridade</label>
+            <input type="hidden" id="solPrioridade" value="media" />
+            <button type="button" id="btnToggleCustomPrioridade" class="w-full px-3 py-2 border border-slate-200 dark:border-[#1C2C26] rounded-xl bg-white dark:bg-[#14231E] text-left flex items-center justify-between cursor-pointer focus:outline-none">
+              <span id="textoPrioridadeSelecionada" class="text-slate-800 dark:text-slate-100 font-medium">Média</span>
+              <i id="iconeSetaPrioridade" class="fa-solid fa-chevron-down text-slate-400 transition-transform text-[10px]"></i>
+            </button>
+            <div id="dropdownCustomOptionsPrioridade" class="absolute left-0 right-0 mt-1 bg-white dark:bg-[#121E1A] border border-slate-200 dark:border-[#1C2C26] rounded-xl shadow-xl hidden z-50 divide-y divide-slate-100 dark:divide-[#1C2C26]">
+              <div class="p-2.5 hover:bg-slate-50 dark:hover:bg-[#15241F] transition-colors cursor-pointer item-opcao-prioridade" data-valor="baixa">Baixa</div>
+              <div class="p-2.5 hover:bg-slate-50 dark:hover:bg-[#15241F] transition-colors cursor-pointer item-opcao-prioridade" data-valor="media">Média</div>
+              <div class="p-2.5 hover:bg-slate-50 dark:hover:bg-[#15241F] transition-colors cursor-pointer item-opcao-prioridade" data-valor="alta">Alta</div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label for="solSolicitante" class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Solicitante</label>
+          <input type="text" id="solSolicitante" readonly
+            class="w-full px-3 py-2 bg-slate-50 dark:bg-[#14231E]/60 border border-slate-200 dark:border-[#1C2C26] rounded-xl text-slate-500 dark:text-slate-400 focus:outline-none" />
+        </div>
+
+        <div>
+          <label for="solObservacao" class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Observação</label>
+          <textarea id="solObservacao" rows="2" placeholder="Motivo da reposição (opcional)..."
+            class="w-full px-3 py-2 border border-slate-200 dark:border-[#1C2C26] rounded-xl bg-white dark:bg-[#14231E] text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#0F392B] resize-none"></textarea>
+        </div>
+
+        <div class="pt-4 border-t border-slate-100 dark:border-[#1C2C26] flex items-center justify-end space-x-2">
+          <button type="button" id="btnCancelarModalSol" class="px-4 py-2 font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#172722] rounded-xl cursor-pointer">Cancelar</button>
+          <button type="submit" class="px-4 py-2 font-semibold text-white bg-[#0F392B] hover:bg-[#0a271d] rounded-xl shadow-xs cursor-pointer">Enviar Solicitação</button>
         </div>
       </form>
     </div>
