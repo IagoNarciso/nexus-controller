@@ -264,11 +264,11 @@ async function inicializarPaginaProdutos() {
 
   setupTopbarDropdowns();
   setupAbasNavegacao();
+  setupListenersLote();
 
   await carregarFornecedoresSugestao();
   await carregarProdutos();
   
-  // Operadores não precisam carregar produtos pendentes se não têm acesso à aba
   let userObj = {};
   try {
     userObj = JSON.parse(localStorage.getItem('nexus_user') || '{}');
@@ -561,7 +561,6 @@ async function carregarProdutos() {
         const custoMeta = Number(meta.preco_custo ?? 0);
         const precoCustoReal = custoBanco > 0 ? custoBanco : custoMeta;
 
-        // Sincroniza o ID do produto no cache local caso tenha sido salvo apenas por SKU ou nome
         if (precoCustoReal > 0 && p.id) {
           salvarMetaLocalProduto(p.id, {
             preco_custo: precoCustoReal,
@@ -616,8 +615,8 @@ async function renderizarTabelaAprovacoes(pendentes) {
   const badgeSolicitacoes = document.getElementById('badgeTabSolicitacoes');
   const badgeMenuProdutos = document.getElementById('badgeMenuProdutos');
   const secaoAprovacoes = document.getElementById('secaoAprovacoes');
+  const containerAcoesLote = document.getElementById('containerAcoesEmMassa');
 
-  // Verifica se é operador para forçar a ocultação do badge na sidebar
   let userObj = {};
   try {
     userObj = JSON.parse(localStorage.getItem('nexus_user') || '{}');
@@ -631,6 +630,15 @@ async function renderizarTabelaAprovacoes(pendentes) {
   }
 
   const qtdAprovacoes = Array.isArray(pendentes) ? pendentes.length : 0;
+
+  // Exibe ou oculta os botões de ação em massa no topo da secção
+  if (containerAcoesLote) {
+    if (qtdAprovacoes > 0) {
+      containerAcoesLote.classList.remove('hidden');
+    } else {
+      containerAcoesLote.classList.add('hidden');
+    }
+  }
 
   let qtdSolicitacoes = 0;
   try {
@@ -657,7 +665,6 @@ async function renderizarTabelaAprovacoes(pendentes) {
   }
 
   const totalGeralPendentes = qtdAprovacoes + qtdSolicitacoes;
-
   localStorage.setItem('nexus_pendentes_cache', totalGeralPendentes);
 
   if (badgeAprovacoes) {
@@ -741,7 +748,6 @@ async function moderarProduto(id, novoStatus) {
   const isAprovacao = novoStatus === 'aprovado';
   const acaoTexto = isAprovacao ? 'aprovar' : 'rejeitar';
 
-  // Utiliza o modal customizado unificado do HTML passando o tipo correto ('sucesso' ou 'perigo')
   const mensagem = `Deseja realmente ${acaoTexto} este produto?`;
   const tipoModal = isAprovacao ? 'sucesso' : 'perigo';
   
@@ -755,6 +761,60 @@ async function moderarProduto(id, novoStatus) {
   if (!confirmado) return;
 
   await executarModeracao(id, novoStatus);
+}
+
+// Configuração dos ouvintes de eventos para Ação em Massa (Lote)
+function setupListenersLote() {
+  const btnAprovarLote = document.getElementById('btnAprovarLote');
+  const btnRejeitarLote = document.getElementById('btnRejeitarLote');
+
+  btnAprovarLote?.addEventListener('click', () => moderarLoteProdutos('aprovado'));
+  btnRejeitarLote?.addEventListener('click', () => moderarLoteProdutos('rejeitado'));
+}
+
+async function moderarLoteProdutos(novoStatus) {
+  if (!produtosPendentesCache || produtosPendentesCache.length === 0) {
+    mostrarNotificacaoToast('Não há produtos pendentes para processar.', 'erro');
+    return;
+  }
+
+  const inputQtd = document.getElementById('inputQtdLote');
+  const quantidadeDesejada = parseInt(inputQtd?.value, 10) || produtosPendentesCache.length;
+  const itensParaProcessar = produtosPendentesCache.slice(0, quantidadeDesejada);
+
+  const isAprovacao = novoStatus === 'aprovado';
+  const acaoTexto = isAprovacao ? 'aprovar' : 'rejeitar';
+  const tipoModal = isAprovacao ? 'sucesso' : 'perigo';
+
+  const mensagem = `Deseja realmente ${acaoTexto} um lote de ${itensParaProcessar.length} produto(s) pendente(s)?`;
+
+  let confirmado = false;
+  if (typeof window.mostrarConfirmacaoCustomizada === 'function') {
+    confirmado = await window.mostrarConfirmacaoCustomizada(mensagem, tipoModal);
+  } else {
+    confirmado = confirm(mensagem);
+  }
+
+  if (!confirmado) return;
+
+  let sucessos = 0;
+  for (const item of itensParaProcessar) {
+    try {
+      const res = await fetchSeguraProdutos(`/api/produtos/${item.id}/status`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status: novoStatus })
+      });
+      if (res && res.ok) sucessos++;
+    } catch (e) {
+      console.error(`Erro ao processar item ${item.id}:`, e);
+    }
+  }
+
+  const acaoMsg = isAprovacao ? 'aprovados' : 'rejeitados';
+  mostrarNotificacaoToast(`${sucessos} de ${itensParaProcessar.length} produtos ${acaoMsg} com sucesso!`, 'sucesso');
+
+  await carregarProdutos();
+  await carregarProdutosPendentes();
 }
 
 async function executarModeracao(id, novoStatus) {
@@ -1108,7 +1168,6 @@ function setupModalEvents() {
     const inputMinTexto = (document.getElementById('prodEstoqueMinimo')?.value || '').trim();
     const estoqueMinVal = inputMinTexto !== '' ? Math.max(1, parseInt(inputMinTexto) || 12) : 12;
 
-    // Identifica se quem está a cadastrar é operador para definir status pendente de aprovação
     let userObj = {};
     try {
       userObj = JSON.parse(localStorage.getItem('nexus_user') || '{}');
