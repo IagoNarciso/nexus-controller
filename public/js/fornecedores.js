@@ -254,7 +254,7 @@ function abrirDetalhesFornecedor(id) {
   if (elAvatar) elAvatar.textContent = iniciais;
   if (elNome) elNome.textContent = nomeSeguro;
   if (elSubtitulo) {
-    elSubtitulo.textContent = `${f.categoria || 'Sem categoria'} - ${f.cidade_estado || 'Não informada'}`;
+    elSubtitulo.textContent = `${f.categoria || 'Sem categoria'} • ${f.cidade_estado || 'Não informada'}`;
   }
 
   const badgeStatus = document.getElementById('detalheStatusBadge');
@@ -442,6 +442,7 @@ function abrirEdicaoFornecedor(f) {
   const fornecedorId = f.id || f._id;
 
   const btnSubmit = document.getElementById('btnSalvarForn');
+  const textoOriginalBotao = btnSubmit ? btnSubmit.textContent : 'Salvar';
   if (btnSubmit) btnSubmit.textContent = 'Salvar';
 
   document.getElementById('fornNome').value = f.nome || '';
@@ -457,6 +458,13 @@ function abrirEdicaoFornecedor(f) {
 
   form.onsubmit = async (e) => {
     e.preventDefault();
+
+    // Proteção contra múltiplos cliques na edição
+    if (btnSubmit) {
+      btnSubmit.disabled = true;
+      btnSubmit.classList.add('opacity-75', 'cursor-not-allowed');
+      btnSubmit.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Salvando...`;
+    }
 
     const payload = {
       nome: document.getElementById('fornNome')?.value,
@@ -477,7 +485,14 @@ function abrirEdicaoFornecedor(f) {
         body: JSON.stringify(payload)
       });
 
-      if (!res) return;
+      if (!res) {
+        if (btnSubmit) {
+          btnSubmit.disabled = false;
+          btnSubmit.classList.remove('opacity-75', 'cursor-not-allowed');
+          btnSubmit.textContent = textoOriginalBotao;
+        }
+        return;
+      }
 
       if (!res.ok) throw new Error('Erro ao atualizar fornecedor');
 
@@ -486,6 +501,12 @@ function abrirEdicaoFornecedor(f) {
     } catch (err) {
       console.error('Erro ao editar:', err);
       alert('Erro ao atualizar o fornecedor.');
+    } finally {
+      if (btnSubmit) {
+        btnSubmit.disabled = false;
+        btnSubmit.classList.remove('opacity-75', 'cursor-not-allowed');
+        btnSubmit.textContent = textoOriginalBotao;
+      }
     }
   };
 
@@ -505,11 +526,20 @@ function setupModalEvents() {
     form?.reset();
 
     const btnSubmit = document.getElementById('btnSalvarForn');
+    const textoOriginalBotao = btnSubmit ? btnSubmit.textContent : 'Adicionar fornecedor';
     if (btnSubmit) btnSubmit.textContent = 'Adicionar fornecedor';
 
     if (form) {
       form.onsubmit = async (e) => {
         e.preventDefault();
+
+        // Proteção contra múltiplos cliques no cadastro
+        if (btnSubmit) {
+          btnSubmit.disabled = true;
+          btnSubmit.classList.add('opacity-75', 'cursor-not-allowed');
+          btnSubmit.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Salvando...`;
+        }
+
         const payload = {
           nome: document.getElementById('fornNome')?.value,
           categoria: document.getElementById('fornCategoria')?.value || '',
@@ -530,11 +560,23 @@ function setupModalEvents() {
             body: JSON.stringify(payload)
           });
 
-          if (!res) return;
+          if (!res) {
+            if (btnSubmit) {
+              btnSubmit.disabled = false;
+              btnSubmit.classList.remove('opacity-75', 'cursor-not-allowed');
+              btnSubmit.textContent = textoOriginalBotao;
+            }
+            return;
+          }
 
           const data = await res.json();
           if (!res.ok) {
             alert(data.error || 'Erro ao cadastrar fornecedor.');
+            if (btnSubmit) {
+              btnSubmit.disabled = false;
+              btnSubmit.classList.remove('opacity-75', 'cursor-not-allowed');
+              btnSubmit.textContent = textoOriginalBotao;
+            }
             return;
           }
 
@@ -543,6 +585,12 @@ function setupModalEvents() {
         } catch (err) {
           console.error('Erro ao cadastrar fornecedor:', err);
           alert('Erro de comunicação com o servidor.');
+        } finally {
+          if (btnSubmit) {
+            btnSubmit.disabled = false;
+            btnSubmit.classList.remove('opacity-75', 'cursor-not-allowed');
+            btnSubmit.textContent = textoOriginalBotao;
+          }
         }
       };
     }
