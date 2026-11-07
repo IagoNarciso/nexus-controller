@@ -205,6 +205,8 @@ function setupDropdownFiltroPeriodo() {
   });
 }
 
+let isMarcandoTodasVistas = false;
+
 function setupBotoesNaoVistas() {
   const btnFiltro = document.getElementById('btnFiltroNaoVistas');
   const btnMarcarTodas = document.getElementById('btnMarcarTodasVistas');
@@ -223,7 +225,8 @@ function setupBotoesNaoVistas() {
 
   if (btnMarcarTodas) {
     btnMarcarTodas.addEventListener('click', async () => {
-      if (!listaMovimentacoesCache || listaMovimentacoesCache.length === 0) return;
+      if (isMarcandoTodasVistas || !listaMovimentacoesCache || listaMovimentacoesCache.length === 0) return;
+      isMarcandoTodasVistas = true;
 
       const pendentes = listaMovimentacoesCache.filter((m) => !m.lida);
       const todosIds = listaMovimentacoesCache.map((m) => String(m.id));
@@ -232,9 +235,11 @@ function setupBotoesNaoVistas() {
       salvarIdsVistosLocal(todosIds);
 
       // 2. Atualiza no banco de dados usando a rota individual existente para cada item não lido
-      if (pendentes.length > 0) {
-        btnMarcarTodas.disabled = true;
-        try {
+      btnMarcarTodas.disabled = true;
+      btnMarcarTodas.classList.add('opacity-75', 'cursor-not-allowed', 'pointer-events-none');
+
+      try {
+        if (pendentes.length > 0) {
           await Promise.all(
             pendentes.map((m) =>
               fetchSeguraMovimentacoes(`/api/movimentacoes/${m.id}/visualizar`, {
@@ -242,24 +247,26 @@ function setupBotoesNaoVistas() {
               }).catch(() => null)
             )
           );
-        } finally {
-          btnMarcarTodas.disabled = false;
         }
+
+        // 3. Atualiza o estado em memória e a interface
+        listaMovimentacoesCache.forEach((m) => {
+          m.lida = true;
+        });
+
+        if (filtroApenasNaoVistas) {
+          filtroApenasNaoVistas = false;
+          btnFiltro?.classList.remove('bg-emerald-50', 'dark:bg-emerald-950/50', 'border-emerald-300', 'dark:border-emerald-700', 'text-emerald-700', 'dark:text-emerald-300');
+        }
+
+        aplicarFiltroBuscaMovimentacoes();
+        await atualizarBadgeNaoLidas();
+        mostrarNotificacaoToastMov('Todas as movimentações foram marcadas como vistas!', 'sucesso');
+      } finally {
+        isMarcandoTodasVistas = false;
+        btnMarcarTodas.disabled = false;
+        btnMarcarTodas.classList.remove('opacity-75', 'cursor-not-allowed', 'pointer-events-none');
       }
-
-      // 3. Atualiza o estado em memória e a interface
-      listaMovimentacoesCache.forEach((m) => {
-        m.lida = true;
-      });
-
-      if (filtroApenasNaoVistas) {
-        filtroApenasNaoVistas = false;
-        btnFiltro?.classList.remove('bg-emerald-50', 'dark:bg-emerald-950/50', 'border-emerald-300', 'dark:border-emerald-700', 'text-emerald-700', 'dark:text-emerald-300');
-      }
-
-      aplicarFiltroBuscaMovimentacoes();
-      await atualizarBadgeNaoLidas();
-      mostrarNotificacaoToastMov('Todas as movimentações foram marcadas como vistas!', 'sucesso');
     });
   }
 }
@@ -569,6 +576,8 @@ async function visualizarMovimentacao(id) {
 }
 window.visualizarMovimentacao = visualizarMovimentacao;
 
+let isSubmittingMovimentacao = false;
+
 function setupMovimentacaoEvents() {
   const modal = document.getElementById('modalMovimentacao');
   const btnAbrir = document.getElementById('btnNovaMovimentacao');
@@ -604,7 +613,7 @@ function setupMovimentacaoEvents() {
         <div class="p-3 hover:bg-slate-50 dark:hover:bg-[#15241F] transition-colors cursor-pointer flex items-center justify-between item-opcao-produto-mov"
           data-id="${p.id}" data-nome="${p.nome}" data-estoque="${estoque}" data-preco="${p.preco_venda || 0}">
           <span class="font-medium text-slate-800 dark:text-slate-200">${p.nome}</span>
-          <span class="text-[10px] px-2 py-0.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/50">Stock: ${estoque} un.</span>
+          <span class="text-[10px] px-2 py-0.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/50">Estoque: ${estoque} un.</span>
         </div>
       `;
       })
@@ -620,7 +629,7 @@ function setupMovimentacaoEvents() {
 
         if (inputHiddenId) inputHiddenId.value = id;
         if (textoSelecionado) {
-          textoSelecionado.textContent = `${nome} (Stock: ${estoque} un.)`;
+          textoSelecionado.textContent = `${nome} (Estoque: ${estoque} un.)`;
           textoSelecionado.className = 'truncate text-slate-800 dark:text-slate-100 font-medium';
         }
 
@@ -712,10 +721,24 @@ function setupMovimentacaoEvents() {
   form?.addEventListener('submit', async (e) => {
     e.preventDefault();
 
+    // Trava lógica imediata contra múltiplos cliques
+    if (isSubmittingMovimentacao) return;
+
     const produto_id = inputHiddenId?.value;
     if (!produto_id) {
       alert('Por favor, selecione um produto.');
       return;
+    }
+
+    isSubmittingMovimentacao = true;
+
+    const btnSubmitModal = form.querySelector('button[type="submit"]');
+    const textoOriginalBotao = btnSubmitModal ? btnSubmitModal.innerHTML : 'Confirmar Registo';
+
+    if (btnSubmitModal) {
+      btnSubmitModal.disabled = true;
+      btnSubmitModal.classList.add('opacity-75', 'cursor-not-allowed', 'pointer-events-none');
+      btnSubmitModal.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Registrando...`;
     }
 
     const tipo = document.querySelector('input[name="movTipo"]:checked')?.value;
@@ -753,6 +776,13 @@ function setupMovimentacaoEvents() {
     } catch (err) {
       console.error('Erro no envio da movimentação:', err);
       alert('Falha na comunicação com o servidor.');
+    } finally {
+      isSubmittingMovimentacao = false;
+      if (btnSubmitModal) {
+        btnSubmitModal.disabled = false;
+        btnSubmitModal.classList.remove('opacity-75', 'cursor-not-allowed', 'pointer-events-none');
+        btnSubmitModal.innerHTML = textoOriginalBotao;
+      }
     }
   });
 }

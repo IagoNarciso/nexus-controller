@@ -631,7 +631,6 @@ async function renderizarTabelaAprovacoes(pendentes) {
 
   const qtdAprovacoes = Array.isArray(pendentes) ? pendentes.length : 0;
 
-  // Exibe ou oculta os botões de ação em massa no topo da secção
   if (containerAcoesLote) {
     if (qtdAprovacoes > 0) {
       containerAcoesLote.classList.remove('hidden');
@@ -744,7 +743,11 @@ async function renderizarTabelaAprovacoes(pendentes) {
     .join('');
 }
 
+let isModerandoProduto = false;
+
 async function moderarProduto(id, novoStatus) {
+  if (isModerandoProduto) return;
+
   const isAprovacao = novoStatus === 'aprovado';
   const acaoTexto = isAprovacao ? 'aprovar' : 'rejeitar';
 
@@ -760,10 +763,14 @@ async function moderarProduto(id, novoStatus) {
 
   if (!confirmado) return;
 
-  await executarModeracao(id, novoStatus);
+  isModerandoProduto = true;
+  try {
+    await executarModeracao(id, novoStatus);
+  } finally {
+    isModerandoProduto = false;
+  }
 }
 
-// Configuração dos ouvintes de eventos para Ação em Massa (Lote)
 function setupListenersLote() {
   const btnAprovarLote = document.getElementById('btnAprovarLote');
   const btnRejeitarLote = document.getElementById('btnRejeitarLote');
@@ -772,7 +779,11 @@ function setupListenersLote() {
   btnRejeitarLote?.addEventListener('click', () => moderarLoteProdutos('rejeitado'));
 }
 
+let isModerandoLote = false;
+
 async function moderarLoteProdutos(novoStatus) {
+  if (isModerandoLote) return;
+
   if (!produtosPendentesCache || produtosPendentesCache.length === 0) {
     mostrarNotificacaoToast('Não há produtos pendentes para processar.', 'erro');
     return;
@@ -797,24 +808,29 @@ async function moderarLoteProdutos(novoStatus) {
 
   if (!confirmado) return;
 
+  isModerandoLote = true;
   let sucessos = 0;
-  for (const item of itensParaProcessar) {
-    try {
-      const res = await fetchSeguraProdutos(`/api/produtos/${item.id}/status`, {
-        method: 'PATCH',
-        body: JSON.stringify({ status: novoStatus })
-      });
-      if (res && res.ok) sucessos++;
-    } catch (e) {
-      console.error(`Erro ao processar item ${item.id}:`, e);
+  try {
+    for (const item of itensParaProcessar) {
+      try {
+        const res = await fetchSeguraProdutos(`/api/produtos/${item.id}/status`, {
+          method: 'PATCH',
+          body: JSON.stringify({ status: novoStatus })
+        });
+        if (res && res.ok) sucessos++;
+      } catch (e) {
+        console.error(`Erro ao processar item ${item.id}:`, e);
+      }
     }
+
+    const acaoMsg = isAprovacao ? 'aprovados' : 'rejeitados';
+    mostrarNotificacaoToast(`${sucessos} de ${itensParaProcessar.length} produtos ${acaoMsg} com sucesso!`, 'sucesso');
+
+    await carregarProdutos();
+    await carregarProdutosPendentes();
+  } finally {
+    isModerandoLote = false;
   }
-
-  const acaoMsg = isAprovacao ? 'aprovados' : 'rejeitados';
-  mostrarNotificacaoToast(`${sucessos} de ${itensParaProcessar.length} produtos ${acaoMsg} com sucesso!`, 'sucesso');
-
-  await carregarProdutos();
-  await carregarProdutosPendentes();
 }
 
 async function executarModeracao(id, novoStatus) {
@@ -1116,6 +1132,8 @@ function atualizarPreviewMargemModal() {
       : 'text-[10px] font-bold text-rose-600 dark:text-rose-400';
 }
 
+let isSubmittingProduto = false;
+
 function setupModalEvents() {
   const modal = document.getElementById('modalProduto');
   const btnNovo = document.getElementById('btnNovoProduto');
@@ -1149,6 +1167,19 @@ function setupModalEvents() {
 
   form?.addEventListener('submit', async (e) => {
     e.preventDefault();
+
+    // Trava lógica imediata contra múltiplos cliques
+    if (isSubmittingProduto) return;
+    isSubmittingProduto = true;
+
+    const btnSubmitModal = form.querySelector('button[type="submit"]');
+    const textoOriginalBotao = btnSubmitModal ? btnSubmitModal.innerHTML : 'Salvar Produto';
+
+    if (btnSubmitModal) {
+      btnSubmitModal.disabled = true;
+      btnSubmitModal.classList.add('opacity-75', 'cursor-not-allowed', 'pointer-events-none');
+      btnSubmitModal.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Salvando...`;
+    }
 
     const id = document.getElementById('prodId').value;
     const nomeProduto = document.getElementById('prodNome').value.trim();
@@ -1198,7 +1229,9 @@ function setupModalEvents() {
         body: JSON.stringify(bodyData)
       });
 
-      if (!res) return;
+      if (!res) {
+        return;
+      }
 
       const responseData = await res.json().catch(() => ({}));
 
@@ -1235,6 +1268,14 @@ function setupModalEvents() {
       }
     } catch (err) {
       alert(`Erro: ${err.message}`);
+    } finally {
+      // Libera a trava lógica e restaura o botão ao estado original
+      isSubmittingProduto = false;
+      if (btnSubmitModal) {
+        btnSubmitModal.disabled = false;
+        btnSubmitModal.classList.remove('opacity-75', 'cursor-not-allowed', 'pointer-events-none');
+        btnSubmitModal.innerHTML = textoOriginalBotao;
+      }
     }
   });
 }
@@ -1306,12 +1347,20 @@ function fecharModalConfirmacao() {
   if (modal) modal.classList.add('hidden');
 }
 
+let isExcluindoProduto = false;
+
 function setupConfirmacaoExclusao() {
   const btnConfirmar = document.getElementById('btnConfirmarExclusaoAcao');
   if (!btnConfirmar) return;
 
   btnConfirmar.addEventListener('click', async () => {
-    if (!produtoParaExcluirId) return;
+    if (!produtoParaExcluirId || isExcluindoProduto) return;
+    isExcluindoProduto = true;
+
+    const textoOriginal = btnConfirmar.innerHTML;
+    btnConfirmar.disabled = true;
+    btnConfirmar.classList.add('opacity-75', 'cursor-not-allowed', 'pointer-events-none');
+    btnConfirmar.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Excluindo...`;
 
     try {
       const res = await fetchSeguraProdutos(`/api/produtos/${produtoParaExcluirId}`, {
@@ -1332,6 +1381,11 @@ function setupConfirmacaoExclusao() {
     } catch (err) {
       alert('Ocorreu um erro de comunicação com o servidor.');
       fecharModalConfirmacao();
+    } finally {
+      isExcluindoProduto = false;
+      btnConfirmar.disabled = false;
+      btnConfirmar.classList.remove('opacity-75', 'cursor-not-allowed', 'pointer-events-none');
+      btnConfirmar.innerHTML = textoOriginal;
     }
   });
 }

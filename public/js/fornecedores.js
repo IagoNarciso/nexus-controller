@@ -1,6 +1,8 @@
 let isRedirectingFornecedores = false;
 let listaFornecedoresGlobal = [];
 let filtroStatusAtual = 'todos';
+let isSubmittingFornecedor = false;
+let isProcessandoAcaoFornecedor = false;
 
 // Função centralizada para requisições autenticadas e prevenção de loop 401
 async function fetchSeguraFornecedores(url, options = {}) {
@@ -366,6 +368,8 @@ function mostrarModalConfirmacaoPersonalizado(
 }
 
 async function alternarStatusFornecedor(id, novoStatus) {
+  if (isProcessandoAcaoFornecedor) return;
+
   const acaoTxt = novoStatus ? 'ativar' : 'desativar';
   const titulo = novoStatus ? 'Ativar Fornecedor' : 'Desativar Fornecedor';
   const corBtn = novoStatus ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-amber-600 hover:bg-amber-700';
@@ -379,6 +383,7 @@ async function alternarStatusFornecedor(id, novoStatus) {
 
   if (!confirmado) return;
 
+  isProcessandoAcaoFornecedor = true;
   try {
     const fornecedorId = id || (window.fAtual && window.fAtual.id);
 
@@ -400,10 +405,14 @@ async function alternarStatusFornecedor(id, novoStatus) {
   } catch (err) {
     console.error('Erro ao atualizar status:', err);
     alert(`Erro ao alterar o status: ${err.message}`);
+  } finally {
+    isProcessandoAcaoFornecedor = false;
   }
 }
 
 async function excluirFornecedorDefinitivo(id) {
+  if (isProcessandoAcaoFornecedor) return;
+
   const confirmado = await mostrarModalConfirmacaoPersonalizado(
     'Excluir Permanentemente',
     'Deseja realmente excluir permanentemente este fornecedor? Esta ação não pode ser desfeita.',
@@ -413,6 +422,7 @@ async function excluirFornecedorDefinitivo(id) {
 
   if (!confirmado) return;
 
+  isProcessandoAcaoFornecedor = true;
   try {
     const res = await fetchSeguraFornecedores(`/api/fornecedores/${id}`, {
       method: 'DELETE'
@@ -427,6 +437,8 @@ async function excluirFornecedorDefinitivo(id) {
   } catch (err) {
     console.error('Erro ao excluir:', err);
     alert('Erro ao excluir o fornecedor.');
+  } finally {
+    isProcessandoAcaoFornecedor = false;
   }
 }
 
@@ -438,12 +450,17 @@ function abrirEdicaoFornecedor(f) {
   if (!modal || !form) return;
 
   form.reset();
+  isSubmittingFornecedor = false;
 
   const fornecedorId = f.id || f._id;
 
-  const btnSubmit = document.getElementById('btnSalvarForn');
-  const textoOriginalBotao = btnSubmit ? btnSubmit.textContent : 'Salvar';
-  if (btnSubmit) btnSubmit.textContent = 'Salvar';
+  const btnSubmit = document.getElementById('btnSalvarForn') || form.querySelector('button[type="submit"]');
+  const textoOriginalBotao = 'Salvar';
+  if (btnSubmit) {
+    btnSubmit.disabled = false;
+    btnSubmit.classList.remove('opacity-75', 'cursor-not-allowed', 'pointer-events-none');
+    btnSubmit.textContent = textoOriginalBotao;
+  }
 
   document.getElementById('fornNome').value = f.nome || '';
   document.getElementById('fornCategoria').value = f.categoria || '';
@@ -459,10 +476,13 @@ function abrirEdicaoFornecedor(f) {
   form.onsubmit = async (e) => {
     e.preventDefault();
 
-    // Proteção contra múltiplos cliques na edição
+    // Trava lógica imediata contra múltiplos cliques na edição
+    if (isSubmittingFornecedor) return;
+    isSubmittingFornecedor = true;
+
     if (btnSubmit) {
       btnSubmit.disabled = true;
-      btnSubmit.classList.add('opacity-75', 'cursor-not-allowed');
+      btnSubmit.classList.add('opacity-75', 'cursor-not-allowed', 'pointer-events-none');
       btnSubmit.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Salvando...`;
     }
 
@@ -485,14 +505,7 @@ function abrirEdicaoFornecedor(f) {
         body: JSON.stringify(payload)
       });
 
-      if (!res) {
-        if (btnSubmit) {
-          btnSubmit.disabled = false;
-          btnSubmit.classList.remove('opacity-75', 'cursor-not-allowed');
-          btnSubmit.textContent = textoOriginalBotao;
-        }
-        return;
-      }
+      if (!res) return;
 
       if (!res.ok) throw new Error('Erro ao atualizar fornecedor');
 
@@ -502,9 +515,10 @@ function abrirEdicaoFornecedor(f) {
       console.error('Erro ao editar:', err);
       alert('Erro ao atualizar o fornecedor.');
     } finally {
+      isSubmittingFornecedor = false;
       if (btnSubmit) {
         btnSubmit.disabled = false;
-        btnSubmit.classList.remove('opacity-75', 'cursor-not-allowed');
+        btnSubmit.classList.remove('opacity-75', 'cursor-not-allowed', 'pointer-events-none');
         btnSubmit.textContent = textoOriginalBotao;
       }
     }
@@ -524,19 +538,27 @@ function setupModalEvents() {
 
   const abrir = () => {
     form?.reset();
+    isSubmittingFornecedor = false;
 
-    const btnSubmit = document.getElementById('btnSalvarForn');
-    const textoOriginalBotao = btnSubmit ? btnSubmit.textContent : 'Adicionar fornecedor';
-    if (btnSubmit) btnSubmit.textContent = 'Adicionar fornecedor';
+    const btnSubmit = document.getElementById('btnSalvarForn') || form?.querySelector('button[type="submit"]');
+    const textoOriginalBotao = 'Adicionar fornecedor';
+    if (btnSubmit) {
+      btnSubmit.disabled = false;
+      btnSubmit.classList.remove('opacity-75', 'cursor-not-allowed', 'pointer-events-none');
+      btnSubmit.textContent = textoOriginalBotao;
+    }
 
     if (form) {
       form.onsubmit = async (e) => {
         e.preventDefault();
 
-        // Proteção contra múltiplos cliques no cadastro
+        // Trava lógica imediata contra múltiplos cliques no cadastro
+        if (isSubmittingFornecedor) return;
+        isSubmittingFornecedor = true;
+
         if (btnSubmit) {
           btnSubmit.disabled = true;
-          btnSubmit.classList.add('opacity-75', 'cursor-not-allowed');
+          btnSubmit.classList.add('opacity-75', 'cursor-not-allowed', 'pointer-events-none');
           btnSubmit.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Salvando...`;
         }
 
@@ -560,23 +582,11 @@ function setupModalEvents() {
             body: JSON.stringify(payload)
           });
 
-          if (!res) {
-            if (btnSubmit) {
-              btnSubmit.disabled = false;
-              btnSubmit.classList.remove('opacity-75', 'cursor-not-allowed');
-              btnSubmit.textContent = textoOriginalBotao;
-            }
-            return;
-          }
+          if (!res) return;
 
           const data = await res.json();
           if (!res.ok) {
             alert(data.error || 'Erro ao cadastrar fornecedor.');
-            if (btnSubmit) {
-              btnSubmit.disabled = false;
-              btnSubmit.classList.remove('opacity-75', 'cursor-not-allowed');
-              btnSubmit.textContent = textoOriginalBotao;
-            }
             return;
           }
 
@@ -586,9 +596,10 @@ function setupModalEvents() {
           console.error('Erro ao cadastrar fornecedor:', err);
           alert('Erro de comunicação com o servidor.');
         } finally {
+          isSubmittingFornecedor = false;
           if (btnSubmit) {
             btnSubmit.disabled = false;
-            btnSubmit.classList.remove('opacity-75', 'cursor-not-allowed');
+            btnSubmit.classList.remove('opacity-75', 'cursor-not-allowed', 'pointer-events-none');
             btnSubmit.textContent = textoOriginalBotao;
           }
         }
