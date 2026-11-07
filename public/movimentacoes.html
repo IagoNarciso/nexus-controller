@@ -156,7 +156,7 @@
           </div>
         </div>
 
-        <!-- PERFIL DO UTILIZADOR -->
+        <!-- PERFIL DO USUÁRIO -->
         <div class="relative border-l border-slate-200 dark:border-[#1C2C26] pl-3">
           <button id="btnPerfilMenu" type="button" class="flex items-center space-x-3 pl-1 focus:outline-none cursor-pointer group">
             <div id="userAvatar"
@@ -187,13 +187,13 @@
     <!-- ÁREA CENTRAL DE CONTEÚDO -->
     <main class="p-8 space-y-6 max-w-7xl w-full mx-auto">
 
-      <!-- CABEÇALHO PADRONIZADO (IGUAL A FORNECEDORES) -->
+      <!-- CABEÇALHO PADRONIZADO (EXATAMENTE IGUAL A PRODUTOS E FORNECEDORES) -->
       <div class="space-y-4">
         
         <!-- Linha 1: Título e Botão de Ação Principal -->
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <p class="text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">HISTÓRICO DE ENTRADAS E SAÍDAS</p>
+            <p class="text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">GESTÃO DE ESTOQUE</p>
             <div class="flex items-baseline space-x-3 mt-1">
               <h1 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Movimentações</h1>
               <span id="totalMovimentacoesBadge" class="text-xs text-slate-400 font-medium">Carregando...</span>
@@ -208,29 +208,29 @@
           </button>
         </div>
 
-        <!-- Linha 2: Barra de Pesquisa em Bloco Único com Filtros e Período -->
+        <!-- Linha 2: Barra de Ferramentas Branca Padronizada -->
         <div class="bg-white dark:bg-[#121E1A] border border-slate-200/80 dark:border-[#1C2C26] p-4 rounded-2xl shadow-xs flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
           
-          <!-- Barra de Pesquisa Grande -->
-          <div class="relative flex-1">
+          <!-- Barra de Pesquisa -->
+          <div class="relative w-full lg:w-96">
             <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
               <i class="fa-solid fa-magnifying-glass text-xs"></i>
             </div>
             <input type="text" id="inputSearchMovimentacoes" placeholder="Buscar por produto, observação, tipo ou solicitante..."
-              class="w-full pl-10 pr-4 py-2 text-xs text-slate-700 dark:text-slate-200 bg-slate-50/50 dark:bg-[#172722]/50 border border-slate-200 dark:border-[#1C2C26] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0F392B] dark:focus:ring-emerald-600/50 placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-colors shadow-2xs" />
+              class="w-full pl-10 pr-4 py-2 text-xs text-slate-700 dark:text-slate-200 bg-white dark:bg-[#121E1A] border border-slate-200 dark:border-[#1C2C26] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0F392B] dark:focus:ring-emerald-600/50 placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-colors shadow-2xs" />
           </div>
 
           <!-- Filtros Secundários e Período -->
           <div class="flex items-center space-x-2 flex-wrap gap-2">
             <!-- Botão Não Vistas -->
-            <button type="button" id="btnFiltroNaoVistas" class="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-slate-50 dark:bg-[#172722]/50 hover:bg-slate-100 dark:hover:bg-[#172722] text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold transition-colors cursor-pointer border border-slate-200 dark:border-[#1C2C26] shadow-2xs">
+            <button type="button" id="btnFiltroNaoVistas" class="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-white dark:bg-[#121E1A] hover:bg-slate-50 dark:hover:bg-[#172722] text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold transition-colors cursor-pointer border border-slate-200 dark:border-[#1C2C26] shadow-2xs">
               <i class="fa-solid fa-eye-slash text-amber-500 text-xs"></i>
               <span>Não Vistas</span>
               <span id="badgeNaoVistasCount" class="ml-1 px-1.5 py-0.2 bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 rounded-full text-[10px] font-bold hidden">0</span>
             </button>
 
             <!-- Botão Marcar Vistas -->
-            <button type="button" id="btnMarcarTodasVistas" class="inline-flex items-center justify-center space-x-1.5 px-3.5 py-2 bg-slate-50 dark:bg-[#172722]/50 hover:bg-slate-100 dark:hover:bg-[#172722] text-xs font-medium text-emerald-700 dark:text-emerald-400 rounded-xl transition-colors cursor-pointer border border-slate-200 dark:border-[#1C2C26] shadow-2xs" title="Marcar todas as movimentações como vistas">
+            <button type="button" id="btnMarcarTodasVistas" class="inline-flex items-center justify-center space-x-1.5 px-3.5 py-2 bg-white dark:bg-[#121E1A] hover:bg-slate-50 dark:hover:bg-[#172722] text-xs font-medium text-emerald-700 dark:text-emerald-400 rounded-xl transition-colors cursor-pointer border border-slate-200 dark:border-[#1C2C26] shadow-2xs" title="Marcar todas as movimentações como vistas">
               <i class="fa-solid fa-check-double text-xs"></i>
               <span>Marcar vistas</span>
             </button>
@@ -238,7 +238,7 @@
             <!-- Dropdown Customizado de Período -->
             <div class="relative">
               <button id="btnToggleFiltroPeriodo" type="button"
-                class="inline-flex items-center space-x-2 px-4 py-2 bg-slate-50 dark:bg-[#172722]/50 hover:bg-slate-100 dark:hover:bg-[#172722] text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl border border-slate-200 dark:border-[#1C2C26] shadow-2xs transition-colors cursor-pointer">
+                class="inline-flex items-center space-x-2 px-4 py-2 bg-white dark:bg-[#121E1A] hover:bg-slate-50 dark:hover:bg-[#172722] text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl border border-slate-200 dark:border-[#1C2C26] shadow-2xs transition-colors cursor-pointer">
                 <i class="fa-regular fa-calendar text-emerald-600 dark:text-emerald-400"></i>
                 <span id="textoPeriodoSelecionado">Este mês</span>
                 <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 ml-1"></i>
