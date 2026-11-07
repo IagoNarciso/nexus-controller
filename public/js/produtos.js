@@ -36,7 +36,7 @@ function encerrarSessaoProdutos() {
   if (isRedirectingProdutos) return;
   isRedirectingProdutos = true;
 
-  console.warn('Sessão expirada ou inválida em Produtos (401). A redirecionar para login...');
+  console.warn('Sessão expirada ou inválida em Produtos (401). Redirecionando para login...');
   localStorage.removeItem('token');
   localStorage.removeItem('access_token');
   localStorage.removeItem('nexus_token');
@@ -185,7 +185,7 @@ function aplicarPreferenciasGlobais() {
   }
 }
 
-// Oculta a aba e a secção de Aprovações caso o utilizador seja Operador
+// Oculta a aba e a seção de Aprovações caso o usuário seja Operador
 function aplicarRestricaoAprovacoesProdutos() {
   let userObj = {};
   try {
@@ -249,7 +249,7 @@ async function inicializarPaginaProdutos() {
     user.nome ||
     user.user_metadata?.nome ||
     user.user_metadata?.full_name ||
-    'Utilizador';
+    'Usuário';
   const userNameElem = document.getElementById('userName');
   const userAvatarElem = document.getElementById('userAvatar');
 
@@ -609,6 +609,71 @@ async function carregarProdutosPendentes() {
   }
 }
 
+// Configura o cabeçalho de "Selecionar todos" e remove o campo numérico antigo de Qtd
+function prepararInterfaceCheckboxesAprovacao(tbody) {
+  // 1. Substitui o campo "Qtd: 10" por um contador dinâmico de itens selecionados
+  const inputQtd = document.getElementById('inputQtdLote');
+  if (inputQtd) {
+    const containerQtd = inputQtd.parentElement;
+    if (containerQtd && containerQtd.id !== 'containerAcoesEmMassa') {
+      containerQtd.innerHTML = `<span id="contadorSelecionadosLote" class="text-xs font-semibold text-slate-500 dark:text-slate-400 px-2">0 selecionado(s)</span>`;
+    } else {
+      inputQtd.classList.add('hidden');
+    }
+  }
+
+  // 2. Injeta o checkbox "Selecionar todos" na primeira coluna do cabeçalho (PRODUTO)
+  if (!tbody) return;
+  const tabela = tbody.closest('table');
+  const primeiroTh = tabela?.querySelector('thead tr th:first-child');
+
+  if (primeiroTh && !document.getElementById('checkTodosAprovacoes')) {
+    primeiroTh.innerHTML = `
+      <label class="inline-flex items-center space-x-3 cursor-pointer select-none">
+        <input type="checkbox" id="checkTodosAprovacoes" class="w-4 h-4 rounded border-slate-300 dark:border-slate-600 text-[#0F392B] focus:ring-emerald-500 cursor-pointer accent-[#0F392B] dark:accent-emerald-500">
+        <span>PRODUTO</span>
+      </label>
+    `;
+
+    const checkTodos = document.getElementById('checkTodosAprovacoes');
+    checkTodos?.addEventListener('change', (e) => {
+      const isChecked = e.target.checked;
+      document.querySelectorAll('.check-item-aprovacao').forEach((cb) => {
+        cb.checked = isChecked;
+      });
+      atualizarEstadoSelecaoAprovacoes();
+    });
+  }
+}
+
+// Atualiza o estado do checkbox mestre e o texto de quantos produtos estão marcados
+function atualizarEstadoSelecaoAprovacoes() {
+  const todosCheckboxes = Array.from(document.querySelectorAll('.check-item-aprovacao'));
+  const marcados = todosCheckboxes.filter((cb) => cb.checked);
+  const checkTodos = document.getElementById('checkTodosAprovacoes');
+  const contadorEl = document.getElementById('contadorSelecionadosLote');
+
+  if (checkTodos) {
+    if (todosCheckboxes.length === 0) {
+      checkTodos.checked = false;
+      checkTodos.indeterminate = false;
+      checkTodos.disabled = true;
+    } else {
+      checkTodos.disabled = false;
+      checkTodos.checked = marcados.length === todosCheckboxes.length;
+      checkTodos.indeterminate = marcados.length > 0 && marcados.length < todosCheckboxes.length;
+    }
+  }
+
+  if (contadorEl) {
+    contadorEl.textContent = `${marcados.length} selecionado(s)`;
+    contadorEl.className =
+      marcados.length > 0
+        ? 'text-xs font-bold text-emerald-600 dark:text-emerald-400 px-2'
+        : 'text-xs font-semibold text-slate-500 dark:text-slate-400 px-2';
+  }
+}
+
 async function renderizarTabelaAprovacoes(pendentes) {
   const tbody = document.getElementById('tabelaAprovacoesBody');
   const badgeAprovacoes = document.getElementById('badgeTabAprovacoes');
@@ -628,6 +693,8 @@ async function renderizarTabelaAprovacoes(pendentes) {
     if (badgeMenuProdutos) badgeMenuProdutos.classList.add('hidden');
     return;
   }
+
+  prepararInterfaceCheckboxesAprovacao(tbody);
 
   const qtdAprovacoes = Array.isArray(pendentes) ? pendentes.length : 0;
 
@@ -699,6 +766,7 @@ async function renderizarTabelaAprovacoes(pendentes) {
         </td>
       </tr>
     `;
+    atualizarEstadoSelecaoAprovacoes();
     return;
   }
 
@@ -714,8 +782,13 @@ async function renderizarTabelaAprovacoes(pendentes) {
       return `
       <tr class="hover:bg-slate-50/80 dark:hover:bg-[#15241F]/60 transition-colors">
         <td class="py-3.5 px-6">
-          <p class="font-bold text-slate-800 dark:text-slate-200 text-xs">${p.nome || 'Sem nome'}</p>
-          <p class="text-[10px] text-slate-400 font-medium">${p.sku || 'N/A'}</p>
+          <label class="flex items-center space-x-3 cursor-pointer">
+            <input type="checkbox" value="${p.id}" onchange="atualizarEstadoSelecaoAprovacoes()" class="check-item-aprovacao w-4 h-4 rounded border-slate-300 dark:border-slate-600 text-[#0F392B] focus:ring-emerald-500 cursor-pointer accent-[#0F392B] dark:accent-emerald-500 shrink-0">
+            <div>
+              <p class="font-bold text-slate-800 dark:text-slate-200 text-xs">${p.nome || 'Sem nome'}</p>
+              <p class="text-[10px] text-slate-400 font-medium">${p.sku || 'N/A'}</p>
+            </div>
+          </label>
         </td>
         <td class="py-3.5 px-4 text-xs font-medium text-slate-600 dark:text-slate-300">
           ${p.categoria || 'Geral'}
@@ -741,6 +814,8 @@ async function renderizarTabelaAprovacoes(pendentes) {
     `;
     })
     .join('');
+
+  atualizarEstadoSelecaoAprovacoes();
 }
 
 let isModerandoProduto = false;
@@ -789,15 +864,24 @@ async function moderarLoteProdutos(novoStatus) {
     return;
   }
 
-  const inputQtd = document.getElementById('inputQtdLote');
-  const quantidadeDesejada = parseInt(inputQtd?.value, 10) || produtosPendentesCache.length;
-  const itensParaProcessar = produtosPendentesCache.slice(0, quantidadeDesejada);
+  // Coleta apenas os produtos marcados nos checkboxes
+  const checkboxesMarcados = Array.from(document.querySelectorAll('.check-item-aprovacao:checked'));
+  const idsSelecionados = checkboxesMarcados.map((cb) => String(cb.value));
+
+  if (idsSelecionados.length === 0) {
+    mostrarNotificacaoToast('Selecione pelo menos um produto nos checkboxes para processar em lote.', 'erro');
+    return;
+  }
+
+  const itensParaProcessar = produtosPendentesCache.filter((item) =>
+    idsSelecionados.includes(String(item.id))
+  );
 
   const isAprovacao = novoStatus === 'aprovado';
   const acaoTexto = isAprovacao ? 'aprovar' : 'rejeitar';
   const tipoModal = isAprovacao ? 'sucesso' : 'perigo';
 
-  const mensagem = `Deseja realmente ${acaoTexto} um lote de ${itensParaProcessar.length} produto(s) pendente(s)?`;
+  const mensagem = `Deseja realmente ${acaoTexto} ${itensParaProcessar.length} produto(s) selecionado(s)?`;
 
   let confirmado = false;
   if (typeof window.mostrarConfirmacaoCustomizada === 'function') {
@@ -823,8 +907,8 @@ async function moderarLoteProdutos(novoStatus) {
       }
     }
 
-    const acaoMsg = isAprovacao ? 'aprovados' : 'rejeitados';
-    mostrarNotificacaoToast(`${sucessos} de ${itensParaProcessar.length} produtos ${acaoMsg} com sucesso!`, 'sucesso');
+    const acaoMsg = isAprovacao ? 'aprovado(s)' : 'rejeitado(s)';
+    mostrarNotificacaoToast(`${sucessos} de ${itensParaProcessar.length} produto(s) ${acaoMsg} com sucesso!`, 'sucesso');
 
     await carregarProdutos();
     await carregarProdutosPendentes();
@@ -1168,7 +1252,6 @@ function setupModalEvents() {
   form?.addEventListener('submit', async (e) => {
     e.preventDefault();
 
-    // Trava lógica imediata contra múltiplos cliques
     if (isSubmittingProduto) return;
     isSubmittingProduto = true;
 
@@ -1269,7 +1352,6 @@ function setupModalEvents() {
     } catch (err) {
       alert(`Erro: ${err.message}`);
     } finally {
-      // Libera a trava lógica e restaura o botão ao estado original
       isSubmittingProduto = false;
       if (btnSubmitModal) {
         btnSubmitModal.disabled = false;
@@ -1442,6 +1524,7 @@ function exportarProdutosCSV() {
   document.body.removeChild(link);
 }
 
+window.atualizarEstadoSelecaoAprovacoes = atualizarEstadoSelecaoAprovacoes;
 window.moderarProduto = moderarProduto;
 window.editarProduto = editarProduto;
 window.alternarStatusProduto = alternarStatusProduto;
