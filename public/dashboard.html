@@ -154,12 +154,15 @@
               <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold cursor-pointer hover:underline">Alertas ativos</span>
             </div>
             <div id="listaNotificacoes" class="max-h-64 overflow-y-auto divide-y divide-slate-100 dark:divide-[#1C2C26]">
-              <div class="p-3 text-slate-500 dark:text-slate-400 text-center">A carregar alertas...</div>
+              <div class="p-4 text-slate-400 dark:text-slate-500 text-center flex items-center justify-center gap-2">
+                <i class="fa-solid fa-circle-notch fa-spin text-emerald-500"></i>
+                <span>Carregando alertas...</span>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- PERFIL DO UTILIZADOR COM BARRA DIVISÓRIA E MENU SUSPENSO -->
+        <!-- PERFIL DO USUÁRIO COM BARRA DIVISÓRIA E MENU SUSPENSO -->
         <div class="relative border-l border-slate-200 dark:border-[#1C2C26] pl-3">
           <button id="btnPerfilMenu" class="flex items-center space-x-3 pl-1 focus:outline-none cursor-pointer group">
             <div id="userAvatar"
@@ -195,7 +198,7 @@
             <span id="nomeEmpresaDestaque" class="text-[10px] font-bold text-[#0F392B] dark:text-emerald-400 bg-[#0F392B]/10 dark:bg-emerald-950/40 px-2 py-0.5 rounded-md uppercase tracking-wider">Empresa</span>
           </div>
           <h1 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight mt-1">
-            Olá, <span id="welcomeName">Utilizador</span>! <span class="text-slate-400 font-normal text-base">Tenha um ótimo dia.</span>
+            Olá, <span id="welcomeName">Usuário</span>! <span class="text-slate-400 font-normal text-base">Tenha um ótimo dia.</span>
           </h1>
         </div>
         <div class="flex items-center space-x-3">
@@ -231,7 +234,11 @@
         <div class="bg-white dark:bg-[#121E1A] border border-slate-200/80 dark:border-[#1C2C26] p-5 rounded-2xl shadow-xs flex items-center justify-between">
           <div>
             <p class="text-xs font-medium text-slate-400">Total de Vendas (Mês)</p>
-            <h2 class="text-xl font-bold text-slate-900 dark:text-white mt-1" id="cardVendasMes">R$ 0,00</h2>
+            <h2 class="text-xl font-bold text-slate-900 dark:text-white mt-1" id="cardVendasMes">
+              <span class="inline-flex items-center gap-2 text-xs font-medium text-slate-400 dark:text-slate-500 animate-pulse">
+                <i class="fa-solid fa-circle-notch fa-spin text-emerald-500"></i> Carregando...
+              </span>
+            </h2>
             <p class="text-[10px] text-emerald-600 dark:text-emerald-400 mt-1">Receita gerada por saídas</p>
           </div>
           <div class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
@@ -243,7 +250,11 @@
         <div class="bg-white dark:bg-[#121E1A] border border-slate-200/80 dark:border-[#1C2C26] p-5 rounded-2xl shadow-xs flex items-center justify-between">
           <div>
             <p class="text-xs font-medium text-slate-400">Total de Compras / Gastos (Mês)</p>
-            <h2 class="text-xl font-bold text-slate-900 dark:text-white mt-1" id="cardGastosMes">R$ 0,00</h2>
+            <h2 class="text-xl font-bold text-slate-900 dark:text-white mt-1" id="cardGastosMes">
+              <span class="inline-flex items-center gap-2 text-xs font-medium text-slate-400 dark:text-slate-500 animate-pulse">
+                <i class="fa-solid fa-circle-notch fa-spin text-amber-500"></i> Carregando...
+              </span>
+            </h2>
             <p class="text-[10px] text-amber-600 dark:text-amber-400 mt-1">Investimento em entradas</p>
           </div>
           <div class="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 flex items-center justify-center">
@@ -263,7 +274,11 @@
           </div>
           <p class="text-xs font-medium text-slate-400 mt-3">Total de produtos</p>
           <div class="flex items-baseline justify-between mt-1">
-            <h2 class="text-2xl font-bold text-slate-900 dark:text-white" id="statTotalProdutos">0</h2>
+            <h2 class="text-2xl font-bold text-slate-900 dark:text-white" id="statTotalProdutos">
+              <span class="inline-flex items-center gap-1.5 text-xs font-medium text-slate-400 dark:text-slate-500 animate-pulse">
+                <i class="fa-solid fa-circle-notch fa-spin text-indigo-500"></i> Carregando...
+              </span>
+            </h2>
             <span class="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-50 dark:bg-emerald-950/50 px-1.5 py-0.5 rounded border border-transparent dark:border-emerald-900/30">▲ +8,2%</span>
           </div>
           <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-1">vs. mês anterior</p>
@@ -278,7 +293,11 @@
           </div>
           <p class="text-xs font-medium text-slate-400 mt-3">Valor em estoque</p>
           <div class="flex items-baseline justify-between mt-1">
-            <h2 class="text-2xl font-bold text-slate-900 dark:text-white" id="statValorEstoque">R$ 0,00</h2>
+            <h2 class="text-2xl font-bold text-slate-900 dark:text-white" id="statValorEstoque">
+              <span class="inline-flex items-center gap-1.5 text-xs font-medium text-slate-400 dark:text-slate-500 animate-pulse">
+                <i class="fa-solid fa-circle-notch fa-spin text-emerald-500"></i> Carregando...
+              </span>
+            </h2>
             <span class="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-50 dark:bg-emerald-950/50 px-1.5 py-0.5 rounded border border-transparent dark:border-emerald-900/30">▲ +12,5%</span>
           </div>
           <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-1">vs. mês anterior</p>
@@ -293,7 +312,11 @@
           </div>
           <p class="text-xs font-medium text-slate-400 mt-3">Estoque baixo</p>
           <div class="flex items-baseline justify-between mt-1">
-            <h2 class="text-2xl font-bold text-slate-900 dark:text-white" id="statEstoqueBaixo">0</h2>
+            <h2 class="text-2xl font-bold text-slate-900 dark:text-white" id="statEstoqueBaixo">
+              <span class="inline-flex items-center gap-1.5 text-xs font-medium text-slate-400 dark:text-slate-500 animate-pulse">
+                <i class="fa-solid fa-circle-notch fa-spin text-amber-500"></i> Carregando...
+              </span>
+            </h2>
             <span class="text-[11px] text-rose-600 dark:text-rose-400 font-semibold bg-rose-50 dark:bg-rose-950/50 px-1.5 py-0.5 rounded border border-transparent dark:border-rose-900/30">▼ Atenção</span>
           </div>
           <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-1">necessitam de reposição</p>
@@ -308,7 +331,11 @@
           </div>
           <p class="text-xs font-medium text-slate-400 mt-3">Saídas este mês</p>
           <div class="flex items-baseline justify-between mt-1">
-            <h2 class="text-2xl font-bold text-slate-900 dark:text-white" id="statSaidasMes">0</h2>
+            <h2 class="text-2xl font-bold text-slate-900 dark:text-white" id="statSaidasMes">
+              <span class="inline-flex items-center gap-1.5 text-xs font-medium text-slate-400 dark:text-slate-500 animate-pulse">
+                <i class="fa-solid fa-circle-notch fa-spin text-purple-500"></i> Carregando...
+              </span>
+            </h2>
             <span class="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-50 dark:bg-emerald-950/50 px-1.5 py-0.5 rounded border border-transparent dark:border-emerald-900/30">▲ +4,1%</span>
           </div>
           <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-1">vs. mês anterior</p>
@@ -323,30 +350,42 @@
           </div>
           <div>
             <h4 class="font-bold text-sm">Resumo operacional</h4>
-            <p class="text-[10px] text-emerald-300/70 mt-0.5">Atualizado agora</p>
+            <p class="text-[10px] text-emerald-300/70 mt-0.5">Sincronizado em tempo real</p>
           </div>
         </div>
 
         <div class="border-b md:border-b-0 md:border-r border-emerald-900/50 dark:border-emerald-900/40 pb-4 md:pb-0">
           <p class="text-[11px] text-emerald-300/70 font-medium">Giro de estoque</p>
-          <h3 class="text-xl font-bold mt-1" id="resumoGiro">0x</h3>
+          <h3 class="text-xl font-bold mt-1" id="resumoGiro">
+            <span class="inline-flex items-center gap-1.5 text-xs font-normal text-emerald-300/80 animate-pulse">
+              <i class="fa-solid fa-circle-notch fa-spin"></i> Carregando...
+            </span>
+          </h3>
           <p class="text-[10px] text-emerald-400 mt-0.5" id="subGiro">Cálculo com base no período</p>
         </div>
 
         <div class="border-b md:border-b-0 md:border-r border-emerald-900/50 dark:border-emerald-900/40 pb-4 md:pb-0">
           <p class="text-[11px] text-emerald-300/70 font-medium">Cobertura média</p>
-          <h3 class="text-xl font-bold mt-1" id="resumoCobertura">0 dias</h3>
+          <h3 class="text-xl font-bold mt-1" id="resumoCobertura">
+            <span class="inline-flex items-center gap-1.5 text-xs font-normal text-emerald-300/80 animate-pulse">
+              <i class="fa-solid fa-circle-notch fa-spin"></i> Carregando...
+            </span>
+          </h3>
           <p class="text-[10px] text-emerald-300/60 mt-0.5" id="subCobertura">Baseado nas saídas</p>
         </div>
 
         <div>
           <p class="text-[11px] text-emerald-300/70 font-medium">Pedid. pendentes</p>
-          <h3 class="text-xl font-bold mt-1" id="resumoPedidos">0</h3>
+          <h3 class="text-xl font-bold mt-1" id="resumoPedidos">
+            <span class="inline-flex items-center gap-1.5 text-xs font-normal text-emerald-300/80 animate-pulse">
+              <i class="fa-solid fa-circle-notch fa-spin"></i> Carregando...
+            </span>
+          </h3>
           <p class="text-[10px] text-emerald-300/60 mt-0.5" id="subPedidos">Solicitações abertas</p>
         </div>
       </div>
 
-      <!-- SECÇÃO DE DESTAQUES DO INVENTÁRIO (MAIS VENDIDOS E MAIS CAROS) -->
+      <!-- SEÇÃO DE DESTAQUES DO INVENTÁRIO (MAIS VENDIDOS E MAIS CAROS) -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
         <!-- TOP 3 MAIS VENDIDOS DO MÊS -->
@@ -361,7 +400,10 @@
             </div>
           </div>
           <div id="listaMaisVendidos" class="space-y-3">
-            <div class="p-3 bg-slate-50 dark:bg-[#14231E] rounded-xl text-xs text-slate-400 text-center">A carregar dados...</div>
+            <div class="p-4 bg-slate-50 dark:bg-[#14231E] rounded-xl text-xs text-slate-400 dark:text-slate-500 flex items-center justify-center gap-2 animate-pulse">
+              <i class="fa-solid fa-circle-notch fa-spin text-emerald-500"></i>
+              <span>Carregando mais vendidos...</span>
+            </div>
           </div>
         </div>
 
@@ -377,7 +419,10 @@
             </div>
           </div>
           <div id="listaMaisCaros" class="space-y-3">
-            <div class="p-3 bg-slate-50 dark:bg-[#14231E] rounded-xl text-xs text-slate-400 text-center">A carregar dados...</div>
+            <div class="p-4 bg-slate-50 dark:bg-[#14231E] rounded-xl text-xs text-slate-400 dark:text-slate-500 flex items-center justify-center gap-2 animate-pulse">
+              <i class="fa-solid fa-circle-notch fa-spin text-indigo-500"></i>
+              <span>Carregando itens de maior valor...</span>
+            </div>
           </div>
         </div>
 
@@ -424,11 +469,16 @@
                 <p class="text-[11px] text-slate-400 mt-0.5">Produtos que precisam de atenção</p>
               </div>
               <span id="lowStockBadge"
-                class="w-5 h-5 bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 border border-transparent dark:border-amber-700/50 font-bold text-[11px] rounded-full flex items-center justify-center">0</span>
+                class="w-5 h-5 bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 border border-transparent dark:border-amber-700/50 font-bold text-[11px] rounded-full flex items-center justify-center">
+                <i class="fa-solid fa-circle-notch fa-spin text-[9px]"></i>
+              </span>
             </div>
 
             <div id="lowStockList" class="space-y-4">
-              <p class="text-xs text-slate-400 py-4 text-center">A carregar...</p>
+              <div class="p-4 bg-slate-50 dark:bg-[#14231E] rounded-xl text-xs text-slate-400 dark:text-slate-500 flex items-center justify-center gap-2 animate-pulse">
+                <i class="fa-solid fa-circle-notch fa-spin text-amber-500"></i>
+                <span>Verificando estoque...</span>
+              </div>
             </div>
           </div>
 
@@ -456,26 +506,9 @@
                 <canvas id="categoriaChart"></canvas>
               </div>
               <div class="space-y-3 flex-1 text-xs" id="listaCategoriasPercentual">
-                <div class="flex items-center justify-between border-b border-slate-100 dark:border-[#1C2C26] pb-1.5">
-                  <div class="flex items-center space-x-2">
-                    <span class="w-2.5 h-2.5 rounded-full bg-[#0F392B]"></span>
-                    <span class="text-slate-600 dark:text-slate-300 font-medium">Eletrônicos</span>
-                  </div>
-                  <span class="font-bold text-slate-800 dark:text-slate-100">70%</span>
-                </div>
-                <div class="flex items-center justify-between border-b border-slate-100 dark:border-[#1C2C26] pb-1.5">
-                  <div class="flex items-center space-x-2">
-                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
-                    <span class="text-slate-600 dark:text-slate-300 font-medium">Móveis</span>
-                  </div>
-                  <span class="font-bold text-slate-800 dark:text-slate-100">25%</span>
-                </div>
-                <div class="flex items-center justify-between">
-                  <div class="flex items-center space-x-2">
-                    <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
-                    <span class="text-slate-600 dark:text-slate-300 font-medium">Decoração</span>
-                  </div>
-                  <span class="font-bold text-slate-800 dark:text-slate-100">5%</span>
+                <div class="py-4 text-xs text-slate-400 dark:text-slate-500 flex items-center justify-center gap-2 animate-pulse">
+                  <i class="fa-solid fa-circle-notch fa-spin text-emerald-500"></i>
+                  <span>Carregando categorias...</span>
                 </div>
               </div>
             </div>
@@ -488,7 +521,7 @@
               <div>
                 <h3 class="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
                   Estatísticas do inventário
-                  <!-- Ícone de dica subtil -->
+                  <!-- Ícone de dica sutil -->
                   <i class="fa-solid fa-circle-info text-slate-400 dark:text-slate-500 text-[11px] cursor-help" title="Métricas consolidadas com base no histórico de inventário e vendas."></i>
                 </h3>
                 <p class="text-[11px] text-slate-400 mt-0.5">Visão consolidada da operação</p>
@@ -502,7 +535,9 @@
                   Giro de estoque global
                   <i class="fa-regular fa-question-circle text-[10px] text-slate-400"></i>
                 </span>
-                <span class="font-bold text-slate-800 dark:text-slate-100" id="giroGlobal">0x / ano</span>
+                <span class="font-bold text-slate-800 dark:text-slate-100" id="giroGlobal">
+                  <i class="fa-solid fa-circle-notch fa-spin text-xs text-slate-400"></i>
+                </span>
               </div>
 
               <div class="flex items-center justify-between py-2 border-b border-slate-100 dark:border-[#1C2C26] group cursor-help" title="Média de dias que os produtos permanecem guardados antes de serem vendidos.">
@@ -510,18 +545,22 @@
                   Média de permanência
                   <i class="fa-regular fa-question-circle text-[10px] text-slate-400"></i>
                 </span>
-                <span class="font-bold text-slate-800 dark:text-slate-100" id="mediaPermanencia">0 dias</span>
+                <span class="font-bold text-slate-800 dark:text-slate-100" id="mediaPermanencia">
+                  <i class="fa-solid fa-circle-notch fa-spin text-xs text-slate-400"></i>
+                </span>
               </div>
 
-              <div class="flex items-center justify-between py-2 border-b border-slate-100 dark:border-[#1C2C26] group cursor-help" title="Percentagem estimada de produtos que ficaram esgotados (ruptura).">
+              <div class="flex items-center justify-between py-2 border-b border-slate-100 dark:border-[#1C2C26] group cursor-help" title="Porcentagem estimada de produtos que ficaram esgotados (ruptura).">
                 <span class="text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
                   Taxa de ruptura estimada
                   <i class="fa-regular fa-question-circle text-[10px] text-slate-400"></i>
                 </span>
-                <span class="font-bold text-emerald-600 dark:text-emerald-400" id="taxaRuptura">0%</span>
+                <span class="font-bold text-emerald-600 dark:text-emerald-400" id="taxaRuptura">
+                  <i class="fa-solid fa-circle-notch fa-spin text-xs text-emerald-500"></i>
+                </span>
               </div>
 
-              <div class="flex items-center justify-between py-2 group cursor-help" title="Nível de conformidade e precisão dos registos em relação ao estoque físico.">
+              <div class="flex items-center justify-between py-2 group cursor-help" title="Nível de conformidade e precisão dos registros em relação ao estoque físico.">
                 <span class="text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
                   Acurácia de inventário
                   <i class="fa-regular fa-question-circle text-[10px] text-slate-400"></i>
@@ -540,7 +579,9 @@
                 <p class="text-[11px] text-slate-400 mt-0.5">Qualidade geral do inventário</p>
               </div>
               <span id="saudeScore"
-                class="w-9 h-9 rounded-full bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-bold text-xs flex items-center justify-center border border-transparent dark:border-emerald-800/60 transition-colors">0</span>
+                class="w-9 h-9 rounded-full bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-bold text-xs flex items-center justify-center border border-transparent dark:border-emerald-800/60 transition-colors">
+                <i class="fa-solid fa-circle-notch fa-spin text-xs"></i>
+              </span>
             </div>
 
             <div class="mt-2">
@@ -549,7 +590,7 @@
               </div>
               <div class="flex justify-between text-[10px] text-slate-400 mt-1 font-medium">
                 <span>Atenção</span>
-                <span id="saudeClassificacao" class="text-emerald-700 dark:text-emerald-400 font-semibold">A calcular...</span>
+                <span id="saudeClassificacao" class="text-emerald-700 dark:text-emerald-400 font-semibold animate-pulse">Calculando...</span>
               </div>
             </div>
 
@@ -559,14 +600,18 @@
                   <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
                   <span class="text-slate-600 dark:text-slate-300">Estoque saudável</span>
                 </div>
-                <span id="txtEstoqueSaudavel" class="font-bold text-slate-800 dark:text-slate-100">--</span>
+                <span id="txtEstoqueSaudavel" class="font-bold text-slate-800 dark:text-slate-100">
+                  <i class="fa-solid fa-circle-notch fa-spin text-xs text-slate-400"></i>
+                </span>
               </div>
               <div class="flex items-center justify-between border-b border-slate-100 dark:border-[#1C2C26] pb-2">
                 <div class="flex items-center space-x-2">
                   <span class="w-2 h-2 rounded-full bg-amber-500"></span>
                   <span class="text-slate-600 dark:text-slate-300">Abaixo do mínimo</span>
                 </div>
-                <span id="txtAbaixoMinimo" class="font-bold text-slate-800 dark:text-slate-100">--</span>
+                <span id="txtAbaixoMinimo" class="font-bold text-slate-800 dark:text-slate-100">
+                  <i class="fa-solid fa-circle-notch fa-spin text-xs text-slate-400"></i>
+                </span>
               </div>
               <div class="flex items-center justify-between pb-1">
                 <div class="flex items-center space-x-2">

@@ -3,7 +3,10 @@ let dashboardRefreshInterval = null;
 
 // Função centralizada para requisições autenticadas e prevenção de loop 401 no Dashboard
 async function fetchSeguraDashboard(url, options = {}) {
-  const token = localStorage.getItem('token');
+  const token =
+    localStorage.getItem('token') ||
+    localStorage.getItem('access_token') ||
+    localStorage.getItem('nexus_token');
 
   if (!token) {
     encerrarSessaoDashboard();
@@ -39,8 +42,10 @@ function encerrarSessaoDashboard() {
     dashboardRefreshInterval = null;
   }
 
-  console.warn('Sessão expirada ou inválida no Dashboard (401). A redirecionar para login...');
+  console.warn('Sessão expirada ou inválida no Dashboard (401). Redirecionando para login...');
   localStorage.removeItem('token');
+  localStorage.removeItem('access_token');
+  localStorage.removeItem('nexus_token');
   localStorage.removeItem('nexus_user');
   localStorage.removeItem('nexus_user_name');
   localStorage.clear();
@@ -50,11 +55,14 @@ function encerrarSessaoDashboard() {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-  // Aplicar preferências visuais do utilizador (Modo Compacto e Alertas)
+  // Aplicar preferências visuais do usuário (Modo Compacto e Alertas)
   aplicarPreferenciasGlobais();
 
   // 1. Validar Autenticação
-  const token = localStorage.getItem('token');
+  const token =
+    localStorage.getItem('token') ||
+    localStorage.getItem('access_token') ||
+    localStorage.getItem('nexus_token');
   const userString = localStorage.getItem('nexus_user');
   let user = {};
 
@@ -66,16 +74,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   try {
     user = userString ? JSON.parse(userString) : {};
   } catch (e) {
-    console.error('Erro ao ler utilizador do localStorage:', e);
+    console.error('Erro ao ler usuário do localStorage:', e);
   }
 
-  // 2. Preencher Nome do Utilizador, Saudação, Iniciais E NOME DA EMPRESA
+  // 2. Preencher Nome do Usuário, Saudação, Iniciais E NOME DA EMPRESA
   const nomeCompleto =
     localStorage.getItem('nexus_user_name') ||
     user.nome ||
     user.user_metadata?.nome ||
     user.user_metadata?.full_name ||
-    'Utilizador';
+    'Usuário';
 
   const userNameElem = document.getElementById('userName');
   const welcomeNameElem = document.getElementById('welcomeName');
@@ -99,7 +107,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   if (userAvatarElem) {
     const names = nomeCompleto.trim().split(' ').filter(Boolean);
-    let initials = 'UT';
+    let initials = 'US';
 
     if (names.length >= 2) {
       initials = (names[0][0] + names[names.length - 1][0]).toUpperCase();
@@ -189,19 +197,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (labelMesAtual) labelMesAtual.textContent = rotulo;
         dropdownFiltroMes.classList.add('hidden');
 
-        // Atualiza o estado ativo e dispara o carregamento dos dados daquele período
+        // Atualiza o estado ativo e dispara o carregamento com indicador visual de loading
         window.mesFiltroAtivo = valor;
-        carregarDadosDashboard(window.mesFiltroAtivo, window.periodoGraficoAtivo);
+        carregarDadosDashboard(window.mesFiltroAtivo, window.periodoGraficoAtivo, false);
       });
     });
   }
 
-  // 5. Carregamento Inicial e Atualização em Tempo Real (a cada 30 segundos)
-  await carregarDadosDashboard(window.mesFiltroAtivo, window.periodoGraficoAtivo);
+  // 5. Carregamento Inicial (com loading) e Atualização em Tempo Real a cada 30s (silenciosa)
+  await carregarDadosDashboard(window.mesFiltroAtivo, window.periodoGraficoAtivo, false);
 
   dashboardRefreshInterval = setInterval(() => {
     if (!isRedirectingDashboard) {
-      carregarDadosDashboard(window.mesFiltroAtivo, window.periodoGraficoAtivo);
+      carregarDadosDashboard(window.mesFiltroAtivo, window.periodoGraficoAtivo, true);
     }
   }, 30000);
 
@@ -231,8 +239,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (labelPeriodoMov) labelPeriodoMov.textContent = texto;
         dropdownPeriodoMov.classList.add('hidden');
 
-        // RECARREGA OS DADOS DO DASHBOARD PASSANDO O NOVO PERÍODO DO GRÁFICO AO BACKEND
-        carregarDadosDashboard(window.mesFiltroAtivo, valor);
+        // Recarrega os dados do dashboard exibindo feedback de loading
+        carregarDadosDashboard(window.mesFiltroAtivo, valor, false);
       });
     });
   }
@@ -276,7 +284,7 @@ function aplicarPreferenciasGlobais() {
   }
 }
 
-// Controlo dos menus suspensos da Topbar (Perfil e Notificações)
+// Controle dos menus suspensos da Topbar (Perfil e Notificações)
 function setupTopbarDropdowns() {
   const btnPerfilMenu = document.getElementById('btnPerfilMenu');
   const dropdownPerfil = document.getElementById('dropdownPerfil');
@@ -331,9 +339,110 @@ function setupModalSuporte() {
   });
 }
 
+// Exibe placeholders animados de carregamento nos cards e listas do Dashboard
+function exibirEstadoCarregamentoDashboard() {
+  const spinnerCard = (corIcone = 'text-emerald-500') => `
+    <span class="inline-flex items-center gap-1.5 text-xs font-medium text-slate-400 dark:text-slate-500 animate-pulse">
+      <i class="fa-solid fa-circle-notch fa-spin ${corIcone}"></i> Carregando...
+    </span>
+  `;
+
+  const spinnerResumo = `
+    <span class="inline-flex items-center gap-1.5 text-xs font-normal text-emerald-300/80 animate-pulse">
+      <i class="fa-solid fa-circle-notch fa-spin"></i> Carregando...
+    </span>
+  `;
+
+  const spinnerMini = `<i class="fa-solid fa-circle-notch fa-spin text-xs text-slate-400"></i>`;
+
+  const elVendasMes = document.getElementById('cardVendasMes');
+  const elGastosMes = document.getElementById('cardGastosMes');
+  const elTotalProdutos = document.getElementById('statTotalProdutos');
+  const elValorEstoque = document.getElementById('statValorEstoque');
+  const statBadge = document.getElementById('statEstoqueBaixo');
+  const elSaidasMes = document.getElementById('statSaidasMes');
+
+  if (elVendasMes) elVendasMes.innerHTML = spinnerCard('text-emerald-500');
+  if (elGastosMes) elGastosMes.innerHTML = spinnerCard('text-amber-500');
+  if (elTotalProdutos) elTotalProdutos.innerHTML = spinnerCard('text-indigo-500');
+  if (elValorEstoque) elValorEstoque.innerHTML = spinnerCard('text-emerald-500');
+  if (statBadge) statBadge.innerHTML = spinnerCard('text-amber-500');
+  if (elSaidasMes) elSaidasMes.innerHTML = spinnerCard('text-purple-500');
+
+  const elGiroTopo = document.getElementById('resumoGiro');
+  const elCoberturaTopo = document.getElementById('resumoCobertura');
+  const elPedidosTopo = document.getElementById('resumoPedidos');
+
+  if (elGiroTopo) elGiroTopo.innerHTML = spinnerResumo;
+  if (elCoberturaTopo) elCoberturaTopo.innerHTML = spinnerResumo;
+  if (elPedidosTopo) elPedidosTopo.innerHTML = spinnerResumo;
+
+  const listaMaisVendidos = document.getElementById('listaMaisVendidos');
+  const listaMaisCaros = document.getElementById('listaMaisCaros');
+  const listContainer = document.getElementById('lowStockList');
+  const badgeContainer = document.getElementById('lowStockBadge');
+  const containerPercentuais = document.getElementById('listaCategoriasPercentual');
+
+  if (listaMaisVendidos) {
+    listaMaisVendidos.innerHTML = `
+      <div class="p-4 bg-slate-50 dark:bg-[#14231E] rounded-xl text-xs text-slate-400 dark:text-slate-500 flex items-center justify-center gap-2 animate-pulse">
+        <i class="fa-solid fa-circle-notch fa-spin text-emerald-500"></i>
+        <span>Carregando mais vendidos...</span>
+      </div>`;
+  }
+
+  if (listaMaisCaros) {
+    listaMaisCaros.innerHTML = `
+      <div class="p-4 bg-slate-50 dark:bg-[#14231E] rounded-xl text-xs text-slate-400 dark:text-slate-500 flex items-center justify-center gap-2 animate-pulse">
+        <i class="fa-solid fa-circle-notch fa-spin text-indigo-500"></i>
+        <span>Carregando itens de maior valor...</span>
+      </div>`;
+  }
+
+  if (badgeContainer) {
+    badgeContainer.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin text-[9px]"></i>`;
+  }
+
+  if (listContainer) {
+    listContainer.innerHTML = `
+      <div class="p-4 bg-slate-50 dark:bg-[#14231E] rounded-xl text-xs text-slate-400 dark:text-slate-500 flex items-center justify-center gap-2 animate-pulse">
+        <i class="fa-solid fa-circle-notch fa-spin text-amber-500"></i>
+        <span>Verificando estoque...</span>
+      </div>`;
+  }
+
+  if (containerPercentuais) {
+    containerPercentuais.innerHTML = `
+      <div class="py-4 text-xs text-slate-400 dark:text-slate-500 flex items-center justify-center gap-2 animate-pulse">
+        <i class="fa-solid fa-circle-notch fa-spin text-emerald-500"></i>
+        <span>Carregando categorias...</span>
+      </div>`;
+  }
+
+  const elGiroGlobal = document.getElementById('giroGlobal');
+  const elMediaPerm = document.getElementById('mediaPermanencia');
+  const elTaxaRuptura = document.getElementById('taxaRuptura');
+  const elSaudeScore = document.getElementById('saudeScore');
+  const elClassificacao = document.getElementById('saudeClassificacao');
+  const txtSaudavel = document.getElementById('txtEstoqueSaudavel');
+  const txtBaixo = document.getElementById('txtAbaixoMinimo');
+
+  if (elGiroGlobal) elGiroGlobal.innerHTML = spinnerMini;
+  if (elMediaPerm) elMediaPerm.innerHTML = spinnerMini;
+  if (elTaxaRuptura) elTaxaRuptura.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin text-xs text-emerald-500"></i>`;
+  if (elSaudeScore) elSaudeScore.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin text-xs"></i>`;
+  if (elClassificacao) elClassificacao.textContent = 'Calculando...';
+  if (txtSaudavel) txtSaudavel.innerHTML = spinnerMini;
+  if (txtBaixo) txtBaixo.innerHTML = spinnerMini;
+}
+
 // Função unificada para buscar e atualizar as estatísticas do painel via API
-async function carregarDadosDashboard(mesSelecionado = '', periodoGrafico = '7') {
+async function carregarDadosDashboard(mesSelecionado = '', periodoGrafico = '7', silencioso = false) {
   if (isRedirectingDashboard) return;
+
+  if (!silencioso) {
+    exibirEstadoCarregamentoDashboard();
+  }
 
   const listContainer = document.getElementById('lowStockList');
   const badgeContainer = document.getElementById('lowStockBadge');
@@ -486,20 +595,24 @@ async function carregarDadosDashboard(mesSelecionado = '', periodoGrafico = '7')
     }
 
     if (containerPercentuais && data.categorias && data.categorias.percentuais) {
-      const cores = ['bg-[#0F392B]', 'bg-emerald-500', 'bg-amber-500'];
-      containerPercentuais.innerHTML = data.categorias.percentuais
-        .map(
-          (cat, idx) => `
-        <div class="flex items-center justify-between border-b border-slate-100 dark:border-[#1C2C26] pb-1.5 mt-2">
-          <div class="flex items-center space-x-2">
-            <span class="w-2.5 h-2.5 rounded-full ${cores[idx] || 'bg-slate-400'}"></span>
-            <span class="text-xs text-slate-600 dark:text-slate-300 font-medium">${cat.nome}</span>
+      if (data.categorias.percentuais.length === 0) {
+        containerPercentuais.innerHTML = `<div class="py-4 text-xs text-slate-400 text-center">Sem categorias registradas.</div>`;
+      } else {
+        const cores = ['bg-[#0F392B]', 'bg-emerald-500', 'bg-amber-500'];
+        containerPercentuais.innerHTML = data.categorias.percentuais
+          .map(
+            (cat, idx) => `
+          <div class="flex items-center justify-between border-b border-slate-100 dark:border-[#1C2C26] pb-1.5 mt-2">
+            <div class="flex items-center space-x-2">
+              <span class="w-2.5 h-2.5 rounded-full ${cores[idx] || 'bg-slate-400'}"></span>
+              <span class="text-xs text-slate-600 dark:text-slate-300 font-medium">${cat.nome}</span>
+            </div>
+            <span class="text-xs font-bold text-slate-800 dark:text-slate-100">${cat.percentual}%</span>
           </div>
-          <span class="text-xs font-bold text-slate-800 dark:text-slate-100">${cat.percentual}%</span>
-        </div>
-      `
-        )
-        .join('');
+        `
+          )
+          .join('');
+      }
     }
 
     const count = data.qtdEstoqueBaixo || 0;
@@ -548,7 +661,7 @@ async function carregarDadosDashboard(mesSelecionado = '', periodoGrafico = '7')
         data.maisVendidos.length === 0 ||
         data.maisVendidos.every((p) => p.totalVendido === 0)
       ) {
-        listaMaisVendidos.innerHTML = `<div class="p-3 bg-slate-50 dark:bg-[#14231E] rounded-xl text-xs text-slate-400 text-center">Sem registos de vendas neste período.</div>`;
+        listaMaisVendidos.innerHTML = `<div class="p-3 bg-slate-50 dark:bg-[#14231E] rounded-xl text-xs text-slate-400 text-center">Sem registros de vendas neste período.</div>`;
       } else {
         listaMaisVendidos.innerHTML = data.maisVendidos
           .map(
