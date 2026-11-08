@@ -25,6 +25,34 @@ function salvarIdsVistosLocal(novosIds) {
   }
 }
 
+// Gera a badge visual do tipo de operação (Venda, Compra ou Retirada)
+function obterBadgeTipoOperacao(tipo, tamanho = 'normal') {
+  const t = String(tipo || 'venda').toLowerCase();
+  const classesTamanho =
+    tamanho === 'mini'
+      ? 'px-2 py-0.5 text-[10px]'
+      : 'px-2.5 py-1 text-[11px]';
+
+  if (t === 'compra') {
+    return `<span class="${classesTamanho} font-semibold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 rounded-full border border-blue-200 dark:border-blue-800/50 inline-flex items-center gap-1"><i class="fa-solid fa-arrow-down text-[9px]"></i>Compra</span>`;
+  }
+  if (t === 'retirada') {
+    return `<span class="${classesTamanho} font-semibold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/60 rounded-full border border-rose-200 dark:border-rose-800/50 inline-flex items-center gap-1"><i class="fa-solid fa-arrow-up text-[9px]"></i>Retirada</span>`;
+  }
+  return `<span class="${classesTamanho} font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 rounded-full border border-emerald-200 dark:border-emerald-800/50 inline-flex items-center gap-1"><i class="fa-solid fa-cart-shopping text-[9px]"></i>Venda</span>`;
+}
+
+function obterDescricaoFluxoEstoque(tipo, quantidade) {
+  const t = String(tipo || 'venda').toLowerCase();
+  if (t === 'compra') {
+    return `<span class="text-blue-600 dark:text-blue-400 font-semibold">Entrada (+${quantidade} un.)</span>`;
+  }
+  if (t === 'retirada') {
+    return `<span class="text-rose-600 dark:text-rose-400 font-semibold">Baixa / Saída (-${quantidade} un.)</span>`;
+  }
+  return `<span class="text-emerald-600 dark:text-emerald-400 font-semibold">Saída por venda (-${quantidade} un.)</span>`;
+}
+
 async function fetchSeguraMovimentacoes(url, options = {}) {
   const token = 
     localStorage.getItem('token') || 
@@ -334,11 +362,12 @@ async function carregarProdutosSelect() {
   }
 }
 
-// Extrai desconto salvo ou embutido na observação e limpa tags técnicas [LOTE:...]
+// Extrai os dados individuais do item (incluindo o tipo de operação de cada produto)
 function extrairDadosItemMovimentacao(m) {
   const qtd = Number(m.quantidade || 0);
   const valorUnit = parseFloat(m.valor_unitario || 0);
   const subtotal = qtd * valorUnit;
+  const tipoItem = String(m.tipo || 'venda').toLowerCase();
 
   let desconto = parseFloat(m.desconto || 0);
   const obsBruta = String(m.observacao || '');
@@ -357,6 +386,7 @@ function extrairDadosItemMovimentacao(m) {
   return {
     id: m.id,
     loteId,
+    tipo: tipoItem,
     observacaoLimpa,
     nome: m.produtos?.nome || m.produto_nome || 'Produto Indisponível',
     quantidade: qtd,
@@ -367,7 +397,7 @@ function extrairDadosItemMovimentacao(m) {
   };
 }
 
-// Agrupa movimentações que compartilham o mesmo código [LOTE:...] em um único registro
+// Agrupa movimentações de um mesmo lote preservando a operação realizada em cada produto
 function agruparMovimentacoesPorLote(movimentacoes) {
   const resultado = [];
   const mapaLotes = new Map();
@@ -385,6 +415,7 @@ function agruparMovimentacoesPorLote(movimentacoes) {
           valor_unitario: itemInfo.valor_unitario,
           desconto: itemInfo.desconto,
           valor_total_operacao: itemInfo.total,
+          tipos: [itemInfo.tipo],
           idsOriginais: [m.id],
           itens: [itemInfo]
         };
@@ -395,9 +426,11 @@ function agruparMovimentacoesPorLote(movimentacoes) {
         grupo.quantidade += itemInfo.quantidade;
         grupo.desconto += itemInfo.desconto;
         grupo.valor_total_operacao += itemInfo.total;
+        if (!grupo.tipos.includes(itemInfo.tipo)) {
+          grupo.tipos.push(itemInfo.tipo);
+        }
         grupo.idsOriginais.push(m.id);
         grupo.itens.push(itemInfo);
-        // O lote só é considerado lido se todos os itens dele estiverem lidos
         grupo.lida = Boolean(grupo.lida && m.lida);
         if (!grupo.observacao && itemInfo.observacaoLimpa) {
           grupo.observacao = itemInfo.observacaoLimpa;
@@ -412,6 +445,7 @@ function agruparMovimentacoesPorLote(movimentacoes) {
         valor_unitario: itemInfo.valor_unitario,
         desconto: itemInfo.desconto,
         valor_total_operacao: itemInfo.total,
+        tipos: [itemInfo.tipo],
         idsOriginais: [m.id],
         itens: [itemInfo]
       });
@@ -465,7 +499,6 @@ async function carregarHistoricoMovimentacoes() {
       return true;
     });
 
-    // Unifica itens do mesmo lote em um único registro na lista
     listaMovimentacoesCache = agruparMovimentacoesPorLote(movimentacoes);
 
     if (badgeTotal) {
@@ -510,8 +543,12 @@ function renderizarTabelaMovimentacoes(movimentacoes) {
       let colunaQuantidadeHTML = '';
 
       if (isMultiplos) {
-        const resumoNomes = itens.map((i) => `${i.nome} (${i.quantidade}x)`).join(', ');
+        const labelTipoCurto = (t) => (t === 'compra' ? 'Compra' : t === 'retirada' ? 'Retirada' : 'Venda');
+        const resumoNomes = itens
+          .map((i) => `${i.nome} (${i.quantidade}x • ${labelTipoCurto(i.tipo)})`)
+          .join(', ');
         const qtdExtra = itens.length - 1;
+
         colunaProdutoHTML = `
           <div class="flex items-center space-x-1.5">
             <span class="font-bold text-slate-800 dark:text-slate-200">${itens[0].nome}</span>
@@ -519,7 +556,7 @@ function renderizarTabelaMovimentacoes(movimentacoes) {
               +${qtdExtra} ${qtdExtra === 1 ? 'item' : 'itens'}
             </span>
           </div>
-          <p class="text-[10px] text-slate-400 dark:text-slate-500 truncate max-w-[230px] mt-0.5 font-normal" title="${resumoNomes}">
+          <p class="text-[10px] text-slate-400 dark:text-slate-500 truncate max-w-[240px] mt-0.5 font-normal" title="${resumoNomes}">
             ${resumoNomes}
           </p>
         `;
@@ -533,12 +570,10 @@ function renderizarTabelaMovimentacoes(movimentacoes) {
         colunaQuantidadeHTML = `<span>${m.quantidade || 0} un.</span>`;
       }
 
-      let badgeTipo = `<span class="px-2.5 py-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 dark:bg-emerald-950/60 rounded-full border border-emerald-200 dark:border-emerald-800/50">Venda</span>`;
-      if (m.tipo === 'compra') {
-        badgeTipo = `<span class="px-2.5 py-1 text-[11px] font-semibold text-blue-700 bg-blue-50 dark:bg-blue-950/60 rounded-full border border-blue-200 dark:border-blue-800/50">Compra</span>`;
-      } else if (m.tipo === 'retirada') {
-        badgeTipo = `<span class="px-2.5 py-1 text-[11px] font-semibold text-rose-700 bg-rose-50 dark:bg-rose-950/60 rounded-full border border-rose-200 dark:border-rose-800/50">Retirada</span>`;
-      }
+      const tiposOperacao = Array.isArray(m.tipos) && m.tipos.length > 0 ? m.tipos : [m.tipo || 'venda'];
+      const badgeTipo = `<div class="flex flex-wrap gap-1">${tiposOperacao
+        .map((t) => obterBadgeTipoOperacao(t, tiposOperacao.length > 1 ? 'mini' : 'normal'))
+        .join('')}</div>`;
 
       let badgeStatus = `<span class="px-2.5 py-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 dark:bg-emerald-950/60 rounded-full border border-emerald-200 dark:border-emerald-800/50">Concluída</span>`;
       if (m.status === 'cancelada' || m.status === 'estornada') {
@@ -578,7 +613,7 @@ function aplicarFiltroBuscaMovimentacoes() {
     if (filtroApenasNaoVistas && m.lida) return false;
 
     const nomesItens = Array.isArray(m.itens)
-      ? m.itens.map((i) => i.nome.toLowerCase()).join(' ')
+      ? m.itens.map((i) => `${i.nome} ${i.tipo}`).join(' ').toLowerCase()
       : (m.produtos?.nome || m.produto_nome || '').toLowerCase();
 
     const obs = (m.observacao || '').toLowerCase();
@@ -645,7 +680,6 @@ async function visualizarMovimentacao(id) {
     const elQtd = document.getElementById('detalhesQuantidade');
     const elValorUnit = document.getElementById('detalhesValorUnit');
 
-    // Garante ou cria o container de detalhamento de múltiplos produtos no modal
     let containerListaLote = document.getElementById('detalhesListaProdutosLote');
     if (!containerListaLote && elProduto) {
       const cardSuperior = elProduto.closest('.grid');
@@ -665,23 +699,30 @@ async function visualizarMovimentacao(id) {
       if (containerListaLote) {
         containerListaLote.classList.remove('hidden');
         containerListaLote.innerHTML = `
-          <span class="block text-[10px] font-bold text-slate-400 uppercase px-1">Produtos incluídos nesta movimentação</span>
-          <div class="max-h-44 overflow-y-auto divide-y divide-slate-100 dark:divide-[#1C2C26] rounded-2xl border border-slate-200/80 dark:border-[#1C2C26] bg-slate-50/50 dark:bg-[#15241F]/40">
+          <span class="block text-[10px] font-bold text-slate-400 uppercase px-1">Produtos e operações realizadas</span>
+          <div class="max-h-48 overflow-y-auto divide-y divide-slate-100 dark:divide-[#1C2C26] rounded-2xl border border-slate-200/80 dark:border-[#1C2C26] bg-slate-50/50 dark:bg-[#15241F]/40">
             ${itens
               .map((item) => {
                 const vUnit = item.valor_unitario.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
                 const vTotal = item.total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                const badgeOp = obterBadgeTipoOperacao(item.tipo || m.tipo, 'mini');
+                const fluxoEstoque = obterDescricaoFluxoEstoque(item.tipo || m.tipo, item.quantidade);
                 const descTxt =
                   item.desconto > 0
                     ? `<span class="text-[10px] text-amber-600 dark:text-amber-400 ml-1">(-R$ ${item.desconto.toLocaleString('pt-BR', { minimumFractionDigits: 2 })})</span>`
                     : '';
                 return `
-                  <div class="px-3.5 py-2.5 flex items-center justify-between text-xs">
-                    <div>
-                      <p class="font-bold text-slate-800 dark:text-slate-200">${item.nome}</p>
-                      <p class="text-[11px] text-slate-500 dark:text-slate-400">${item.quantidade} un. &times; ${vUnit} ${descTxt}</p>
+                  <div class="px-3.5 py-2.5 flex items-center justify-between text-xs gap-2">
+                    <div class="space-y-0.5 min-w-0">
+                      <div class="flex items-center gap-2 flex-wrap">
+                        <p class="font-bold text-slate-800 dark:text-slate-200 truncate">${item.nome}</p>
+                        ${badgeOp}
+                      </div>
+                      <p class="text-[11px] text-slate-500 dark:text-slate-400">
+                        ${fluxoEstoque} &bull; ${item.quantidade} un. &times; ${vUnit} ${descTxt}
+                      </p>
                     </div>
-                    <span class="font-bold text-slate-800 dark:text-slate-100">${vTotal}</span>
+                    <span class="font-bold text-slate-800 dark:text-slate-100 shrink-0">${vTotal}</span>
                   </div>
                 `;
               })
@@ -691,7 +732,11 @@ async function visualizarMovimentacao(id) {
       }
     } else {
       const itemUnico = itens[0] || {};
-      if (elProduto) elProduto.textContent = itemUnico.nome || m.produtos?.nome || m.produto_nome || 'Produto Indisponível';
+      const tipoUnico = itemUnico.tipo || m.tipo || 'venda';
+      if (elProduto) {
+        const nomeProd = itemUnico.nome || m.produtos?.nome || m.produto_nome || 'Produto Indisponível';
+        elProduto.innerHTML = `${nomeProd} <span class="block text-[11px] font-normal mt-0.5">${obterDescricaoFluxoEstoque(tipoUnico, m.quantidade)}</span>`;
+      }
       if (elQtd) elQtd.textContent = `${m.quantidade} un.`;
       if (elValorUnit) {
         elValorUnit.textContent = `R$ ${parseFloat(m.valor_unitario || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
@@ -725,13 +770,10 @@ async function visualizarMovimentacao(id) {
 
     const badgeDiv = document.getElementById('detalhesBadgeTipo');
     if (badgeDiv) {
-      if (m.tipo === 'venda') {
-        badgeDiv.innerHTML = `<span class="px-2.5 py-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 dark:bg-emerald-950/60 rounded-full border border-emerald-200 dark:border-emerald-800/50">Venda</span>`;
-      } else if (m.tipo === 'compra') {
-        badgeDiv.innerHTML = `<span class="px-2.5 py-1 text-[11px] font-semibold text-blue-700 bg-blue-50 dark:bg-blue-950/60 rounded-full border border-blue-200 dark:border-blue-800/50">Compra</span>`;
-      } else {
-        badgeDiv.innerHTML = `<span class="px-2.5 py-1 text-[11px] font-semibold text-rose-700 bg-rose-50 dark:bg-rose-950/60 rounded-full border border-rose-200 dark:border-rose-800/50">Retirada</span>`;
-      }
+      const tiposOperacao = Array.isArray(m.tipos) && m.tipos.length > 0 ? m.tipos : [m.tipo || 'venda'];
+      badgeDiv.innerHTML = `<div class="flex flex-wrap gap-1.5">${tiposOperacao
+        .map((t) => obterBadgeTipoOperacao(t, 'normal'))
+        .join('')}</div>`;
     }
 
     if (!m.lida) {
@@ -821,6 +863,7 @@ function setupMovimentacaoEvents() {
 
     return {
       produto_id: prodId,
+      tipo,
       nome,
       estoque,
       quantidade: qtd,
@@ -832,15 +875,6 @@ function setupMovimentacaoEvents() {
   };
 
   const recalcularValores = () => {
-    const tipo = document.querySelector('input[name="movTipo"]:checked')?.value || 'venda';
-
-    carrinhoMovimentacao.forEach((item) => {
-      const subtotal = item.quantidade * item.valor_unitario;
-      const pct = tipo === 'venda' ? item.desconto_pct : 0;
-      item.desconto = subtotal * (pct / 100);
-      item.total = Math.max(0, subtotal - item.desconto);
-    });
-
     const totalCarrinho = carrinhoMovimentacao.reduce((acc, item) => acc + item.total, 0);
     const itemAtual = calcularItemAtualInputs();
     const totalPrevisto = totalCarrinho + (itemAtual ? itemAtual.total : 0);
@@ -864,21 +898,23 @@ function setupMovimentacaoEvents() {
     containerCarrinho.classList.remove('hidden');
     if (contadorItensCarrinho) contadorItensCarrinho.textContent = String(carrinhoMovimentacao.length);
 
-    const tipo = document.querySelector('input[name="movTipo"]:checked')?.value || 'venda';
-
     listaItensCarrinho.innerHTML = carrinhoMovimentacao
       .map((item, idx) => {
         const valorUnitFmt = item.valor_unitario.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
         const totalFmt = item.total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        const badgeOp = obterBadgeTipoOperacao(item.tipo, 'mini');
         const tagDesconto =
-          tipo === 'venda' && item.desconto_pct > 0
+          item.tipo === 'venda' && item.desconto_pct > 0
             ? `<span class="ml-1.5 px-1.5 py-0.5 text-[10px] font-bold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 rounded border border-amber-200/60">-${item.desconto_pct}%</span>`
             : '';
 
         return `
           <div class="p-3 flex items-center justify-between hover:bg-slate-50/80 dark:hover:bg-[#15241F]/60 transition-colors">
-            <div class="min-w-0 pr-3">
-              <p class="font-bold text-slate-800 dark:text-slate-200 text-xs truncate">${item.nome}</p>
+            <div class="min-w-0 pr-3 space-y-0.5">
+              <div class="flex items-center gap-2 flex-wrap">
+                <p class="font-bold text-slate-800 dark:text-slate-200 text-xs truncate">${item.nome}</p>
+                ${badgeOp}
+              </div>
               <p class="text-[11px] text-slate-500 dark:text-slate-400">
                 ${item.quantidade} un. &times; ${valorUnitFmt} ${tagDesconto}
               </p>
@@ -914,14 +950,19 @@ function setupMovimentacaoEvents() {
       return;
     }
 
-    const tipo = document.querySelector('input[name="movTipo"]:checked')?.value || 'venda';
+    // Procura item com o mesmo produto E mesmo tipo de operação
     const itemExistente = carrinhoMovimentacao.find(
-      (i) => String(i.produto_id) === String(novoItem.produto_id)
+      (i) => String(i.produto_id) === String(novoItem.produto_id) && i.tipo === novoItem.tipo
     );
 
-    const qtdTotalProduto = (itemExistente ? itemExistente.quantidade : 0) + novoItem.quantidade;
+    const qtdSaidaNoCarrinho = carrinhoMovimentacao
+      .filter((i) => String(i.produto_id) === String(novoItem.produto_id) && (i.tipo === 'venda' || i.tipo === 'retirada'))
+      .reduce((acc, i) => acc + i.quantidade, 0);
 
-    if ((tipo === 'venda' || tipo === 'retirada') && qtdTotalProduto > novoItem.estoque) {
+    if (
+      (novoItem.tipo === 'venda' || novoItem.tipo === 'retirada') &&
+      qtdSaidaNoCarrinho + novoItem.quantidade > novoItem.estoque
+    ) {
       mostrarNotificacaoToastMov(
         `Estoque insuficiente para "${novoItem.nome}". Disponível: ${novoItem.estoque} un.`,
         'erro'
@@ -930,9 +971,12 @@ function setupMovimentacaoEvents() {
     }
 
     if (itemExistente) {
-      itemExistente.quantidade = qtdTotalProduto;
+      itemExistente.quantidade += novoItem.quantidade;
       itemExistente.valor_unitario = novoItem.valor_unitario;
       itemExistente.desconto_pct = novoItem.desconto_pct;
+      const subtotal = itemExistente.quantidade * itemExistente.valor_unitario;
+      itemExistente.desconto = subtotal * ((itemExistente.tipo === 'venda' ? itemExistente.desconto_pct : 0) / 100);
+      itemExistente.total = Math.max(0, subtotal - itemExistente.desconto);
     } else {
       carrinhoMovimentacao.push(novoItem);
     }
@@ -1020,7 +1064,7 @@ function setupMovimentacaoEvents() {
         if (inputPorcentagem) inputPorcentagem.value = '';
       }
     }
-    renderizarCarrinhoMov();
+    recalcularValores();
   };
 
   radiosTipo.forEach((r) => r.addEventListener('change', toggleDesconto));
@@ -1048,19 +1092,24 @@ function setupMovimentacaoEvents() {
 
     if (isSubmittingMovimentacao) return;
 
-    const tipo = document.querySelector('input[name="movTipo"]:checked')?.value || 'venda';
     const observacaoDigitada = (document.getElementById('movObservacao')?.value || '').trim();
 
     const itensParaEnviar = [...carrinhoMovimentacao];
     const itemPendenteNoInput = calcularItemAtualInputs();
 
     if (itemPendenteNoInput) {
-      const existente = itensParaEnviar.find(
-        (i) => String(i.produto_id) === String(itemPendenteNoInput.produto_id)
-      );
-      const qtdTotal = (existente ? existente.quantidade : 0) + itemPendenteNoInput.quantidade;
+      const qtdSaidaExistente = itensParaEnviar
+        .filter(
+          (i) =>
+            String(i.produto_id) === String(itemPendenteNoInput.produto_id) &&
+            (i.tipo === 'venda' || i.tipo === 'retirada')
+        )
+        .reduce((acc, i) => acc + i.quantidade, 0);
 
-      if ((tipo === 'venda' || tipo === 'retirada') && qtdTotal > itemPendenteNoInput.estoque) {
+      if (
+        (itemPendenteNoInput.tipo === 'venda' || itemPendenteNoInput.tipo === 'retirada') &&
+        qtdSaidaExistente + itemPendenteNoInput.quantidade > itemPendenteNoInput.estoque
+      ) {
         mostrarNotificacaoToastMov(
           `Estoque insuficiente para "${itemPendenteNoInput.nome}". Disponível: ${itemPendenteNoInput.estoque} un.`,
           'erro'
@@ -1068,10 +1117,14 @@ function setupMovimentacaoEvents() {
         return;
       }
 
-      if (existente) {
-        existente.quantidade = qtdTotal;
-        existente.valor_unitario = itemPendenteNoInput.valor_unitario;
-        existente.desconto += itemPendenteNoInput.desconto;
+      const existenteMesmoTipo = itensParaEnviar.find(
+        (i) => String(i.produto_id) === String(itemPendenteNoInput.produto_id) && i.tipo === itemPendenteNoInput.tipo
+      );
+
+      if (existenteMesmoTipo) {
+        existenteMesmoTipo.quantidade += itemPendenteNoInput.quantidade;
+        existenteMesmoTipo.valor_unitario = itemPendenteNoInput.valor_unitario;
+        existenteMesmoTipo.desconto += itemPendenteNoInput.desconto;
       } else {
         itensParaEnviar.push(itemPendenteNoInput);
       }
@@ -1093,7 +1146,6 @@ function setupMovimentacaoEvents() {
       btnSubmitModal.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Registrando...`;
     }
 
-    // Se houver 2 ou mais produtos, gera um identificador único de lote para unificar o registro na tabela
     const codigoLote =
       itensParaEnviar.length > 1
         ? Math.random().toString(36).substring(2, 8).toUpperCase()
@@ -1112,10 +1164,10 @@ function setupMovimentacaoEvents() {
           method: 'POST',
           body: JSON.stringify({
             produto_id: item.produto_id,
-            tipo,
+            tipo: item.tipo,
             quantidade: item.quantidade,
             valor_unitario: item.valor_unitario || undefined,
-            desconto: tipo === 'venda' ? item.desconto : 0,
+            desconto: item.tipo === 'venda' ? item.desconto : 0,
             observacao: observacaoFinal
           })
         });
