@@ -46,8 +46,43 @@
   };
 })();
 
-// Inicialização automática para preencher o e-mail lembrado ao carregar a página de login
-window.addEventListener('DOMContentLoaded', () => {
+// Sincronização automática do cabeçalho em qualquer página (Dashboard, Produtos, etc.)
+document.addEventListener('DOMContentLoaded', () => {
+  const nomeSalvo = localStorage.getItem('nexus_user_name');
+  const cargoSalvo = localStorage.getItem('nexus_user_role') || localStorage.getItem('nexus_user_nivel');
+
+  const elUserName = document.getElementById('userName');
+  const elUserRole = document.getElementById('userRole');
+  const elUserAvatar = document.getElementById('userAvatar');
+
+  if (elUserName && nomeSalvo) {
+    elUserName.textContent = nomeSalvo;
+  }
+
+  if (elUserRole && cargoSalvo) {
+    const cargoLower = cargoSalvo.toLowerCase().trim();
+    let cargoFormatado = 'Administrador';
+    if (cargoLower === 'operador' || cargoLower === 'operator') {
+      cargoFormatado = 'Operador';
+    } else if (cargoLower === 'admin' || cargoLower === 'administrador') {
+      cargoFormatado = 'Administrador';
+    } else {
+      cargoFormatado = cargoSalvo.charAt(0).toUpperCase() + cargoSalvo.slice(1);
+    }
+    elUserRole.textContent = cargoFormatado;
+  }
+
+  if (elUserAvatar && nomeSalvo) {
+    const iniciais = nomeSalvo
+      .split(' ')
+      .filter(Boolean)
+      .map((n) => n[0])
+      .slice(0, 2)
+      .join('')
+      .toUpperCase();
+    elUserAvatar.textContent = iniciais;
+  }
+
   const emailSalvo = localStorage.getItem('nexus_lembrar_email');
   if (emailSalvo) {
     const inputEmail = document.getElementById('login-email');
@@ -71,7 +106,6 @@ async function handleLoginComLembrar(event) {
     return;
   }
 
-  // Gerencia a gravação ou remoção do e-mail no localStorage conforme o "Lembrar de mim"
   if (rememberCheck) {
     localStorage.setItem('nexus_lembrar_email', emailInput);
   } else {
@@ -92,23 +126,20 @@ async function handleLoginComLembrar(event) {
       const tokenToSave = resultado.token || resultado.session.access_token;
       const userObj = resultado.user || resultado.usuario || {};
       
-      // Extrai o nome e o cargo com múltiplas opções de fallback seguras
       const nomeFinal = resultado.nome || userObj.nome || userObj.user_metadata?.nome || emailInput.split('@')[0];
       const cargoFinal = resultado.cargo || resultado.role || userObj.cargo || userObj.role || userObj.user_metadata?.cargo || 'Administrador';
 
-      // ⚠️ GRAVAÇÃO ROBUSTA (Local Storage completo com Cargo e Nome)
       localStorage.setItem('token', tokenToSave);
       localStorage.setItem('nexus_user', JSON.stringify(userObj));
       localStorage.setItem('nexus_user_name', nomeFinal);
       localStorage.setItem('nexus_user_role', cargoFinal);
       localStorage.setItem('nexus_user_nivel', cargoFinal);
+      localStorage.setItem('nexus_user_empresa', resultado.empresa || userObj.empresa || 'Nexus Controller');
       
-      // Define também o cookie global para evitar perda no redirecionamento
       document.cookie = `token=${tokenToSave}; path=/; max-age=86400; SameSite=Lax`;
 
       console.log("Token, Nome e Cargo gravados com sucesso no Storage e Cookie!");
 
-      // Redireciona de imediato para o dashboard
       setTimeout(() => {
         window.location.href = 'dashboard.html';
       }, 150);
@@ -129,12 +160,10 @@ async function handleLoginComLembrar(event) {
   }
 }
 
-// Mantém compatibilidade com a função antiga caso seja chamada noutros sítios
 async function handleLogin(event) {
   return handleLoginComLembrar(event);
 }
 
-// Função de Registo de Nova Empresa/Utilizador com Validação de Segurança de Senha
 async function handleRegister(event) {
   event.preventDefault();
 
@@ -148,7 +177,6 @@ async function handleRegister(event) {
   const confirmarSenha = document.getElementById('reg-confirm-password')?.value;
   const alertMsg = document.getElementById('alert-msg');
 
-  // Validação rigorosa dos requisitos de segurança da senha
   const temTamanho = senha.length >= 6;
   const temMaiuscula = /[A-Z]/.test(senha);
   const temNumero = /[0-9]/.test(senha);
@@ -157,7 +185,7 @@ async function handleRegister(event) {
   if (!temTamanho || !temMaiuscula || !temNumero || !temEspecial) {
     if (alertMsg) {
       alertMsg.className = 'p-4 rounded-xl text-sm border font-medium bg-red-50 text-red-700 border-red-200';
-      alertMsg.textContent = 'A senha não atende aos requisitos de segurança (mínimo de 6 caracteres, 1 maiúscula, 1 número e 1 caractere especial).';
+      alertMsg.textContent = 'A senha não atende aos requisitos de segurança.';
       alertMsg.classList.remove('hidden');
     }
     return;
@@ -166,7 +194,7 @@ async function handleRegister(event) {
   if (senha !== confirmarSenha) {
     if (alertMsg) {
       alertMsg.className = 'p-4 rounded-xl text-sm border font-medium bg-red-50 text-red-700 border-red-200';
-      alertMsg.textContent = 'As senhas não coincidem. Por favor, verifique.';
+      alertMsg.textContent = 'As senhas não coincidem.';
       alertMsg.classList.remove('hidden');
     }
     return;
@@ -184,7 +212,7 @@ async function handleRegister(event) {
     if (response.ok) {
       if (alertMsg) {
         alertMsg.className = 'p-4 rounded-xl text-sm border font-medium bg-emerald-50 text-emerald-700 border-emerald-200';
-        alertMsg.textContent = 'Conta criada com sucesso! Redirecionando para o login...';
+        alertMsg.textContent = 'Conta criada com sucesso! Redirecionando...';
         alertMsg.classList.remove('hidden');
       }
       setTimeout(() => {
@@ -202,13 +230,9 @@ async function handleRegister(event) {
   }
 }
 
-// Função para mascarar e limitar o CNPJ automaticamente
 function mascaraCNPJ(input) {
-  let valor = input.value.replace(/\D/g, ''); // Remove tudo o que não for dígito
-  
-  if (valor.length > 14) {
-    valor = valor.substring(0, 14);
-  }
+  let valor = input.value.replace(/\D/g, '');
+  if (valor.length > 14) valor = valor.substring(0, 14);
 
   if (valor.length > 12) {
     valor = valor.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
@@ -223,7 +247,6 @@ function mascaraCNPJ(input) {
   input.value = valor;
 }
 
-// Função para Redefinição Direta de Senha (via Modal)
 async function enviarRecuperacaoDireta(event) {
   event.preventDefault();
 
@@ -262,7 +285,6 @@ async function enviarRecuperacaoDireta(event) {
   }
 }
 
-// Alternância entre os Modos de Login e Registo no Ecrã
 function toggleAuthMode() {
   const formLogin = document.getElementById('form-login');
   const formRegister = document.getElementById('form-register');
@@ -288,7 +310,6 @@ function toggleAuthMode() {
   }
 }
 
-// Funções de Controlo do Modal de Recuperação de Senha
 function abrirModalRecuperacao(event) {
   event.preventDefault();
   const modal = document.getElementById('modal-recuperacao');
@@ -300,7 +321,6 @@ function fecharModalRecuperacao() {
   if (modal) modal.classList.add('hidden');
 }
 
-// Visibilidade de Senha com Ícone
 function togglePassword(inputId, iconId) {
   const input = document.getElementById(inputId);
   const icon = document.getElementById(iconId);
@@ -315,7 +335,6 @@ function togglePassword(inputId, iconId) {
   }
 }
 
-// Acesso Rápido via Conta de Demonstração
 async function loginDemo() {
   const emailInput = document.getElementById('login-email');
   const passwordInput = document.getElementById('login-password');

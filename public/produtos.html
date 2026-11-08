@@ -762,24 +762,7 @@
     })();
   </script>
 
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      // Atualiza o nome e o cargo globalmente a partir do localStorage logo ao abrir a página
-      const nomeSalvo = localStorage.getItem('nexus_user_name');
-      const cargoSalvo = localStorage.getItem('nexus_user_role');
-
-      const elUserName = document.getElementById('userName');
-      const elUserRole = document.getElementById('userRole');
-
-      if (elUserName && nomeSalvo) {
-        elUserName.textContent = nomeSalvo;
-      }
-
-      if (elUserRole && cargoSalvo) {
-        elUserRole.textContent = cargoSalvo;
-      }
-    });
-  </script>
+  <script src="js/auth.js"></script>
 
 </body>
 
