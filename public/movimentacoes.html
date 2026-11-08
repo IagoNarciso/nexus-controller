@@ -187,10 +187,10 @@
     <!-- ÁREA CENTRAL DE CONTEÚDO -->
     <main class="p-8 space-y-6 max-w-7xl w-full mx-auto">
 
-      <!-- CABEÇALHO PADRONIZADO IGUAL A PRODUTOS -->
-      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <!-- BLOCO 1: CABEÇALHO COM FUNDO VERDE SUAVE (PADRÃO PRODUTOS E FORNECEDORES) -->
+      <div class="bg-emerald-50/35 dark:bg-emerald-950/20 border border-emerald-100/50 dark:border-emerald-800/40 rounded-2xl p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shadow-xs">
         <div>
-          <p class="text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">GESTÃO DE ESTOQUE</p>
+          <p class="text-[11px] font-bold text-emerald-800/80 dark:text-emerald-400 uppercase tracking-wider">GESTÃO DE ESTOQUE</p>
           <div class="flex items-baseline space-x-3 mt-1">
             <h1 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Movimentações</h1>
             <span id="totalMovimentacoesBadge" class="text-xs text-slate-400 font-medium">Carregando...</span>
@@ -199,90 +199,85 @@
 
         <!-- Botão Principal de Nova Movimentação -->
         <button id="btnNovaMovimentacao"
-          class="inline-flex items-center justify-center space-x-2 px-4 py-2.5 bg-[#0F392B] hover:bg-[#0a271d] dark:hover:bg-[#144737] text-white text-xs font-semibold rounded-xl shadow-xs border border-transparent dark:border-emerald-700/40 transition-colors cursor-pointer self-start sm:self-auto">
+          class="inline-flex items-center justify-center space-x-2 px-4 py-2.5 bg-[#0F392B] hover:bg-[#0a271d] dark:hover:bg-[#144737] text-white text-xs font-semibold rounded-xl shadow-sm border border-transparent dark:border-emerald-700/40 transition-colors cursor-pointer self-start sm:self-auto">
           <i class="fa-solid fa-plus text-xs"></i>
           <span>Nova Movimentação</span>
         </button>
       </div>
 
-      <!-- TABELA COM BARRA DE FERRAMENTAS E FUNDO ESVERDEADO PADRÃO (IGUAL A PRODUTOS) -->
-      <div class="bg-emerald-50/35 dark:bg-emerald-950/20 border border-emerald-100/50 dark:border-emerald-800/40 rounded-2xl p-6 space-y-4 shadow-xs">
+      <!-- BLOCO 2: CARD BRANCO COM BARRA DE PESQUISA NO TOPO E TABELA ABAIXO (IGUAL A PRODUTOS) -->
+      <div class="bg-white dark:bg-[#121E1A] rounded-2xl border border-slate-200/80 dark:border-[#1C2C26] shadow-xs overflow-hidden">
         
-        <!-- BARRA DE FERRAMENTAS SUPERIOR (PESQUISA + FILTROS NA MESMA LINHA) -->
-        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+        <!-- Barra Superior de Pesquisa e Filtros integrada ao Card da Tabela -->
+        <div class="p-4 border-b border-slate-100 dark:border-[#1C2C26] flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
           
-          <!-- Barra de Pesquisa -->
-          <div class="relative w-full lg:w-80">
-            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
-              <i class="fa-solid fa-magnifying-glass text-xs"></i>
+          <!-- Lado Esquerdo: Barra de Pesquisa + Botões de Status (Padrão Produtos) -->
+          <div class="flex flex-col sm:flex-row sm:items-center gap-3 flex-1">
+            <div class="relative w-full sm:w-64">
+              <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
+                <i class="fa-solid fa-magnifying-glass text-xs"></i>
+              </div>
+              <input type="text" id="inputSearchMovimentacoes" placeholder="Buscar por produto ou obs..."
+                class="w-full pl-9 pr-4 py-2 text-xs text-slate-700 dark:text-slate-200 bg-slate-50/70 dark:bg-[#15241F]/60 border border-slate-200/80 dark:border-[#1C2C26] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0F392B] dark:focus:ring-emerald-600/50 placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-colors" />
             </div>
-            <input type="text" id="inputSearchMovimentacoes" placeholder="Buscar por produto, observação..."
-              class="w-full pl-10 pr-4 py-2 text-xs text-slate-700 dark:text-slate-200 bg-white dark:bg-[#121E1A] border border-slate-200 dark:border-[#1C2C26] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0F392B] dark:focus:ring-emerald-600/50 placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-colors shadow-2xs" />
-          </div>
 
-          <!-- Filtros Secundários e Período (Alinhados à direita) -->
-          <div class="flex items-center space-x-2 flex-wrap gap-2">
-            <!-- Botão Não Vistas -->
-            <button type="button" id="btnFiltroNaoVistas" class="inline-flex items-center space-x-1.5 px-3 py-2 bg-white dark:bg-[#121E1A] hover:bg-slate-50 dark:hover:bg-[#172722] text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold transition-colors cursor-pointer border border-slate-200 dark:border-[#1C2C26] shadow-2xs">
-              <i class="fa-solid fa-eye-slash text-amber-500 text-xs"></i>
-              <span>Não Vistas</span>
-              <span id="badgeNaoVistasCount" class="ml-1 px-1.5 py-0.2 bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 rounded-full text-[10px] font-bold hidden">0</span>
-            </button>
-
-            <!-- Botão Marcar Vistas -->
-            <button type="button" id="btnMarcarTodasVistas" class="inline-flex items-center justify-center space-x-1.5 px-3 py-2 bg-white dark:bg-[#121E1A] hover:bg-slate-50 dark:hover:bg-[#172722] text-xs font-medium text-emerald-700 dark:text-emerald-400 rounded-xl transition-colors cursor-pointer border border-slate-200 dark:border-[#1C2C26] shadow-2xs" title="Marcar todas as movimentações como vistas">
-              <i class="fa-solid fa-check-double text-xs"></i>
-              <span>Marcar vistas</span>
-            </button>
-
-            <!-- Dropdown Customizado de Período -->
-            <div class="relative">
-              <button id="btnToggleFiltroPeriodo" type="button"
-                class="inline-flex items-center space-x-2 px-3.5 py-2 bg-white dark:bg-[#121E1A] hover:bg-slate-50 dark:hover:bg-[#172722] text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl border border-slate-200 dark:border-[#1C2C26] shadow-2xs transition-colors cursor-pointer">
-                <i class="fa-regular fa-calendar text-emerald-600 dark:text-emerald-400"></i>
-                <span id="textoPeriodoSelecionado">Este mês</span>
-                <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 ml-1"></i>
+            <div class="flex items-center space-x-2 flex-wrap gap-2">
+              <button type="button" id="btnFiltroNaoVistas" class="inline-flex items-center space-x-1.5 px-3 py-2 bg-white dark:bg-[#121E1A] hover:bg-slate-50 dark:hover:bg-[#172722] text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold transition-colors cursor-pointer border border-slate-200 dark:border-[#1C2C26] shadow-2xs">
+                <i class="fa-solid fa-eye-slash text-amber-500 text-xs"></i>
+                <span>Não Vistas</span>
+                <span id="badgeNaoVistasCount" class="ml-1 px-1.5 py-0.2 bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 rounded-full text-[10px] font-bold hidden">0</span>
               </button>
 
-              <!-- Opções do Dropdown de Período -->
-              <div id="dropdownFiltroPeriodo"
-                class="absolute right-0 mt-2 w-52 bg-white dark:bg-[#121E1A] border border-slate-200 dark:border-[#1C2C26] rounded-2xl shadow-xl hidden z-30 overflow-hidden text-xs py-1.5 divide-y divide-slate-100 dark:divide-[#1C2C26]">
-                <div class="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Selecionar Período</div>
-                <div id="listaOpcoesPeriodoMov"></div>
-              </div>
+              <button type="button" id="btnMarcarTodasVistas" class="inline-flex items-center justify-center space-x-1.5 px-3 py-2 bg-white dark:bg-[#121E1A] hover:bg-slate-50 dark:hover:bg-[#172722] text-xs font-medium text-emerald-700 dark:text-emerald-400 rounded-xl transition-colors cursor-pointer border border-slate-200 dark:border-[#1C2C26] shadow-2xs" title="Marcar todas as movimentações como vistas">
+                <i class="fa-solid fa-check-double text-xs"></i>
+                <span>Marcar vistas</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Lado Direito: Seletor de Período -->
+          <div class="relative self-start lg:self-auto">
+            <button id="btnToggleFiltroPeriodo" type="button"
+              class="inline-flex items-center space-x-2 px-3.5 py-2 bg-white dark:bg-[#121E1A] hover:bg-slate-50 dark:hover:bg-[#172722] text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl border border-slate-200 dark:border-[#1C2C26] shadow-2xs transition-colors cursor-pointer">
+              <i class="fa-regular fa-calendar text-emerald-600 dark:text-emerald-400"></i>
+              <span id="textoPeriodoSelecionado">Este mês</span>
+              <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 ml-1"></i>
+            </button>
+
+            <!-- Opções do Dropdown de Período -->
+            <div id="dropdownFiltroPeriodo"
+              class="absolute right-0 mt-2 w-52 bg-white dark:bg-[#121E1A] border border-slate-200 dark:border-[#1C2C26] rounded-2xl shadow-xl hidden z-30 overflow-hidden text-xs py-1.5 divide-y divide-slate-100 dark:divide-[#1C2C26]">
+              <div class="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Selecionar Período</div>
+              <div id="listaOpcoesPeriodoMov"></div>
             </div>
           </div>
 
         </div>
 
-        <!-- TABELA INTERNA COM FUNDO BRANCO -->
-        <div class="bg-white dark:bg-[#121E1A] rounded-2xl border border-slate-200/80 dark:border-[#1C2C26] shadow-xs overflow-hidden">
-          <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
-              <thead>
-                <tr class="bg-slate-50/50 dark:bg-[#0E1A16] border-b border-slate-100 dark:border-[#1C2C26] text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                  <th class="py-3.5 px-4">Data / ID</th>
-                  <th class="py-3.5 px-4">Produto</th>
-                  <th class="py-3.5 px-4">Quantidade</th>
-                  <th class="py-3.5 px-4">Solicitante</th>
-                  <th class="py-3.5 px-4">Tipo</th>
-                  <th class="py-3.5 px-4">Status</th>
-                  <th class="py-3.5 px-4">Observação</th>
-                  <th class="py-3.5 px-4 text-right">Ações</th>
-                </tr>
-              </thead>
-              <tbody id="tabelaMovimentacoesBody" class="divide-y divide-slate-100 dark:divide-[#1C2C26] text-xs text-slate-700 dark:text-slate-300">
-                <tr>
-                  <td colspan="8" class="py-12 text-center text-slate-400 font-medium text-xs">
-                    <i class="fa-solid fa-spinner fa-spin mr-2"></i> A carregar movimentações...
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+        <!-- Tabela Padronizada com 8 Colunas -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-slate-50/50 dark:bg-[#0E1A16] border-b border-slate-100 dark:border-[#1C2C26] text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                <th class="py-3.5 px-6">Data / ID</th>
+                <th class="py-3.5 px-6">Produto</th>
+                <th class="py-3.5 px-6">Quantidade</th>
+                <th class="py-3.5 px-6">Solicitante</th>
+                <th class="py-3.5 px-6">Tipo</th>
+                <th class="py-3.5 px-6">Status</th>
+                <th class="py-3.5 px-6">Observação</th>
+                <th class="py-3.5 px-6 text-right">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="tabelaMovimentacoesBody" class="divide-y divide-slate-100 dark:divide-[#1C2C26] text-xs text-slate-700 dark:text-slate-300">
+              <tr>
+                <td colspan="8" class="py-12 text-center text-slate-400 font-medium text-xs">
+                  <i class="fa-solid fa-spinner fa-spin mr-2"></i> Carregando movimentações...
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
-
-      </div>
 
       </div>
 
@@ -301,7 +296,7 @@
           </div>
           <div>
             <h3 class="text-sm font-bold text-slate-900 dark:text-slate-100">Nova Movimentação de Estoque</h3>
-            <p class="text-[11px] text-slate-400 dark:text-slate-500">Registe entradas, saídas ou retiradas do inventário</p>
+            <p class="text-[11px] text-slate-400 dark:text-slate-500">Registre entradas, saídas ou retiradas do inventário</p>
           </div>
         </div>
         <button type="button" id="btnFecharModalMov" class="w-8 h-8 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1C2C26] transition-colors flex items-center justify-center cursor-pointer">
@@ -409,7 +404,7 @@
           </div>
           <div>
             <h3 class="text-sm font-bold text-slate-900 dark:text-slate-100">Detalhes da Movimentação</h3>
-            <p id="detalhesIdData" class="text-[11px] text-slate-400 dark:text-slate-500">ID e Data do registo</p>
+            <p id="detalhesIdData" class="text-[11px] text-slate-400 dark:text-slate-500">ID e Data do registro</p>
           </div>
         </div>
         <button type="button" id="btnFecharModalDetalhes" class="w-8 h-8 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1C2C26] transition-colors flex items-center justify-center cursor-pointer">
@@ -475,7 +470,7 @@
       <div class="flex items-center gap-3 mb-4">
         <div class="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536l0 5.656l3.536 3.536M9.172 9.172L5.636 5.636l3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636l3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
           </svg>
         </div>
         <div>
