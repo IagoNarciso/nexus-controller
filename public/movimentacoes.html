@@ -205,13 +205,13 @@
         </button>
       </div>
 
-      <!-- BLOCO 2: CARD BRANCO COM BARRA DE PESQUISA NO TOPO E TABELA ABAIXO (IGUAL A PRODUTOS) -->
+      <!-- BLOCO 2: CARD BRANCO COM BARRA DE PESQUISA NO TOPO E TABELA ABAIXO -->
       <div class="bg-white dark:bg-[#121E1A] rounded-2xl border border-slate-200/80 dark:border-[#1C2C26] shadow-xs overflow-hidden">
         
         <!-- Barra Superior de Pesquisa e Filtros integrada ao Card da Tabela -->
         <div class="p-4 border-b border-slate-100 dark:border-[#1C2C26] flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
           
-          <!-- Lado Esquerdo: Barra de Pesquisa + Botões de Status (Padrão Produtos) -->
+          <!-- Lado Esquerdo: Barra de Pesquisa + Botões de Status -->
           <div class="flex flex-col sm:flex-row sm:items-center gap-3 flex-1">
             <div class="relative w-full sm:w-64">
               <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
@@ -284,19 +284,19 @@
     </main>
   </div>
 
-  <!-- MODAL DE NOVA MOVIMENTAÇÃO -->
+  <!-- MODAL DE NOVA MOVIMENTAÇÃO (COM SUPORTE A MÚLTIPLOS PRODUTOS) -->
   <div id="modalMovimentacao"
     class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs hidden p-4">
-    <div class="bg-white dark:bg-[#121E1A] rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden border border-slate-200/80 dark:border-[#1C2C26] animate-in fade-in zoom-in-95 duration-200">
+    <div class="bg-white dark:bg-[#121E1A] rounded-3xl shadow-2xl w-full max-w-xl max-h-[92vh] flex flex-col overflow-hidden border border-slate-200/80 dark:border-[#1C2C26] animate-in fade-in zoom-in-95 duration-200">
       
-      <div class="px-6 py-5 border-b border-slate-100 dark:border-[#1C2C26] flex justify-between items-center bg-slate-50/50 dark:bg-[#15241F]/40">
+      <div class="px-6 py-4 border-b border-slate-100 dark:border-[#1C2C26] flex justify-between items-center bg-slate-50/50 dark:bg-[#15241F]/40 shrink-0">
         <div class="flex items-center space-x-3">
           <div class="w-10 h-10 rounded-2xl bg-emerald-100 dark:bg-emerald-950/80 text-[#0F392B] dark:text-emerald-400 flex items-center justify-center border border-emerald-200/60 dark:border-emerald-800/50 shadow-xs">
             <i class="fa-solid fa-arrow-right-arrow-left text-sm"></i>
           </div>
           <div>
             <h3 class="text-sm font-bold text-slate-900 dark:text-slate-100">Nova Movimentação de Estoque</h3>
-            <p class="text-[11px] text-slate-400 dark:text-slate-500">Registre entradas, saídas ou retiradas do inventário</p>
+            <p class="text-[11px] text-slate-400 dark:text-slate-500">Adicione um ou mais produtos na mesma operação</p>
           </div>
         </div>
         <button type="button" id="btnFecharModalMov" class="w-8 h-8 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1C2C26] transition-colors flex items-center justify-center cursor-pointer">
@@ -304,85 +304,114 @@
         </button>
       </div>
 
-      <form id="formMovimentacao" class="p-6 space-y-4 text-xs">
+      <form id="formMovimentacao" class="p-6 space-y-4 text-xs overflow-y-auto flex-1">
         
-        <div class="space-y-1.5 relative" id="wrapperCustomSelectMov">
-          <label class="block font-semibold text-slate-700 dark:text-slate-300">Produto *</label>
-          
-          <div id="btnToggleCustomSelectMov"
-            class="w-full relative pl-10 pr-10 py-3 border border-slate-200 dark:border-[#1C2C26] bg-slate-50/50 dark:bg-[#15241F]/50 text-slate-800 dark:text-slate-100 rounded-xl focus:ring-2 focus:ring-[#0F392B]/20 focus:border-[#0F392B] dark:focus:ring-emerald-600/50 outline-none transition-all flex items-center justify-between cursor-pointer">
-            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-              <i class="fa-solid fa-box text-xs"></i>
-            </div>
-            <span id="textoProdutoSelecionadoMov" class="truncate text-slate-400">Selecione um produto...</span>
-            <div class="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none text-slate-400 transition-transform duration-200" id="iconeSetaSelectMov">
-              <i class="fa-solid fa-chevron-down text-[10px]"></i>
-            </div>
-          </div>
-
-          <input type="hidden" id="movProdutoId" required />
-
-          <div id="dropdownCustomOptionsMov"
-            class="absolute left-0 right-0 mt-1 bg-white dark:bg-[#121E1A] border border-slate-200 dark:border-[#1C2C26] rounded-2xl shadow-2xl hidden z-50 max-h-56 overflow-y-auto divide-y divide-slate-100 dark:divide-[#1C2C26]">
-          </div>
-        </div>
-
+        <!-- 1. Tipo de Movimentação -->
         <div class="space-y-1.5">
           <label class="block font-semibold text-slate-700 dark:text-slate-300">Tipo de Movimentação *</label>
           <div class="grid grid-cols-3 gap-2.5">
             <label class="cursor-pointer">
               <input type="radio" name="movTipo" value="venda" checked class="peer hidden">
-              <div class="p-3 text-center font-semibold rounded-xl border border-slate-200 dark:border-[#1C2C26] text-slate-600 dark:text-slate-400 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-950/60 peer-checked:border-emerald-500 peer-checked:text-emerald-700 dark:peer-checked:text-emerald-400 transition-all shadow-2xs">
-                <i class="fa-solid fa-cart-shopping mb-1 block text-sm"></i> Venda
+              <div class="p-2.5 text-center font-semibold rounded-xl border border-slate-200 dark:border-[#1C2C26] text-slate-600 dark:text-slate-400 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-950/60 peer-checked:border-emerald-500 peer-checked:text-emerald-700 dark:peer-checked:text-emerald-400 transition-all shadow-2xs">
+                <i class="fa-solid fa-cart-shopping mb-0.5 block text-sm"></i> Venda
               </div>
             </label>
             <label class="cursor-pointer">
               <input type="radio" name="movTipo" value="compra" class="peer hidden">
-              <div class="p-3 text-center font-semibold rounded-xl border border-slate-200 dark:border-[#1C2C26] text-slate-600 dark:text-slate-400 peer-checked:bg-blue-50 dark:peer-checked:bg-blue-950/60 peer-checked:border-blue-500 peer-checked:text-blue-700 dark:peer-checked:text-blue-400 transition-all shadow-2xs">
-                <i class="fa-solid fa-truck-ramp-box mb-1 block text-sm"></i> Compra
+              <div class="p-2.5 text-center font-semibold rounded-xl border border-slate-200 dark:border-[#1C2C26] text-slate-600 dark:text-slate-400 peer-checked:bg-blue-50 dark:peer-checked:bg-blue-950/60 peer-checked:border-blue-500 peer-checked:text-blue-700 dark:peer-checked:text-blue-400 transition-all shadow-2xs">
+                <i class="fa-solid fa-truck-ramp-box mb-0.5 block text-sm"></i> Compra
               </div>
             </label>
             <label class="cursor-pointer">
               <input type="radio" name="movTipo" value="retirada" class="peer hidden">
-              <div class="p-3 text-center font-semibold rounded-xl border border-slate-200 dark:border-[#1C2C26] text-slate-600 dark:text-slate-400 peer-checked:bg-rose-50 dark:peer-checked:bg-rose-950/60 peer-checked:border-rose-500 peer-checked:text-rose-700 dark:peer-checked:text-rose-400 transition-all shadow-2xs">
-                <i class="fa-solid fa-arrow-up-from-bracket mb-1 block text-sm"></i> Retirada
+              <div class="p-2.5 text-center font-semibold rounded-xl border border-slate-200 dark:border-[#1C2C26] text-slate-600 dark:text-slate-400 peer-checked:bg-rose-50 dark:peer-checked:bg-rose-950/60 peer-checked:border-rose-500 peer-checked:text-rose-700 dark:peer-checked:text-rose-400 transition-all shadow-2xs">
+                <i class="fa-solid fa-arrow-up-from-bracket mb-0.5 block text-sm"></i> Retirada
               </div>
             </label>
           </div>
         </div>
 
-        <div class="grid grid-cols-3 gap-3">
-          <div>
-            <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Quantidade *</label>
-            <input type="number" id="movQuantidade" min="1" value="1" required
-              class="w-full px-3.5 py-3 rounded-xl border border-slate-200 dark:border-[#1C2C26] bg-slate-50/50 dark:bg-[#15241F]/50 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#0F392B]">
+        <!-- 2. Caixa de Seleção e Adição de Produto -->
+        <div class="p-4 rounded-2xl bg-slate-50/70 dark:bg-[#15241F]/40 border border-slate-200/80 dark:border-[#1C2C26] space-y-3">
+          <div class="space-y-1.5 relative" id="wrapperCustomSelectMov">
+            <label class="block font-semibold text-slate-700 dark:text-slate-300">Selecionar Produto *</label>
+            
+            <div id="btnToggleCustomSelectMov"
+              class="w-full relative pl-10 pr-10 py-2.5 border border-slate-200 dark:border-[#1C2C26] bg-white dark:bg-[#121E1A] text-slate-800 dark:text-slate-100 rounded-xl focus:ring-2 focus:ring-[#0F392B]/20 focus:border-[#0F392B] dark:focus:ring-emerald-600/50 outline-none transition-all flex items-center justify-between cursor-pointer">
+              <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                <i class="fa-solid fa-box text-xs"></i>
+              </div>
+              <span id="textoProdutoSelecionadoMov" class="truncate text-slate-400">Selecione um produto...</span>
+              <div class="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none text-slate-400 transition-transform duration-200" id="iconeSetaSelectMov">
+                <i class="fa-solid fa-chevron-down text-[10px]"></i>
+              </div>
+            </div>
+
+            <input type="hidden" id="movProdutoId" />
+
+            <div id="dropdownCustomOptionsMov"
+              class="absolute left-0 right-0 mt-1 bg-white dark:bg-[#121E1A] border border-slate-200 dark:border-[#1C2C26] rounded-2xl shadow-2xl hidden z-50 max-h-52 overflow-y-auto divide-y divide-slate-100 dark:divide-[#1C2C26]">
+            </div>
           </div>
-          <div>
-            <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Valor Un. (R$)</label>
-            <input type="text" id="movValorUnitario" placeholder="0,00"
-              class="w-full px-3.5 py-3 rounded-xl border border-slate-200 dark:border-[#1C2C26] bg-slate-50/50 dark:bg-[#15241F]/50 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#0F392B]">
+
+          <div class="grid grid-cols-3 gap-3">
+            <div>
+              <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Quantidade *</label>
+              <input type="number" id="movQuantidade" min="1" value="1"
+                class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-[#1C2C26] bg-white dark:bg-[#121E1A] text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#0F392B]">
+            </div>
+            <div>
+              <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Valor Un. (R$)</label>
+              <input type="text" id="movValorUnitario" placeholder="0,00"
+                class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-[#1C2C26] bg-white dark:bg-[#121E1A] text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#0F392B]">
+            </div>
+            <div id="containerDescontoPct">
+              <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Desconto (%)</label>
+              <input type="number" id="movDescontoPorcentagem" min="0" max="100" step="0.1" placeholder="0%"
+                class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-[#1C2C26] bg-white dark:bg-[#121E1A] text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#0F392B]">
+            </div>
           </div>
-          <div id="containerDescontoPct">
-            <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Desconto (%)</label>
-            <input type="number" id="movDescontoPorcentagem" min="0" max="100" step="0.1" placeholder="0%"
-              class="w-full px-3.5 py-3 rounded-xl border border-slate-200 dark:border-[#1C2C26] bg-slate-50/50 dark:bg-[#15241F]/50 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#0F392B]">
+
+          <button type="button" id="btnAdicionarItemMov"
+            class="w-full py-2.5 px-4 bg-emerald-600/10 hover:bg-emerald-600/20 dark:bg-emerald-500/15 dark:hover:bg-emerald-500/25 text-[#0F392B] dark:text-emerald-300 font-bold rounded-xl border border-emerald-600/25 dark:border-emerald-500/30 transition-colors flex items-center justify-center space-x-2 cursor-pointer">
+            <i class="fa-solid fa-cart-plus text-xs"></i>
+            <span>Adicionar produto à lista</span>
+          </button>
+        </div>
+
+        <!-- 3. Lista de Produtos Adicionados na Operação (Carrinho) -->
+        <div id="containerCarrinhoMov" class="hidden space-y-2">
+          <div class="flex items-center justify-between px-1">
+            <span class="font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider text-[10px]">
+              Produtos na Operação (<span id="contadorItensCarrinhoMov">0</span>)
+            </span>
+            <button type="button" id="btnLimparCarrinhoMov" class="text-[11px] font-semibold text-rose-600 dark:text-rose-400 hover:underline cursor-pointer">
+              Limpar lista
+            </button>
+          </div>
+
+          <div id="listaItensCarrinhoMov" class="max-h-40 overflow-y-auto divide-y divide-slate-100 dark:divide-[#1C2C26] border border-slate-200/80 dark:border-[#1C2C26] rounded-2xl bg-white dark:bg-[#121E1A]">
           </div>
         </div>
 
+        <!-- 4. Total da Operação -->
         <div id="boxTotalCalculado"
           class="flex items-center justify-between p-3.5 bg-emerald-50/60 dark:bg-emerald-950/40 border border-emerald-100 dark:border-emerald-900/40 rounded-xl text-xs">
-          <span class="font-semibold text-slate-600 dark:text-slate-300"><i class="fa-solid fa-calculator text-emerald-600 dark:text-emerald-400 mr-1.5"></i>
-            Total da Operação:</span>
+          <span class="font-semibold text-slate-600 dark:text-slate-300">
+            <i class="fa-solid fa-calculator text-emerald-600 dark:text-emerald-400 mr-1.5"></i>
+            Total da Operação:
+          </span>
           <span id="labelTotalComDesconto" class="font-bold text-emerald-700 dark:text-emerald-400 text-sm">R$ 0,00</span>
         </div>
 
+        <!-- 5. Observação -->
         <div class="space-y-1.5">
           <label class="block font-semibold text-slate-700 dark:text-slate-300">Observação</label>
-          <textarea id="movObservacao" rows="2.5" placeholder="Ex: Venda no balcão / Perda por avaria"
-            class="w-full px-3.5 py-3 rounded-xl border border-slate-200 dark:border-[#1C2C26] bg-slate-50/50 dark:bg-[#15241F]/50 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#0F392B] resize-none"></textarea>
+          <textarea id="movObservacao" rows="2" placeholder="Ex: Venda no balcão / Nota fiscal com múltiplos itens"
+            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-[#1C2C26] bg-slate-50/50 dark:bg-[#15241F]/50 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#0F392B] resize-none"></textarea>
         </div>
 
-        <div class="pt-5 flex justify-end space-x-3 border-t border-slate-100 dark:border-[#1C2C26]">
+        <div class="pt-4 flex justify-end space-x-3 border-t border-slate-100 dark:border-[#1C2C26]">
           <button type="button" id="btnCancelarModalMov"
             class="px-4.5 py-2.5 font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#172722] rounded-xl transition-colors cursor-pointer">Cancelar</button>
           <button type="submit"

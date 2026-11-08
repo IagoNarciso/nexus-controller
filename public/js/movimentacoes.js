@@ -1,6 +1,7 @@
 let isRedirectingMovimentacoes = false;
 let listaProdutosCache = [];
 let listaMovimentacoesCache = [];
+let carrinhoMovimentacao = [];
 let filtroPeriodoAtual = 'este_mes';
 let filtroApenasNaoVistas = false;
 
@@ -106,7 +107,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 function carregarInfoUtilizador() {
-  const nomeUtilizador = localStorage.getItem('nexus_user_name') || 'Utilizador Nexus';
+  const nomeUtilizador = localStorage.getItem('nexus_user_name') || 'Usuário Nexus';
   const elUserName = document.getElementById('userName');
   if (elUserName) elUserName.textContent = nomeUtilizador;
 
@@ -231,10 +232,8 @@ function setupBotoesNaoVistas() {
       const pendentes = listaMovimentacoesCache.filter((m) => !m.lida);
       const todosIds = listaMovimentacoesCache.map((m) => String(m.id));
 
-      // 1. Salva imediatamente no localStorage para persistência local garantida
       salvarIdsVistosLocal(todosIds);
 
-      // 2. Atualiza no banco de dados usando a rota individual existente para cada item não lido
       btnMarcarTodas.disabled = true;
       btnMarcarTodas.classList.add('opacity-75', 'cursor-not-allowed', 'pointer-events-none');
 
@@ -249,7 +248,6 @@ function setupBotoesNaoVistas() {
           );
         }
 
-        // 3. Atualiza o estado em memória e a interface
         listaMovimentacoesCache.forEach((m) => {
           m.lida = true;
         });
@@ -349,7 +347,6 @@ async function carregarHistoricoMovimentacoes() {
     let movimentacoes = Array.isArray(dados) ? dados : [];
     const idsVistos = obterIdsVistosLocal();
 
-    // Sincroniza o status vindo do banco com os IDs já marcados como vistos no navegador
     movimentacoes = movimentacoes.map((m) => ({
       ...m,
       lida: Boolean(m.lida || idsVistos.includes(String(m.id)))
@@ -382,7 +379,7 @@ async function carregarHistoricoMovimentacoes() {
     listaMovimentacoesCache = movimentacoes;
 
     if (badgeTotal) {
-      badgeTotal.textContent = `${movimentacoes.length} registo(s) encontrado(s)`;
+      badgeTotal.textContent = `${movimentacoes.length} registro(s) encontrado(s)`;
     }
 
     aplicarFiltroBuscaMovimentacoes();
@@ -506,7 +503,7 @@ async function visualizarMovimentacao(id) {
   try {
     const elIdData = document.getElementById('detalhesIdData');
     if (elIdData) {
-      elIdData.textContent = `Registo #${m.id ? String(m.id).substring(0, 6) : '---'} | ${new Date(m.created_at).toLocaleString('pt-BR')}`;
+      elIdData.textContent = `Registro #${m.id ? String(m.id).substring(0, 6) : '---'} | ${new Date(m.created_at).toLocaleString('pt-BR')}`;
     }
 
     const elProduto = document.getElementById('detalhesProduto');
@@ -598,6 +595,168 @@ function setupMovimentacaoEvents() {
   const labelTotal = document.getElementById('labelTotalComDesconto');
   const radiosTipo = document.querySelectorAll('input[name="movTipo"]');
 
+  const btnAdicionarItem = document.getElementById('btnAdicionarItemMov');
+  const containerCarrinho = document.getElementById('containerCarrinhoMov');
+  const listaItensCarrinho = document.getElementById('listaItensCarrinhoMov');
+  const contadorItensCarrinho = document.getElementById('contadorItensCarrinhoMov');
+  const btnLimparCarrinho = document.getElementById('btnLimparCarrinhoMov');
+
+  const limparCamposSelecaoProduto = () => {
+    if (inputHiddenId) {
+      inputHiddenId.value = '';
+      delete inputHiddenId.dataset.nome;
+      delete inputHiddenId.dataset.estoque;
+    }
+    if (textoSelecionado) {
+      textoSelecionado.textContent = 'Selecione um produto...';
+      textoSelecionado.className = 'truncate text-slate-400';
+    }
+    if (inputQtd) inputQtd.value = '1';
+    if (inputValorUnit) inputValorUnit.value = '';
+    if (inputPorcentagem) inputPorcentagem.value = '';
+  };
+
+  const calcularItemAtualInputs = () => {
+    const prodId = inputHiddenId?.value;
+    if (!prodId) return null;
+
+    const tipo = document.querySelector('input[name="movTipo"]:checked')?.value || 'venda';
+    const qtd = Math.max(1, parseInt(inputQtd?.value, 10) || 1);
+    const valorUnit = parseFloat((inputValorUnit?.value || '').replace(/\./g, '').replace(',', '.')) || 0;
+    const pct = tipo === 'venda' ? Math.min(100, Math.max(0, parseFloat(inputPorcentagem?.value) || 0)) : 0;
+
+    const subtotal = qtd * valorUnit;
+    const descontoReais = subtotal * (pct / 100);
+    const totalLiquido = Math.max(0, subtotal - descontoReais);
+
+    const prodObj = listaProdutosCache.find((p) => String(p.id) === String(prodId));
+    const nome = inputHiddenId.dataset.nome || prodObj?.nome || 'Produto';
+    const estoque = Number(inputHiddenId.dataset.estoque ?? prodObj?.estoque ?? prodObj?.quantidade ?? 0);
+
+    return {
+      produto_id: prodId,
+      nome,
+      estoque,
+      quantidade: qtd,
+      valor_unitario: valorUnit,
+      desconto_pct: pct,
+      desconto: descontoReais,
+      total: totalLiquido
+    };
+  };
+
+  const recalcularValores = () => {
+    const tipo = document.querySelector('input[name="movTipo"]:checked')?.value || 'venda';
+
+    // Recalcula descontos dos itens já no carrinho caso o tipo mude (ex: de Venda para Compra)
+    carrinhoMovimentacao.forEach((item) => {
+      const subtotal = item.quantidade * item.valor_unitario;
+      const pct = tipo === 'venda' ? item.desconto_pct : 0;
+      item.desconto = subtotal * (pct / 100);
+      item.total = Math.max(0, subtotal - item.desconto);
+    });
+
+    const totalCarrinho = carrinhoMovimentacao.reduce((acc, item) => acc + item.total, 0);
+    const itemAtual = calcularItemAtualInputs();
+    const totalPrevisto = totalCarrinho + (itemAtual ? itemAtual.total : 0);
+
+    if (labelTotal) {
+      labelTotal.textContent = `R$ ${totalPrevisto.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    }
+  };
+
+  const renderizarCarrinhoMov = () => {
+    if (!containerCarrinho || !listaItensCarrinho) return;
+
+    if (carrinhoMovimentacao.length === 0) {
+      containerCarrinho.classList.add('hidden');
+      listaItensCarrinho.innerHTML = '';
+      if (contadorItensCarrinho) contadorItensCarrinho.textContent = '0';
+      recalcularValores();
+      return;
+    }
+
+    containerCarrinho.classList.remove('hidden');
+    if (contadorItensCarrinho) contadorItensCarrinho.textContent = String(carrinhoMovimentacao.length);
+
+    const tipo = document.querySelector('input[name="movTipo"]:checked')?.value || 'venda';
+
+    listaItensCarrinho.innerHTML = carrinhoMovimentacao
+      .map((item, idx) => {
+        const valorUnitFmt = item.valor_unitario.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        const totalFmt = item.total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        const tagDesconto =
+          tipo === 'venda' && item.desconto_pct > 0
+            ? `<span class="ml-1.5 px-1.5 py-0.5 text-[10px] font-bold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 rounded border border-amber-200/60">-${item.desconto_pct}%</span>`
+            : '';
+
+        return `
+          <div class="p-3 flex items-center justify-between hover:bg-slate-50/80 dark:hover:bg-[#15241F]/60 transition-colors">
+            <div class="min-w-0 pr-3">
+              <p class="font-bold text-slate-800 dark:text-slate-200 text-xs truncate">${item.nome}</p>
+              <p class="text-[11px] text-slate-500 dark:text-slate-400">
+                ${item.quantidade} un. &times; ${valorUnitFmt} ${tagDesconto}
+              </p>
+            </div>
+            <div class="flex items-center space-x-3 shrink-0">
+              <span class="font-bold text-emerald-700 dark:text-emerald-400 text-xs">${totalFmt}</span>
+              <button type="button" onclick="removerItemCarrinhoMov(${idx})" class="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer" title="Remover item">
+                <i class="fa-solid fa-trash-can text-xs"></i>
+              </button>
+            </div>
+          </div>
+        `;
+      })
+      .join('');
+
+    recalcularValores();
+  };
+
+  window.removerItemCarrinhoMov = (index) => {
+    carrinhoMovimentacao.splice(index, 1);
+    renderizarCarrinhoMov();
+  };
+
+  btnLimparCarrinho?.addEventListener('click', () => {
+    carrinhoMovimentacao = [];
+    renderizarCarrinhoMov();
+  });
+
+  btnAdicionarItem?.addEventListener('click', () => {
+    const novoItem = calcularItemAtualInputs();
+    if (!novoItem) {
+      mostrarNotificacaoToastMov('Selecione um produto antes de adicionar à lista.', 'erro');
+      return;
+    }
+
+    const tipo = document.querySelector('input[name="movTipo"]:checked')?.value || 'venda';
+    const itemExistente = carrinhoMovimentacao.find(
+      (i) => String(i.produto_id) === String(novoItem.produto_id)
+    );
+
+    const qtdTotalProduto = (itemExistente ? itemExistente.quantidade : 0) + novoItem.quantidade;
+
+    // Validação de estoque disponível para Venda ou Retirada
+    if ((tipo === 'venda' || tipo === 'retirada') && qtdTotalProduto > novoItem.estoque) {
+      mostrarNotificacaoToastMov(
+        `Estoque insuficiente para "${novoItem.nome}". Disponível: ${novoItem.estoque} un.`,
+        'erro'
+      );
+      return;
+    }
+
+    if (itemExistente) {
+      itemExistente.quantidade = qtdTotalProduto;
+      itemExistente.valor_unitario = novoItem.valor_unitario;
+      itemExistente.desconto_pct = novoItem.desconto_pct;
+    } else {
+      carrinhoMovimentacao.push(novoItem);
+    }
+
+    limparCamposSelecaoProduto();
+    renderizarCarrinhoMov();
+  });
+
   const renderizarDropdownProdutos = () => {
     if (!dropdownOptions) return;
 
@@ -611,7 +770,7 @@ function setupMovimentacaoEvents() {
         const estoque = p.estoque ?? p.quantidade ?? 0;
         return `
         <div class="p-3 hover:bg-slate-50 dark:hover:bg-[#15241F] transition-colors cursor-pointer flex items-center justify-between item-opcao-produto-mov"
-          data-id="${p.id}" data-nome="${p.nome}" data-estoque="${estoque}" data-preco="${p.preco_venda || 0}">
+          data-id="${p.id}" data-nome="${p.nome}" data-estoque="${estoque}" data-preco="${p.preco_venda || p.preco || 0}">
           <span class="font-medium text-slate-800 dark:text-slate-200">${p.nome}</span>
           <span class="text-[10px] px-2 py-0.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/50">Estoque: ${estoque} un.</span>
         </div>
@@ -627,7 +786,11 @@ function setupMovimentacaoEvents() {
         const estoque = item.getAttribute('data-estoque');
         const preco = item.getAttribute('data-preco');
 
-        if (inputHiddenId) inputHiddenId.value = id;
+        if (inputHiddenId) {
+          inputHiddenId.value = id;
+          inputHiddenId.dataset.nome = nome;
+          inputHiddenId.dataset.estoque = estoque;
+        }
         if (textoSelecionado) {
           textoSelecionado.textContent = `${nome} (Estoque: ${estoque} un.)`;
           textoSelecionado.className = 'truncate text-slate-800 dark:text-slate-100 font-medium';
@@ -635,7 +798,7 @@ function setupMovimentacaoEvents() {
 
         if (inputValorUnit && preco) {
           inputValorUnit.value = parseFloat(preco).toFixed(2).replace('.', ',');
-          recalculasValores();
+          recalcularValores();
         }
 
         dropdownOptions.classList.add('hidden');
@@ -659,29 +822,9 @@ function setupMovimentacaoEvents() {
     });
   }
 
-  const recalculasValores = () => {
-    const tipo = document.querySelector('input[name="movTipo"]:checked')?.value;
-    const qtd = parseInt(inputQtd?.value, 10) || 1;
-    const valorUnit = parseFloat((inputValorUnit?.value || '').replace(/\./g, '').replace(',', '.')) || 0;
-
-    const subtotal = qtd * valorUnit;
-    let descReais = 0;
-
-    if (tipo === 'venda' && inputPorcentagem) {
-      const pct = parseFloat(inputPorcentagem.value) || 0;
-      descReais = subtotal * (pct / 100);
-    }
-
-    const totalFinal = Math.max(0, subtotal - descReais);
-
-    if (labelTotal) {
-      labelTotal.textContent = `R$ ${totalFinal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-    }
-  };
-
-  inputQtd?.addEventListener('input', recalculasValores);
-  inputValorUnit?.addEventListener('input', recalculasValores);
-  inputPorcentagem?.addEventListener('input', recalculasValores);
+  inputQtd?.addEventListener('input', recalcularValores);
+  inputValorUnit?.addEventListener('input', recalcularValores);
+  inputPorcentagem?.addEventListener('input', recalcularValores);
 
   const toggleDesconto = () => {
     const tipo = document.querySelector('input[name="movTipo"]:checked')?.value;
@@ -693,18 +836,16 @@ function setupMovimentacaoEvents() {
         if (inputPorcentagem) inputPorcentagem.value = '';
       }
     }
-    recalculasValores();
+    renderizarCarrinhoMov();
   };
 
   radiosTipo.forEach((r) => r.addEventListener('change', toggleDesconto));
 
   const abrir = async () => {
     form?.reset();
-    if (textoSelecionado) {
-      textoSelecionado.textContent = 'Selecione um produto...';
-      textoSelecionado.className = 'truncate text-slate-400';
-    }
-    if (inputHiddenId) inputHiddenId.value = '';
+    carrinhoMovimentacao = [];
+    limparCamposSelecaoProduto();
+    renderizarCarrinhoMov();
     if (dropdownOptions) dropdownOptions.classList.add('hidden');
 
     toggleDesconto();
@@ -721,61 +862,107 @@ function setupMovimentacaoEvents() {
   form?.addEventListener('submit', async (e) => {
     e.preventDefault();
 
-    // Trava lógica imediata contra múltiplos cliques
     if (isSubmittingMovimentacao) return;
 
-    const produto_id = inputHiddenId?.value;
-    if (!produto_id) {
-      alert('Por favor, selecione um produto.');
+    const tipo = document.querySelector('input[name="movTipo"]:checked')?.value || 'venda';
+    const observacao = document.getElementById('movObservacao')?.value || '';
+
+    // Monta a lista final de itens (carrinho + item eventual selecionado no campo que ainda não foi adicionado)
+    const itensParaEnviar = [...carrinhoMovimentacao];
+    const itemPendenteNoInput = calcularItemAtualInputs();
+
+    if (itemPendenteNoInput) {
+      const existente = itensParaEnviar.find(
+        (i) => String(i.produto_id) === String(itemPendenteNoInput.produto_id)
+      );
+      const qtdTotal = (existente ? existente.quantidade : 0) + itemPendenteNoInput.quantidade;
+
+      if ((tipo === 'venda' || tipo === 'retirada') && qtdTotal > itemPendenteNoInput.estoque) {
+        mostrarNotificacaoToastMov(
+          `Estoque insuficiente para "${itemPendenteNoInput.nome}". Disponível: ${itemPendenteNoInput.estoque} un.`,
+          'erro'
+        );
+        return;
+      }
+
+      if (existente) {
+        existente.quantidade = qtdTotal;
+        existente.valor_unitario = itemPendenteNoInput.valor_unitario;
+        existente.desconto += itemPendenteNoInput.desconto;
+      } else {
+        itensParaEnviar.push(itemPendenteNoInput);
+      }
+    }
+
+    if (itensParaEnviar.length === 0) {
+      mostrarNotificacaoToastMov('Selecione ou adicione pelo menos um produto para registrar.', 'erro');
       return;
     }
 
     isSubmittingMovimentacao = true;
 
     const btnSubmitModal = form.querySelector('button[type="submit"]');
-    const textoOriginalBotao = btnSubmitModal ? btnSubmitModal.innerHTML : 'Confirmar Registo';
+    const textoOriginalBotao = btnSubmitModal ? btnSubmitModal.innerHTML : 'Registrar Movimentação';
 
     if (btnSubmitModal) {
       btnSubmitModal.disabled = true;
       btnSubmitModal.classList.add('opacity-75', 'cursor-not-allowed', 'pointer-events-none');
-      btnSubmitModal.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Registrando...`;
+      btnSubmitModal.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Registrando (${itensParaEnviar.length})...`;
     }
 
-    const tipo = document.querySelector('input[name="movTipo"]:checked')?.value;
-    const quantidade = parseInt(inputQtd?.value, 10);
-    const valorTexto = inputValorUnit?.value || '';
-    const observacao = document.getElementById('movObservacao')?.value || '';
-
-    const valor_unitario = valorTexto ? parseFloat(valorTexto.replace(/\./g, '').replace(',', '.')) : undefined;
-
-    let desconto = 0;
-    if (tipo === 'venda' && inputPorcentagem && inputPorcentagem.value) {
-      const pct = parseFloat(inputPorcentagem.value) || 0;
-      const subtotal = quantidade * (valor_unitario || 0);
-      desconto = subtotal * (pct / 100);
-    }
+    let sucessos = 0;
+    let ultimoErro = '';
 
     try {
-      const res = await fetchSeguraMovimentacoes('/api/movimentacoes', {
-        method: 'POST',
-        body: JSON.stringify({ produto_id, tipo, quantidade, valor_unitario, desconto, observacao })
-      });
+      for (const item of itensParaEnviar) {
+        const res = await fetchSeguraMovimentacoes('/api/movimentacoes', {
+          method: 'POST',
+          body: JSON.stringify({
+            produto_id: item.produto_id,
+            tipo,
+            quantidade: item.quantidade,
+            valor_unitario: item.valor_unitario || undefined,
+            desconto: tipo === 'venda' ? item.desconto : 0,
+            observacao
+          })
+        });
 
-      if (!res) return;
+        if (!res) return;
 
-      const data = await res.json();
+        if (res.ok) {
+          sucessos++;
+        } else {
+          const dataErro = await res.json().catch(() => ({}));
+          ultimoErro = dataErro.error || `Falha ao registrar ${item.nome}`;
+        }
+      }
 
-      if (!res.ok) {
-        alert(data.error || 'Erro ao registrar movimentação.');
+      if (sucessos === 0) {
+        mostrarNotificacaoToastMov(ultimoErro || 'Erro ao registrar movimentação.', 'erro');
         return;
       }
 
+      if (sucessos < itensParaEnviar.length) {
+        mostrarNotificacaoToastMov(
+          `${sucessos} de ${itensParaEnviar.length} itens registrados. (${ultimoErro})`,
+          'erro'
+        );
+      } else {
+        mostrarNotificacaoToastMov(
+          itensParaEnviar.length > 1
+            ? `${sucessos} produtos movimentados com sucesso!`
+            : 'Movimentação registrada com sucesso!',
+          'sucesso'
+        );
+      }
+
       fechar();
+      await carregarProdutosSelect();
       await carregarHistoricoMovimentacoes();
       await atualizarBadgeNaoLidas();
     } catch (err) {
       console.error('Erro no envio da movimentação:', err);
-      alert('Falha na comunicação com o servidor.');
+      mostrarNotificacaoToastMov('Falha na comunicação com o servidor.', 'erro');
     } finally {
       isSubmittingMovimentacao = false;
       if (btnSubmitModal) {
