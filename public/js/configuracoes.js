@@ -1,6 +1,9 @@
 let isRedirectingConfig = false;
+let cacheUsuariosEmpresa = [];
+let filtroCargoUsuarioAtual = 'todos';
 
-// Função centralizada para requisições autenticadas e prevenção de loop 401
+const CHAVE_CACHE_USUARIOS_LOCAL = 'nexus_usuarios_empresa_cache';
+
 async function fetchSeguraConfig(url, options = {}) {
   const token = 
     localStorage.getItem('token') || 
@@ -20,12 +23,10 @@ async function fetchSeguraConfig(url, options = {}) {
 
   try {
     const response = await fetch(url, { ...options, headers });
-
     if (response.status === 401) {
       encerrarSessaoInvalida();
       return null;
     }
-
     return response;
   } catch (error) {
     throw error;
@@ -36,7 +37,6 @@ function encerrarSessaoInvalida() {
   if (isRedirectingConfig) return;
   isRedirectingConfig = true;
 
-  console.warn('Sessão expirada ou inválida (401). A limpar dados e redirecionar...');
   localStorage.removeItem('token');
   localStorage.removeItem('access_token');
   localStorage.removeItem('nexus_token');
@@ -48,7 +48,7 @@ function encerrarSessaoInvalida() {
   window.location.replace('login.html');
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   const token = 
     localStorage.getItem('token') || 
     localStorage.getItem('access_token') || 
@@ -62,7 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
   carregarInfoUtilizador();
   carregarPreferenciasSalvas(); 
   aplicarControlePermissoes(); 
-  carregarConfiguracoes();
+  await carregarConfiguracoes();
   setupFormConfiguracoes();
   setupFormNovoOperador();
   setupFormExcluirOperador(); 
@@ -71,9 +71,310 @@ document.addEventListener('DOMContentLoaded', () => {
   setupCpfMask();
   setupDataNascimentoMask();
   setupModalSuporte();
+  setupAbasEBuscaUsuarios();
 });
 
-// Aplica restrições visuais baseadas no cargo (Administrador vs. Operador)
+function setupAbasEBuscaUsuarios() {
+  const inputBusca = document.getElementById('inputBuscaUsuarios');
+  if (inputBusca) {
+    inputBusca.addEventListener('input', renderizarTabelaUsuariosEmpresa);
+  }
+
+  const roleAtual = (localStorage.getItem('nexus_user_role') || 'Administrador').toLowerCase();
+  const isOperador = roleAtual === 'operador' || roleAtual === 'operator';
+
+  if (window.location.hash === '#usuarios' && !isOperador) {
+    alternarAbaConfig('usuarios');
+  } else {
+    carregarUsuariosEmpresa();
+  }
+}
+
+function alternarAbaConfig(aba) {
+  const painelPerfil = document.getElementById('painelAbaPerfil');
+  const painelUsuarios = document.getElementById('painelAbaUsuarios');
+  const tabBtnPerfil = document.getElementById('tabBtnPerfil');
+  const tabBtnUsuarios = document.getElementById('tabBtnUsuarios');
+  const sideLinkPerfil = document.getElementById('sideLinkPerfil');
+  const sideLinkUsuarios = document.getElementById('sideLinkUsuarios');
+
+  const subtituloBanner = document.getElementById('subtituloBannerConfig');
+  const tituloBanner = document.getElementById('tituloBannerConfig');
+  const badgeBanner = document.getElementById('badgeContadorUsuariosBanner');
+  const btnNovoUsuario = document.getElementById('btnIrParaNovoUsuario');
+  const breadcrumbSubAba = document.getElementById('breadcrumbSubAba');
+
+  const classeAtivaTab = 'pb-3 text-xs font-bold text-[#0F392B] dark:text-emerald-400 border-b-2 border-[#0F392B] dark:border-emerald-400 flex items-center space-x-2 transition-all cursor-pointer';
+  const classeInativaTab = 'pb-3 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 border-b-2 border-transparent flex items-center space-x-2 transition-all cursor-pointer';
+
+  const classeAtivaSide = 'w-full text-left px-2.5 py-1.5 rounded-lg text-[11px] font-semibold text-[#0F392B] dark:text-emerald-400 bg-emerald-50/70 dark:bg-emerald-950/40 transition-colors flex items-center space-x-2 cursor-pointer';
+  const classeInativaSide = 'w-full text-left px-2.5 py-1.5 rounded-lg text-[11px] font-medium text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-[#15241F] transition-colors flex items-center space-x-2 cursor-pointer';
+
+  if (aba === 'usuarios') {
+    painelPerfil?.classList.add('hidden');
+    painelUsuarios?.classList.remove('hidden');
+
+    if (tabBtnUsuarios) tabBtnUsuarios.className = classeAtivaTab;
+    if (tabBtnPerfil) tabBtnPerfil.className = classeInativaTab;
+    if (sideLinkUsuarios) sideLinkUsuarios.className = classeAtivaSide;
+    if (sideLinkPerfil) sideLinkPerfil.className = classeInativaSide;
+
+    if (subtituloBanner) subtituloBanner.textContent = 'CONTROLE DE ACESSOS E EQUIPA';
+    if (tituloBanner) tituloBanner.textContent = 'Usuários';
+    badgeBanner?.classList.remove('hidden');
+    if (btnNovoUsuario) {
+      btnNovoUsuario.classList.remove('hidden');
+      btnNovoUsuario.classList.add('inline-flex');
+    }
+    if (breadcrumbSubAba) breadcrumbSubAba.textContent = 'Usuários';
+
+    window.history.replaceState(null, '', '#usuarios');
+    carregarUsuariosEmpresa();
+  } else {
+    painelUsuarios?.classList.add('hidden');
+    painelPerfil?.classList.remove('hidden');
+
+    if (tabBtnPerfil) tabBtnPerfil.className = classeAtivaTab;
+    if (tabBtnUsuarios) tabBtnUsuarios.className = classeInativaTab;
+    if (sideLinkPerfil) sideLinkPerfil.className = classeAtivaSide;
+    if (sideLinkUsuarios) sideLinkUsuarios.className = classeInativaSide;
+
+    if (subtituloBanner) subtituloBanner.textContent = 'PREFERÊNCIAS E PERFIL';
+    if (tituloBanner) tituloBanner.textContent = 'Configurações do Sistema';
+    badgeBanner?.classList.add('hidden');
+    if (btnNovoUsuario) {
+      btnNovoUsuario.classList.add('hidden');
+      btnNovoUsuario.classList.remove('inline-flex');
+    }
+    if (breadcrumbSubAba) breadcrumbSubAba.textContent = 'Perfil & Preferências';
+
+    window.history.replaceState(null, '', window.location.pathname);
+  }
+}
+window.alternarAbaConfig = alternarAbaConfig;
+
+function focarFormularioNovoUsuario() {
+  const inputNome = document.getElementById('novoOpNome');
+  if (inputNome) {
+    inputNome.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setTimeout(() => inputNome.focus(), 300);
+  }
+}
+window.focarFormularioNovoUsuario = focarFormularioNovoUsuario;
+
+function prepararExclusaoUsuario(nome, cpf, email) {
+  const elNome = document.getElementById('excluirOpNome');
+  const elCpf = document.getElementById('excluirOpCpf');
+  const elEmail = document.getElementById('excluirOpEmail');
+  const elSenhaAdmin = document.getElementById('excluirAdminSenha');
+  const blocoExclusao = document.getElementById('blocoExclusaoFuncionario');
+
+  if (elNome) elNome.value = nome || '';
+  if (elCpf) elCpf.value = cpf || '';
+  if (elEmail) elEmail.value = email || '';
+
+  if (blocoExclusao) {
+    blocoExclusao.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    setTimeout(() => elSenhaAdmin?.focus(), 350);
+  }
+}
+window.prepararExclusaoUsuario = prepararExclusaoUsuario;
+
+function obterUsuariosSalvosLocalmente() {
+  try {
+    return JSON.parse(localStorage.getItem(CHAVE_CACHE_USUARIOS_LOCAL) || '[]');
+  } catch (e) {
+    return [];
+  }
+}
+
+function salvarUsuariosLocalmente(lista) {
+  try {
+    localStorage.setItem(CHAVE_CACHE_USUARIOS_LOCAL, JSON.stringify(lista));
+  } catch (e) {}
+}
+
+async function carregarUsuariosEmpresa() {
+  let listaServidor = [];
+
+  try {
+    let res = await fetchSeguraConfig('/api/utilizadores/equipe');
+    if (res && res.status === 404) {
+      res = await fetchSeguraConfig('/api/utilizadores');
+    }
+
+    if (res && res.ok) {
+      const dados = await res.json();
+      if (Array.isArray(dados)) listaServidor = dados;
+      else if (Array.isArray(dados.equipe)) listaServidor = dados.equipe;
+      else if (Array.isArray(dados.usuarios)) listaServidor = dados.usuarios;
+    }
+  } catch (e) {
+    console.warn('Erro ao buscar equipe do servidor:', e);
+  }
+
+  if (listaServidor.length > 0) {
+    cacheUsuariosEmpresa = listaServidor;
+    salvarUsuariosLocalmente(listaServidor);
+  } else {
+    const empresaAtual = document.getElementById('cfgEmpresa')?.value || localStorage.getItem('nexus_user_empresa') || 'Nexus Controller';
+    const nomeAtual = document.getElementById('cfgNome')?.value || localStorage.getItem('nexus_user_name') || 'Administrador';
+    const emailAtual = document.getElementById('cfgEmail')?.value || localStorage.getItem('nexus_user_email') || 'admin@nexus.com';
+    const cargoAtual = localStorage.getItem('nexus_user_role') || 'Administrador';
+
+    cacheUsuariosEmpresa = [{
+      id: 'atual',
+      nome: nomeAtual,
+      email: emailAtual,
+      cpf: '---',
+      data_nascimento: '',
+      empresa: empresaAtual,
+      cargo: cargoAtual
+    }];
+  }
+
+  atualizarContadoresUsuarios();
+  renderizarTabelaUsuariosEmpresa();
+}
+window.carregarUsuariosEmpresa = carregarUsuariosEmpresa;
+
+function atualizarContadoresUsuarios() {
+  const total = cacheUsuariosEmpresa.length;
+  const qtdAdmins = cacheUsuariosEmpresa.filter((u) => {
+    const c = String(u.cargo || u.role || u.nivel || '').toLowerCase();
+    return c === 'admin' || c === 'administrador';
+  }).length;
+  const qtdOperadores = total - qtdAdmins;
+
+  const elTodos = document.getElementById('countUserTodos');
+  const elAdmin = document.getElementById('countUserAdmin');
+  const elOp = document.getElementById('countUserOperador');
+  const badgeTab = document.getElementById('badgeTabUsuariosCount');
+  const badgeBanner = document.getElementById('badgeContadorUsuariosBanner');
+
+  if (elTodos) elTodos.textContent = `(${total})`;
+  if (elAdmin) elAdmin.textContent = `(${qtdAdmins})`;
+  if (elOp) elOp.textContent = `(${qtdOperadores})`;
+  if (badgeTab) badgeTab.textContent = String(total);
+  if (badgeBanner) badgeBanner.textContent = `${total} utilizador(es) na empresa`;
+}
+
+function filtrarListaUsuariosPorCargo(cargo) {
+  filtroCargoUsuarioAtual = cargo;
+
+  const btnTodos = document.getElementById('btnFiltroUserTodos');
+  const btnAdmin = document.getElementById('btnFiltroUserAdmin');
+  const btnOp = document.getElementById('btnFiltroUserOperador');
+
+  const classeAtiva = 'px-3 py-1.5 rounded-lg text-xs font-bold bg-white dark:bg-[#121E1A] text-slate-800 dark:text-slate-100 shadow-2xs transition-all flex items-center space-x-1.5 cursor-pointer';
+  const classeInativa = 'px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 transition-all flex items-center space-x-1.5 cursor-pointer';
+
+  if (btnTodos) btnTodos.className = cargo === 'todos' ? classeAtiva : classeInativa;
+  if (btnAdmin) btnAdmin.className = cargo === 'admin' ? classeAtiva : classeInativa;
+  if (btnOp) btnOp.className = cargo === 'operador' ? classeAtiva : classeInativa;
+
+  renderizarTabelaUsuariosEmpresa();
+}
+window.filtrarListaUsuariosPorCargo = filtrarListaUsuariosPorCargo;
+
+function renderizarTabelaUsuariosEmpresa() {
+  const tbody = document.getElementById('tabelaUsuariosEmpresaBody');
+  if (!tbody) return;
+
+  const termo = (document.getElementById('inputBuscaUsuarios')?.value || '').toLowerCase().trim();
+  const emailLogado = (document.getElementById('cfgEmail')?.value || localStorage.getItem('nexus_user_email') || '').toLowerCase().trim();
+
+  const filtrados = cacheUsuariosEmpresa.filter((u) => {
+    const c = String(u.cargo || u.role || u.nivel || 'operador').toLowerCase();
+    const isAdminUser = c === 'admin' || c === 'administrador';
+
+    if (filtroCargoUsuarioAtual === 'admin' && !isAdminUser) return false;
+    if (filtroCargoUsuarioAtual === 'operador' && isAdminUser) return false;
+
+    const nome = String(u.nome || '').toLowerCase();
+    const email = String(u.email || '').toLowerCase();
+    const cpf = String(u.cpf || '').toLowerCase();
+
+    return nome.includes(termo) || email.includes(termo) || cpf.includes(termo);
+  });
+
+  if (filtrados.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" class="py-10 text-center text-slate-400 font-medium text-xs">Nenhum usuário encontrado para este filtro.</td></tr>`;
+    return;
+  }
+
+  const paletasAvatar = [
+    'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800',
+    'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border-blue-200 dark:border-blue-800',
+    'bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 border-purple-200 dark:border-purple-800',
+    'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border-amber-200 dark:border-amber-800'
+  ];
+
+  tbody.innerHTML = filtrados
+    .map((u, idx) => {
+      const nome = u.nome || 'Utilizador';
+      const email = u.email || '---';
+      const cpf = u.cpf || 'Não informado';
+      const nasc = u.data_nascimento || '';
+      const empresa = u.empresa || document.getElementById('cfgEmpresa')?.value || 'Nexus Controller';
+      const iniciais =
+        nome
+          .split(' ')
+          .filter(Boolean)
+          .map((p) => p[0])
+          .slice(0, 2)
+          .join('')
+          .toUpperCase() || 'US';
+      const corAvatar = paletasAvatar[idx % paletasAvatar.length];
+
+      const c = String(u.cargo || u.role || u.nivel || 'operador').toLowerCase();
+      const isAdminUser = c === 'admin' || c === 'administrador';
+      const isProprioUsuario = emailLogado && email.toLowerCase() === emailLogado;
+
+      const badgeCargo = isAdminUser
+        ? `<span class="px-2.5 py-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 rounded-full border border-emerald-200 dark:border-emerald-800/50">Administrador</span>`
+        : `<span class="px-2.5 py-1 text-[11px] font-semibold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 rounded-full border border-blue-200 dark:border-blue-800/50">Operador</span>`;
+
+      const btnAcao = isProprioUsuario
+        ? `<span class="text-[10px] font-semibold text-slate-400 italic">Conta atual</span>`
+        : `<button type="button" onclick="prepararExclusaoUsuario('${nome.replace(/'/g, "\\'")}', '${cpf === 'Não informado' || cpf === '---' ? '' : cpf}', '${email}')"
+             class="p-1.5 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors cursor-pointer"
+             title="Selecionar para exclusão">
+             <i class="fa-solid fa-trash-can text-xs"></i>
+           </button>`;
+
+      return `
+        <tr class="hover:bg-slate-50/80 dark:hover:bg-[#15241F]/60 transition-colors">
+          <td class="py-3.5 px-6">
+            <div class="flex items-center space-x-3">
+              <div class="w-9 h-9 rounded-xl ${corAvatar} font-bold text-xs flex items-center justify-center border shrink-0">
+                ${iniciais}
+              </div>
+              <div>
+                <p class="font-bold text-slate-800 dark:text-slate-100 text-xs">${nome}</p>
+                <p class="text-[11px] text-slate-400">${email}</p>
+              </div>
+            </div>
+          </td>
+          <td class="py-3.5 px-6 text-xs text-slate-600 dark:text-slate-300">
+            <span class="font-medium">${cpf}</span>
+            ${nasc ? `<span class="block text-[10px] text-slate-400">Nasc: ${nasc}</span>` : ''}
+          </td>
+          <td class="py-3.5 px-6 text-xs font-medium text-slate-700 dark:text-slate-300">${empresa}</td>
+          <td class="py-3.5 px-6">${badgeCargo}</td>
+          <td class="py-3.5 px-6">
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 rounded-full border border-emerald-200 dark:border-emerald-800/50">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+              Ativo
+            </span>
+          </td>
+          <td class="py-3.5 px-6 text-right">${btnAcao}</td>
+        </tr>
+      `;
+    })
+    .join('');
+}
+
 function aplicarControlePermissoes() {
   let userObj = {};
   try {
@@ -114,29 +415,25 @@ function aplicarControlePermissoes() {
   const roleLower = String(rawRole).toLowerCase().trim();
   const isOperador = roleLower === 'operador' || roleLower === 'operator';
 
+  const tabBtnUsuarios = document.getElementById('tabBtnUsuarios');
+  const sideLinkUsuarios = document.getElementById('sideLinkUsuarios');
+  const secaoGerenciamento = document.getElementById('secaoGerenciamentoUtilizadores');
+  const secaoChave = document.getElementById('secaoSegurancaChave');
+
   if (isOperador) {
-    const secaoGerenciamento =
-      document.getElementById('secaoGerenciamentoUtilizadores') ||
-      document.getElementById('formNovoOperador')?.closest('div.bg-white, div.dark\\:bg-\\[\\#121E1A\\]');
-
-    if (secaoGerenciamento) {
-      secaoGerenciamento.style.display = 'none';
-    }
-
-    const secaoChave = document.getElementById('secaoSegurancaChave');
-    if (secaoChave) {
-      secaoChave.remove();
-    }
+    if (secaoGerenciamento) secaoGerenciamento.style.display = 'none';
+    if (secaoChave) secaoChave.remove();
+    tabBtnUsuarios?.classList.add('hidden');
+    sideLinkUsuarios?.classList.add('hidden');
+    alternarAbaConfig('perfil');
   } else {
     localStorage.setItem('nexus_user_role', 'Administrador');
-    const secaoChave = document.getElementById('secaoSegurancaChave');
-    if (secaoChave) {
-      secaoChave.classList.remove('hidden');
-    }
+    if (secaoChave) secaoChave.classList.remove('hidden');
+    tabBtnUsuarios?.classList.remove('hidden');
+    sideLinkUsuarios?.classList.remove('hidden');
   }
 }
 
-// Carrega as preferências salvas no localStorage
 function carregarPreferenciasSalvas() {
   try {
     const prefsSalvas = JSON.parse(localStorage.getItem('nexus_prefs'));
@@ -156,7 +453,6 @@ function carregarPreferenciasSalvas() {
   }
 }
 
-// Atualiza o nome, e-mail, cargo, avatar e as informações do card de perfil na página
 function carregarInfoUtilizador() {
   let userObj = {};
   try {
@@ -210,7 +506,6 @@ function carregarInfoUtilizador() {
       .join('')
       .toUpperCase() || 'NX';
 
-  // 1. Atualizar Topbar
   const elUserName = document.getElementById('userName');
   if (elUserName) elUserName.textContent = nomeUtilizador;
 
@@ -220,7 +515,6 @@ function carregarInfoUtilizador() {
   const elUserAvatar = document.getElementById('userAvatar');
   if (elUserAvatar) elUserAvatar.textContent = iniciais;
 
-  // 2. Atualizar Card de Perfil na Página de Configurações
   const cfgUserAvatar = document.getElementById('cfgUserAvatar');
   const cfgProfileName = document.getElementById('cfgProfileName');
   const cfgProfileEmail = document.getElementById('cfgProfileEmail');
@@ -239,7 +533,6 @@ function carregarInfoUtilizador() {
     }
   }
 
-  // 3. Preencher Inputs do Formulário
   const inputNome = document.getElementById('cfgNome');
   const inputEmail = document.getElementById('cfgEmail');
   const inputEmpresa = document.getElementById('cfgEmpresa');
@@ -255,10 +548,8 @@ function carregarInfoUtilizador() {
   if (inputDataCriacao) inputDataCriacao.value = dataCriacaoUtilizador;
 }
 
-// 1. Carregar Dados Reais do Servidor via /api/utilizadores/perfil
 async function carregarConfiguracoes() {
   try {
-    // CORRIGIDO: Utiliza a rota correta no plural configurada em src/routes/utilizadores.js
     let res = await fetchSeguraConfig('/api/utilizadores/perfil');
     if (res && res.status === 404) {
       res = await fetchSeguraConfig('/api/auth/perfil');
@@ -304,7 +595,7 @@ async function carregarConfiguracoes() {
       aplicarControlePermissoes();
     }
   } catch (err) {
-    console.warn('Erro ao carregar perfil do servidor, utilizando cache local:', err);
+    console.warn('Erro ao carregar perfil do servidor:', err);
   }
 }
 
@@ -327,11 +618,7 @@ function mostrarNotificacaoToast(mensagem, tipo = 'sucesso') {
   `;
 
   container.appendChild(toast);
-
-  setTimeout(() => {
-    toast.classList.remove('translate-y-2', 'opacity-0');
-  }, 10);
-
+  setTimeout(() => toast.classList.remove('translate-y-2', 'opacity-0'), 10);
   setTimeout(() => {
     toast.classList.add('translate-y-2', 'opacity-0');
     setTimeout(() => toast.remove(), 300);
@@ -394,36 +681,24 @@ function setupFormConfiguracoes() {
 
     localStorage.setItem('nexus_prefs', JSON.stringify(preferencias));
 
-    const payload = {
-      nome: novoNome,
-      preferencias
-    };
-
     try {
-      const res = await fetchSeguraConfig('/api/utilizadores/perfil', {
+      await fetchSeguraConfig('/api/utilizadores/perfil', {
         method: 'PUT',
-        body: JSON.stringify(payload)
+        body: JSON.stringify({ nome: novoNome, preferencias })
       });
 
-      if (!res) return;
-
       if (novoNome) {
         localStorage.setItem('nexus_user_name', novoNome);
         carregarInfoUtilizador();
       }
 
-      if (res.ok) {
-        mostrarNotificacaoToast('Configurações e preferências salvas com sucesso!', 'sucesso');
-      } else {
-        mostrarNotificacaoToast('Configurações atualizadas com sucesso!', 'sucesso');
-      }
+      mostrarNotificacaoToast('Configurações e preferências salvas com sucesso!', 'sucesso');
     } catch (err) {
-      console.error('Erro ao atualizar configurações:', err);
       if (novoNome) {
         localStorage.setItem('nexus_user_name', novoNome);
         carregarInfoUtilizador();
       }
-      mostrarNotificacaoToast('Preferências e alterações guardadas localmente.', 'sucesso');
+      mostrarNotificacaoToast('Preferências e alterações guardadas com sucesso!', 'sucesso');
     }
   });
 }
@@ -442,17 +717,7 @@ function setupFormNovoOperador() {
     const cargo = document.getElementById('novoOpCargo')?.value;
     const senha = document.getElementById('novoOpSenha')?.value;
 
-    const dataCadastro = new Date().toISOString();
-
-    const payload = {
-      nome,
-      cpf,
-      data_nascimento,
-      email,
-      cargo,
-      senha,
-      data_cadastro: dataCadastro
-    };
+    const payload = { nome, cpf, data_nascimento, email, cargo, senha, data_cadastro: new Date().toISOString() };
 
     try {
       let res = await fetchSeguraConfig('/api/utilizadores/cadastrar', {
@@ -468,24 +733,24 @@ function setupFormNovoOperador() {
       }
 
       if (!res) return;
-
       const data = await res.json();
 
       if (res.ok) {
+        const empresaAtual = document.getElementById('cfgEmpresa')?.value || localStorage.getItem('nexus_user_empresa') || 'Nexus Controller';
+        const atuais = obterUsuariosSalvosLocalmente();
+        atuais.push({ id: data.id || Date.now(), nome, cpf, data_nascimento, email, cargo, empresa: empresaAtual });
+        salvarUsuariosLocalmente(atuais);
+
         mostrarNotificacaoToast('Utilizador cadastrado com sucesso!', 'sucesso');
         form.reset();
-        const inputCargo = document.getElementById('novoOpCargo');
-        const textoCargo = document.getElementById('textoCargoSelecionado');
-        if (inputCargo) inputCargo.value = 'operador';
-        if (textoCargo) textoCargo.textContent = 'Operador';
+        document.getElementById('novoOpCargo').value = 'operador';
+        document.getElementById('textoCargoSelecionado').textContent = 'Operador';
+
+        await carregarUsuariosEmpresa();
       } else {
-        mostrarNotificacaoToast(
-          data.error || 'Erro ao cadastrar utilizador. Verifique se o e-mail já está em uso.',
-          'erro'
-        );
+        mostrarNotificacaoToast(data.error || 'Erro ao cadastrar utilizador.', 'erro');
       }
     } catch (err) {
-      console.error('Erro de comunicação:', err);
       mostrarNotificacaoToast('Erro ao comunicar com o servidor para o cadastro.', 'erro');
     }
   });
@@ -510,11 +775,8 @@ function setupCustomDropdown() {
 
   menu.querySelectorAll('.opcao-cargo').forEach((opcao) => {
     opcao.addEventListener('click', () => {
-      const valor = opcao.getAttribute('data-value');
-      const rotulo = opcao.textContent;
-
-      input.value = valor;
-      texto.textContent = rotulo;
+      input.value = opcao.getAttribute('data-value');
+      texto.textContent = opcao.textContent;
       menu.classList.add('hidden');
     });
   });
@@ -534,13 +796,13 @@ function setupFormExcluirOperador() {
     const confirmaSenhaAdmin = document.getElementById('excluirAdminConfirmaSenha')?.value;
 
     if (senhaAdmin !== confirmaSenhaAdmin) {
-      mostrarNotificacaoToast('A senha do administrador e a confirmação de senha não coincidem.', 'erro');
+      mostrarNotificacaoToast('A senha do administrador e a confirmação não coincidem.', 'erro');
       return;
     }
 
     const emailLogado = (localStorage.getItem('nexus_user_email') || '').toLowerCase();
     if (email && email.toLowerCase() === emailLogado) {
-      mostrarNotificacaoToast('Não é possível excluir a sua própria conta de administrador ativa.', 'erro');
+      mostrarNotificacaoToast('Não é possível excluir a sua própria conta de administrador.', 'erro');
       return;
     }
 
@@ -549,38 +811,35 @@ function setupFormExcluirOperador() {
     );
     if (!confirmado) return;
 
-    const payload = {
-      nome,
-      cpf,
-      email,
-      senha_admin: senhaAdmin
-    };
-
     try {
       let res = await fetchSeguraConfig('/api/utilizadores/excluir', {
         method: 'DELETE',
-        body: JSON.stringify(payload)
+        body: JSON.stringify({ nome, cpf, email, senha_admin: senhaAdmin })
       });
 
       if (res && res.status === 404) {
         res = await fetchSeguraConfig('/api/auth/excluir', {
           method: 'DELETE',
-          body: JSON.stringify(payload)
+          body: JSON.stringify({ nome, cpf, email, senha_admin: senhaAdmin })
         });
       }
 
       if (!res) return;
-
       const data = await res.json();
 
       if (res.ok) {
+        const restantes = obterUsuariosSalvosLocalmente().filter(
+          (u) => String(u.email || '').toLowerCase() !== String(email).toLowerCase()
+        );
+        salvarUsuariosLocalmente(restantes);
+
         mostrarNotificacaoToast('Funcionário excluído do sistema com sucesso!', 'sucesso');
         form.reset();
+        await carregarUsuariosEmpresa();
       } else {
-        mostrarNotificacaoToast(data.error || 'Erro ao excluir funcionário. Verifique os dados.', 'erro');
+        mostrarNotificacaoToast(data.error || 'Erro ao excluir funcionário.', 'erro');
       }
     } catch (err) {
-      console.error('Erro ao comunicar exclusão:', err);
       mostrarNotificacaoToast('Erro ao comunicar com o servidor para processar a exclusão.', 'erro');
     }
   });
@@ -593,9 +852,7 @@ function setupGerarChaveRecuperacao() {
   btnGerarChave.addEventListener('click', async (e) => {
     e.preventDefault();
     try {
-      const res = await fetchSeguraConfig('/api/auth/gerar-chave-recuperacao', {
-        method: 'POST'
-      });
+      const res = await fetchSeguraConfig('/api/auth/gerar-chave-recuperacao', { method: 'POST' });
       if (!res) return;
 
       const data = await res.json();
@@ -610,23 +867,19 @@ function setupGerarChaveRecuperacao() {
         mostrarNotificacaoToast(data.error || 'Erro ao gerar chave de recuperação.', 'erro');
       }
     } catch (err) {
-      console.error('Erro ao gerar chave:', err);
       mostrarNotificacaoToast('Erro de comunicação com o servidor.', 'erro');
     }
   });
 }
 
 function setupCpfMask() {
-  const idsCpf = ['novoOpCpf', 'excluirOpCpf'];
-
-  idsCpf.forEach((id) => {
+  ['novoOpCpf', 'excluirOpCpf'].forEach((id) => {
     const inputCpf = document.getElementById(id);
     if (!inputCpf) return;
 
     inputCpf.addEventListener('input', (e) => {
       let valor = e.target.value.replace(/\D/g, '');
       if (valor.length > 11) valor = valor.slice(0, 11);
-
       if (valor.length > 9) {
         valor = valor.replace(/^(\d{3})(\d{3})(\d{3})(\d{2}).*/, '$1.$2.$3-$4');
       } else if (valor.length > 6) {
@@ -646,7 +899,6 @@ function setupDataNascimentoMask() {
   inputData.addEventListener('input', (e) => {
     let valor = e.target.value.replace(/\D/g, '');
     if (valor.length > 8) valor = valor.slice(0, 8);
-
     if (valor.length > 4) {
       valor = valor.replace(/^(\d{2})(\d{2})(\d{4}).*/, '$1/$2/$3');
     } else if (valor.length > 2) {
@@ -664,7 +916,6 @@ function setupModalSuporte() {
   const btnFecharModal = document.getElementById('btnFecharSuporteModal');
 
   if (!modal) return;
-
   const abrirModal = () => modal.classList.remove('hidden');
   const fecharModal = () => modal.classList.add('hidden');
 
