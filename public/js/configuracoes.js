@@ -231,7 +231,8 @@ async function carregarUsuariosEmpresa() {
       cpf: '---',
       data_nascimento: '',
       empresa: empresaAtual,
-      cargo: cargoAtual
+      cargo: cargoAtual,
+      ativo: true
     }];
   }
 
@@ -301,7 +302,7 @@ function renderizarTabelaUsuariosEmpresa() {
   });
 
   if (filtrados.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" class="py-10 text-center text-slate-400 font-medium text-xs">Nenhum usuário encontrado para este filtro.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6" class="py-14 text-center text-slate-400 font-medium text-xs">Nenhum usuário encontrado para este filtro.</td></tr>`;
     return;
   }
 
@@ -332,50 +333,91 @@ function renderizarTabelaUsuariosEmpresa() {
       const c = String(u.cargo || u.role || u.nivel || 'operador').toLowerCase();
       const isAdminUser = c === 'admin' || c === 'administrador';
       const isProprioUsuario = emailLogado && email.toLowerCase() === emailLogado;
+      const estaAtivo = u.ativo !== false;
 
       const badgeCargo = isAdminUser
-        ? `<span class="px-2.5 py-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 rounded-full border border-emerald-200 dark:border-emerald-800/50">Administrador</span>`
-        : `<span class="px-2.5 py-1 text-[11px] font-semibold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 rounded-full border border-blue-200 dark:border-blue-800/50">Operador</span>`;
+        ? `<span class="px-3 py-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 rounded-full border border-emerald-200 dark:border-emerald-800/50">Administrador</span>`
+        : `<span class="px-3 py-1 text-[11px] font-semibold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 rounded-full border border-blue-200 dark:border-blue-800/50">Operador</span>`;
+
+      const badgeStatus = estaAtivo
+        ? `<span class="inline-flex items-center gap-1.5 px-3 py-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 rounded-full border border-emerald-200 dark:border-emerald-800/50"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Ativo</span>`
+        : `<span class="inline-flex items-center gap-1.5 px-3 py-1 text-[11px] font-semibold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/60 rounded-full border border-rose-200 dark:border-rose-800/50"><span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Inativo</span>`;
 
       const btnAcao = isProprioUsuario
-        ? `<span class="text-[10px] font-semibold text-slate-400 italic">Conta atual</span>`
-        : `<button type="button" onclick="prepararExclusaoUsuario('${nome.replace(/'/g, "\\'")}', '${cpf === 'Não informado' || cpf === '---' ? '' : cpf}', '${email}')"
-             class="p-1.5 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors cursor-pointer"
-             title="Selecionar para exclusão">
-             <i class="fa-solid fa-trash-can text-xs"></i>
-           </button>`;
+        ? `<span class="text-[11px] font-semibold text-slate-400 italic pr-2">Conta atual</span>`
+        : `
+          <div class="flex items-center justify-end space-x-3">
+            <button type="button" onclick="alternarStatusUsuario('${u.id}', ${!estaAtivo}, '${nome.replace(/'/g, "\\'")}')"
+               class="px-3.5 py-1.5 text-[11px] font-semibold rounded-xl transition-colors cursor-pointer shadow-2xs ${
+                 estaAtivo 
+                   ? 'text-amber-700 bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/50 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/40' 
+                   : 'text-emerald-700 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/40'
+               }"
+               title="${estaAtivo ? 'Desativar acesso' : 'Ativar acesso'}">
+               <i class="fa-solid ${estaAtivo ? 'fa-ban' : 'fa-check'} mr-1.5"></i> ${estaAtivo ? 'Desativar' : 'Ativar'}
+            </button>
+            <button type="button" onclick="prepararExclusaoUsuario('${nome.replace(/'/g, "\\'")}', '${cpf === 'Não informado' || cpf === '---' ? '' : cpf}', '${email}')"
+               class="px-3 py-1.5 text-xs text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl transition-colors cursor-pointer border border-slate-200 dark:border-[#1C2C26] hover:border-rose-200 dark:hover:border-rose-900"
+               title="Selecionar para exclusão permanente">
+               <i class="fa-solid fa-trash-can"></i>
+            </button>
+          </div>
+        `;
 
       return `
         <tr class="hover:bg-slate-50/80 dark:hover:bg-[#15241F]/60 transition-colors">
-          <td class="py-3.5 px-6">
-            <div class="flex items-center space-x-3">
-              <div class="w-9 h-9 rounded-xl ${corAvatar} font-bold text-xs flex items-center justify-center border shrink-0">
+          <td class="py-5 px-6">
+            <div class="flex items-center space-x-4">
+              <div class="w-10 h-10 rounded-2xl ${corAvatar} font-bold text-xs flex items-center justify-center border shrink-0 shadow-2xs">
                 ${iniciais}
               </div>
               <div>
                 <p class="font-bold text-slate-800 dark:text-slate-100 text-xs">${nome}</p>
-                <p class="text-[11px] text-slate-400">${email}</p>
+                <p class="text-[11px] text-slate-400 mt-0.5">${email}</p>
               </div>
             </div>
           </td>
-          <td class="py-3.5 px-6 text-xs text-slate-600 dark:text-slate-300">
+          <td class="py-5 px-6 text-xs text-slate-600 dark:text-slate-300">
             <span class="font-medium">${cpf}</span>
-            ${nasc ? `<span class="block text-[10px] text-slate-400">Nasc: ${nasc}</span>` : ''}
+            ${nasc ? `<span class="block text-[11px] text-slate-400 mt-0.5">Nasc: ${nasc}</span>` : ''}
           </td>
-          <td class="py-3.5 px-6 text-xs font-medium text-slate-700 dark:text-slate-300">${empresa}</td>
-          <td class="py-3.5 px-6">${badgeCargo}</td>
-          <td class="py-3.5 px-6">
-            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 rounded-full border border-emerald-200 dark:border-emerald-800/50">
-              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-              Ativo
-            </span>
-          </td>
-          <td class="py-3.5 px-6 text-right">${btnAcao}</td>
+          <td class="py-5 px-6 text-xs font-medium text-slate-700 dark:text-slate-300">${empresa}</td>
+          <td class="py-5 px-6">${badgeCargo}</td>
+          <td class="py-5 px-6">${badgeStatus}</td>
+          <td class="py-5 px-6 text-right">${btnAcao}</td>
         </tr>
       `;
     })
     .join('');
 }
+
+async function alternarStatusUsuario(id, novoStatus, nomeFuncionario) {
+  const acao = novoStatus ? 'ativar' : 'desativar';
+  const confirmado = await mostrarConfirmacaoCustomizada(
+    `Tem a certeza de que deseja ${acao} o acesso de "${nomeFuncionario}"?`
+  );
+  if (!confirmado) return;
+
+  try {
+    const res = await fetchSeguraConfig(`/api/utilizadores/status/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ ativo: novoStatus })
+    });
+
+    if (!res) return;
+    const data = await res.json();
+
+    if (res.ok) {
+      mostrarNotificacaoToast(data.message || 'Status atualizado com sucesso!', 'sucesso');
+      await carregarUsuariosEmpresa();
+    } else {
+      mostrarNotificacaoToast(data.error || 'Erro ao atualizar status.', 'erro');
+    }
+  } catch (err) {
+    mostrarNotificacaoToast('Erro de comunicação com o servidor.', 'erro');
+  }
+}
+window.alternarStatusUsuario = alternarStatusUsuario;
 
 function aplicarControlePermissoes() {
   let userObj = {};
@@ -740,7 +782,7 @@ function setupFormNovoOperador() {
       if (res.ok) {
         const empresaAtual = document.getElementById('cfgEmpresa')?.value || localStorage.getItem('nexus_user_empresa') || 'Nexus Controller';
         const atuais = obterUsuariosSalvosLocalmente();
-        atuais.push({ id: data.id || Date.now(), nome, cpf, data_nascimento, email, cargo, empresa: empresaAtual });
+        atuais.push({ id: data.id || Date.now(), nome, cpf, data_nascimento, email, cargo, empresa: empresaAtual, ativo: true });
         salvarUsuariosLocalmente(atuais);
 
         mostrarNotificacaoToast('Utilizador cadastrado com sucesso!', 'sucesso');
