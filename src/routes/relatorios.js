@@ -87,6 +87,15 @@ async function obterDadosUsuario(req) {
   return null;
 }
 
+// Função auxiliar rigorosa para filtrar apenas os produtos aprovados/ativos (Idêntico ao Frontend)
+function filtrarProdutosValidos(produtosBrutos) {
+  const lista = Array.isArray(produtosBrutos) ? produtosBrutos : [];
+  return lista.filter((p) => {
+    const status = String(p.status || p.estado || '').toLowerCase();
+    return status === 'aprovado' || status === 'ativo' || p.aprovado === true || !p.status;
+  });
+}
+
 // Rota de Chat / Consultas Inteligentes para Relatórios
 router.post('/chat-analise', autenticarToken, async (req, res) => {
   const { mensagem } = req.body;
@@ -106,14 +115,15 @@ router.post('/chat-analise', autenticarToken, async (req, res) => {
     const textoQuery = mensagem.toLowerCase();
 
     if (textoQuery.includes('estoque baixo') || textoQuery.includes('critico') || textoQuery.includes('crítico')) {
-      const { data: produtos, error } = await supabaseAdmin
+      const { data: produtosBrutos, error } = await supabaseAdmin
         .from('produtos')
         .select('*')
         .eq('empresa', empresaNome);
 
       if (error) throw error;
 
-      const criticos = produtos.filter(p => p.estoque <= (p.quantidade_minima || 12));
+      const produtos = filtrarProdutosValidos(produtosBrutos);
+      const criticos = produtos.filter(p => Number(p.estoque ?? p.quantidade ?? 0) <= (p.quantidade_minima || p.estoque_minimo || 12));
 
       if (criticos.length === 0) {
         return res.json({ resposta: 'Excelente notícia! Atualmente não existem produtos com estoque crítico na empresa.' });
@@ -121,17 +131,18 @@ router.post('/chat-analise', autenticarToken, async (req, res) => {
 
       let respostaHtml = `📊 **Encontrei ${criticos.length} produto(s) com estoque crítico:**\n\n`;
       criticos.forEach(p => {
-        respostaHtml += `• **${p.nome}** (SKU: ${p.sku || 'N/D'}): **${p.estoque} unidades** em estoque (Mínimo: ${p.quantidade_minima || 12})\n`;
+        const qtd = Number(p.estoque ?? p.quantidade ?? 0);
+        respostaHtml += `• **${p.nome}** (SKU: ${p.sku || 'N/D'}): **${qtd} unidades** em estoque (Mínimo: ${p.quantidade_minima || p.estoque_minimo || 12})\n`;
       });
 
-      return res.json({ resposta: respostaHtml });
+      return res.json({ resposta: respostaHtml, permitirPdf: true });
     }
 
     if (textoQuery.includes('movimentacao') || textoQuery.includes('movimentações') || textoQuery.includes('historico') || textoQuery.includes('histórico')) {
       const { data: movimentacoes, error } = await supabaseAdmin
         .from('movimentacoes')
         .select('*')
-        .eq('empresa', empresaNome) // <-- ISOLAMENTO MULTI-EMPRESA APLICADO
+        .eq('empresa', empresaNome)
         .order('created_at', { ascending: false })
         .limit(5);
 
@@ -144,21 +155,27 @@ router.post('/chat-analise', autenticarToken, async (req, res) => {
       let respostaHtml = `📋 **Aqui estão as 5 movimentações mais recentes:**\n\n`;
       movimentacoes.forEach(m => {
         const tipoFormatado = (m.tipo || '').toUpperCase();
-        respostaHtml += `• [${tipoFormatado}] **${m.produto_nome || 'Produto'}** — Qtd: **${m.quantidade}** (${new Date(m.created_at).toLocaleDateString('pt-BR')})\n`;
+        respostaHtml += `• [${tipoFormatado}] **${m.produto_nome || m.produtos?.nome || 'Produto'}** — Qtd: **${m.quantidade}** (${new Date(m.created_at).toLocaleDateString('pt-BR')})\n`;
       });
 
-      return res.json({ resposta: respostaHtml });
+      return res.json({ resposta: respostaHtml, permitirPdf: true });
     }
 
     if (textoQuery.includes('resumo') || textoQuery.includes('geral') || textoQuery.includes('total') || textoQuery.includes('balanço') || textoQuery.includes('relatório')) {
-      const { data: produtos } = await supabaseAdmin
+      const { data: produtosBrutos } = await supabaseAdmin
         .from('produtos')
-        .select('estoque, preco_venda')
+        .select('*')
         .eq('empresa', empresaNome);
 
-      const totalProdutos = produtos?.length || 0;
-      const estoqueTotal = produtos?.reduce((acc, p) => acc + (p.estoque || 0), 0) || 0;
-      const valorTotalEstoque = produtos?.reduce((acc, p) => acc + ((p.estoque || 0) * (p.preco_venda || 0)), 0) || 0;
+      const produtos = filtrarProdutosValidos(produtosBrutos);
+
+      const totalProdutos = produtos.length;
+      const estoqueTotal = produtos.reduce((acc, p) => acc + Number(p.estoque ?? p.quantidade ?? 0), 0);
+      const valorTotalEstoque = produtos.reduce((acc, p) => {
+        const qtd = Number(p.estoque ?? p.quantidade ?? 0);
+        const preco = Number(p.preco_venda ?? p.preco ?? 0);
+        return acc + (qtd * preco);
+      }, 0);
 
       let respostaHtml = `📈 **Resumo Geral do Inventário (${empresaNome}):**\n\n` +
         `• Total de Itens Cadastrados: **${totalProdutos}**\n` +
@@ -176,7 +193,8 @@ router.post('/chat-analise', autenticarToken, async (req, res) => {
       resposta: `Olá, Boss! Compreendi a sua pergunta, mas para relatórios precisos tente usar comandos como:\n` +
         `1. *"Quais produtos estão com estoque crítico?"*\n` +
         `2. *"Mostrar movimentações recentes"*\n` +
-        `3. *"Resumo geral do inventário"*` 
+        `3. *"Resumo geral do inventário"*`,
+      permitirPdf: true
     });
 
   } catch (err) {
@@ -185,7 +203,7 @@ router.post('/chat-analise', autenticarToken, async (req, res) => {
   }
 });
 
-// Rota para Gerar e Descarregar o Relatório em PDF (Com Logótipo Vetorial e Resumo Executivo)
+// Rota para Gerar e Descarregar o Relatório em PDF (Com Filtro Rigoroso de Produtos Ativos)
 router.get('/exportar-pdf', autenticarToken, async (req, res) => {
   try {
     const usuario = await obterDadosUsuario(req);
@@ -196,11 +214,13 @@ router.get('/exportar-pdf', autenticarToken, async (req, res) => {
 
     const empresaNome = usuario.empresa || 'Nexus Controller';
 
-    // 1. Busca produtos da empresa
-    const { data: produtos } = await supabaseAdmin
+    // 1. Busca produtos da empresa e aplica o filtro estrito
+    const { data: produtosBrutos } = await supabaseAdmin
       .from('produtos')
       .select('*')
       .eq('empresa', empresaNome);
+
+    const produtos = filtrarProdutosValidos(produtosBrutos);
 
     // 2. Busca movimentações estritamente da empresa para totalizar entradas e saídas
     const { data: movimentacoes } = await supabaseAdmin
@@ -208,10 +228,14 @@ router.get('/exportar-pdf', autenticarToken, async (req, res) => {
       .select('*')
       .eq('empresa', empresaNome);
 
-    // Cálculos estatísticos globais
-    const totalProdutos = produtos?.length || 0;
-    const estoqueTotalFisico = produtos?.reduce((acc, p) => acc + (p.estoque || 0), 0) || 0;
-    const valorTotalInventario = produtos?.reduce((acc, p) => acc + ((p.estoque || 0) * (p.preco_venda || 0)), 0) || 0;
+    // Cálculos estatísticos globais corretos
+    const totalProdutos = produtos.length;
+    const estoqueTotalFisico = produtos.reduce((acc, p) => acc + Number(p.estoque ?? p.quantidade ?? 0), 0);
+    const valorTotalInventario = produtos.reduce((acc, p) => {
+      const qtd = Number(p.estoque ?? p.quantidade ?? 0);
+      const preco = Number(p.preco_venda ?? p.preco ?? 0);
+      return acc + (qtd * preco);
+    }, 0);
     
     let totalEntradas = 0;
     let totalSaidas = 0;
@@ -232,7 +256,6 @@ router.get('/exportar-pdf', autenticarToken, async (req, res) => {
     // --- CABEÇALHO COM LOGÓTIPO VETORIAL ---
     const startY = doc.y;
 
-    // Desenha o Cubo Conectado no canto superior direito
     const cx = 515;
     const cy = startY + 18;
     const r = 18;
@@ -257,7 +280,6 @@ router.get('/exportar-pdf', autenticarToken, async (req, res) => {
     doc.circle(cx, cy, 3.2).fill('#10B981');
     doc.restore();
 
-    // Textos do Cabeçalho
     doc.fontSize(20).fillColor('#0F392B').font('Helvetica-Bold').text('Nexus Controller', 50, startY, { align: 'left' });
     doc.fontSize(10).fillColor('#4B5563').font('Helvetica').text(`Relatório Analítico Completo de Inventário — ${empresaNome}`, { align: 'left' });
     doc.fontSize(8).fillColor('#9CA3AF').text(`Data de Emissão: ${new Date().toLocaleDateString('pt-BR')}`, { align: 'left' });
@@ -283,17 +305,19 @@ router.get('/exportar-pdf', autenticarToken, async (req, res) => {
 
     if (produtos && produtos.length > 0) {
       produtos.forEach((p, index) => {
-        const isCritico = p.estoque <= (p.quantidade_minima || 12);
+        const qtdEstoque = Number(p.estoque ?? p.quantidade ?? 0);
+        const qtdMinima = Number(p.quantidade_minima ?? p.estoque_minimo ?? 12);
+        const isCritico = qtdEstoque <= qtdMinima;
         const statusTexto = isCritico ? ' [CRÍTICO]' : ' [OK]';
-        const precoVenda = p.preco_venda || 0;
-        const precoCusto = p.preco_custo || 0;
-        const valorTotalItem = (p.estoque || 0) * precoVenda;
+        const precoVenda = Number(p.preco_venda ?? p.preco ?? 0);
+        const precoCusto = Number(p.preco_custo ?? 0);
+        const valorTotalItem = qtdEstoque * precoVenda;
 
         doc.fontSize(9).fillColor('#111827').font('Helvetica-Bold').text(`${index + 1}. ${p.nome}`, { continued: true });
         doc.font('Helvetica').fillColor('#4B5563').text(` (SKU: ${p.sku || 'N/D'})`, { continued: false });
         
-        doc.text(`    Estoque: ${p.estoque} un. (Mín: ${p.quantidade_minima || 12}) | Custo: R$ ${precoCusto.toFixed(2)} | Venda: R$ ${precoVenda.toFixed(2)}`, { continued: false });
-        doc.text(`    Valor Total do Item: R$ ${valorTotalItem.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} — Estado: `, { continued: true });
+        doc.text(`     Estoque: ${qtdEstoque} un. (Mín: ${qtdMinima}) | Custo: R$ ${precoCusto.toFixed(2)} | Venda: R$ ${precoVenda.toFixed(2)}`, { continued: false });
+        doc.text(`     Valor Total do Item: R$ ${valorTotalItem.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} — Estado: `, { continued: true });
 
         doc.font('Helvetica-Bold').fillColor(isCritico ? '#DC2626' : '#059669').text(statusTexto);
         doc.moveDown(0.6);
