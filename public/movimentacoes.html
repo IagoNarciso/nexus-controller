@@ -188,72 +188,68 @@
     <main class="p-8 space-y-6 max-w-7xl w-full mx-auto">
 
       <!-- CABEÇALHO PADRONIZADO (EXATAMENTE IGUAL A PRODUTOS E FORNECEDORES) -->
-      <div class="space-y-4">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <p class="text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">GESTÃO DE ESTOQUE</p>
+          <div class="flex items-baseline space-x-3 mt-1">
+            <h1 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Movimentações</h1>
+            <span id="totalMovimentacoesBadge" class="text-xs text-slate-400 font-medium">Carregando...</span>
+          </div>
+        </div>
+
+        <!-- Botão Principal de Nova Movimentação -->
+        <button id="btnNovaMovimentacao"
+          class="inline-flex items-center justify-center space-x-2 px-4 py-2.5 bg-[#0F392B] hover:bg-[#0a271d] dark:hover:bg-[#144737] text-white text-xs font-semibold rounded-xl shadow-xs border border-transparent dark:border-emerald-700/40 transition-colors cursor-pointer self-start sm:self-auto">
+          <i class="fa-solid fa-plus text-xs"></i>
+          <span>Nova Movimentação</span>
+        </button>
+      </div>
+
+      <!-- BARRA DE FERRAMENTAS UNIFICADA (PESQUISA + FILTROS NA MESMA LINHA) -->
+      <div class="bg-white dark:bg-[#121E1A] border border-slate-200/80 dark:border-[#1C2C26] p-4 rounded-2xl shadow-xs flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
         
-        <!-- Linha 1: Título e Botão de Ação Principal -->
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <p class="text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">GESTÃO DE ESTOQUE</p>
-            <div class="flex items-baseline space-x-3 mt-1">
-              <h1 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Movimentações</h1>
-              <span id="totalMovimentacoesBadge" class="text-xs text-slate-400 font-medium">Carregando...</span>
-            </div>
+        <!-- Barra de Pesquisa -->
+        <div class="relative w-full lg:w-96">
+          <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
+            <i class="fa-solid fa-magnifying-glass text-xs"></i>
           </div>
+          <input type="text" id="inputSearchMovimentacoes" placeholder="Buscar por produto, observação, tipo ou solicitante..."
+            class="w-full pl-10 pr-4 py-2 text-xs text-slate-700 dark:text-slate-200 bg-white dark:bg-[#121E1A] border border-slate-200 dark:border-[#1C2C26] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0F392B] dark:focus:ring-emerald-600/50 placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-colors shadow-2xs" />
+        </div>
 
-          <!-- Botão Principal de Nova Movimentação -->
-          <button id="btnNovaMovimentacao"
-            class="inline-flex items-center justify-center space-x-2 px-4 py-2.5 bg-[#0F392B] hover:bg-[#0a271d] dark:hover:bg-[#144737] text-white text-xs font-semibold rounded-xl shadow-xs border border-transparent dark:border-emerald-700/40 transition-colors cursor-pointer self-start sm:self-auto">
-            <i class="fa-solid fa-plus text-xs"></i>
-            <span>Nova Movimentação</span>
+        <!-- Filtros Secundários e Período (Alinhados à direita) -->
+        <div class="flex items-center space-x-2 flex-wrap gap-2">
+          <!-- Botão Não Vistas -->
+          <button type="button" id="btnFiltroNaoVistas" class="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-white dark:bg-[#121E1A] hover:bg-slate-50 dark:hover:bg-[#172722] text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold transition-colors cursor-pointer border border-slate-200 dark:border-[#1C2C26] shadow-2xs">
+            <i class="fa-solid fa-eye-slash text-amber-500 text-xs"></i>
+            <span>Não Vistas</span>
+            <span id="badgeNaoVistasCount" class="ml-1 px-1.5 py-0.2 bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 rounded-full text-[10px] font-bold hidden">0</span>
           </button>
-        </div>
 
-        <!-- Linha 2: Barra de Ferramentas Branca Padronizada -->
-        <div class="bg-white dark:bg-[#121E1A] border border-slate-200/80 dark:border-[#1C2C26] p-4 rounded-2xl shadow-xs flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
-          
-          <!-- Barra de Pesquisa -->
-          <div class="relative w-full lg:w-96">
-            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
-              <i class="fa-solid fa-magnifying-glass text-xs"></i>
-            </div>
-            <input type="text" id="inputSearchMovimentacoes" placeholder="Buscar por produto, observação, tipo ou solicitante..."
-              class="w-full pl-10 pr-4 py-2 text-xs text-slate-700 dark:text-slate-200 bg-white dark:bg-[#121E1A] border border-slate-200 dark:border-[#1C2C26] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0F392B] dark:focus:ring-emerald-600/50 placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-colors shadow-2xs" />
-          </div>
+          <!-- Botão Marcar Vistas -->
+          <button type="button" id="btnMarcarTodasVistas" class="inline-flex items-center justify-center space-x-1.5 px-3.5 py-2 bg-white dark:bg-[#121E1A] hover:bg-slate-50 dark:hover:bg-[#172722] text-xs font-medium text-emerald-700 dark:text-emerald-400 rounded-xl transition-colors cursor-pointer border border-slate-200 dark:border-[#1C2C26] shadow-2xs" title="Marcar todas as movimentações como vistas">
+            <i class="fa-solid fa-check-double text-xs"></i>
+            <span>Marcar vistas</span>
+          </button>
 
-          <!-- Filtros Secundários e Período -->
-          <div class="flex items-center space-x-2 flex-wrap gap-2">
-            <!-- Botão Não Vistas -->
-            <button type="button" id="btnFiltroNaoVistas" class="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-white dark:bg-[#121E1A] hover:bg-slate-50 dark:hover:bg-[#172722] text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold transition-colors cursor-pointer border border-slate-200 dark:border-[#1C2C26] shadow-2xs">
-              <i class="fa-solid fa-eye-slash text-amber-500 text-xs"></i>
-              <span>Não Vistas</span>
-              <span id="badgeNaoVistasCount" class="ml-1 px-1.5 py-0.2 bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 rounded-full text-[10px] font-bold hidden">0</span>
+          <!-- Dropdown Customizado de Período -->
+          <div class="relative">
+            <button id="btnToggleFiltroPeriodo" type="button"
+              class="inline-flex items-center space-x-2 px-4 py-2 bg-white dark:bg-[#121E1A] hover:bg-slate-50 dark:hover:bg-[#172722] text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl border border-slate-200 dark:border-[#1C2C26] shadow-2xs transition-colors cursor-pointer">
+              <i class="fa-regular fa-calendar text-emerald-600 dark:text-emerald-400"></i>
+              <span id="textoPeriodoSelecionado">Este mês</span>
+              <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 ml-1"></i>
             </button>
 
-            <!-- Botão Marcar Vistas -->
-            <button type="button" id="btnMarcarTodasVistas" class="inline-flex items-center justify-center space-x-1.5 px-3.5 py-2 bg-white dark:bg-[#121E1A] hover:bg-slate-50 dark:hover:bg-[#172722] text-xs font-medium text-emerald-700 dark:text-emerald-400 rounded-xl transition-colors cursor-pointer border border-slate-200 dark:border-[#1C2C26] shadow-2xs" title="Marcar todas as movimentações como vistas">
-              <i class="fa-solid fa-check-double text-xs"></i>
-              <span>Marcar vistas</span>
-            </button>
-
-            <!-- Dropdown Customizado de Período -->
-            <div class="relative">
-              <button id="btnToggleFiltroPeriodo" type="button"
-                class="inline-flex items-center space-x-2 px-4 py-2 bg-white dark:bg-[#121E1A] hover:bg-slate-50 dark:hover:bg-[#172722] text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl border border-slate-200 dark:border-[#1C2C26] shadow-2xs transition-colors cursor-pointer">
-                <i class="fa-regular fa-calendar text-emerald-600 dark:text-emerald-400"></i>
-                <span id="textoPeriodoSelecionado">Este mês</span>
-                <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 ml-1"></i>
-              </button>
-
-              <!-- Opções do Dropdown de Período -->
-              <div id="dropdownFiltroPeriodo"
-                class="absolute right-0 mt-2 w-52 bg-white dark:bg-[#121E1A] border border-slate-200 dark:border-[#1C2C26] rounded-2xl shadow-xl hidden z-30 overflow-hidden text-xs py-1.5 divide-y divide-slate-100 dark:divide-[#1C2C26]">
-                <div class="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Selecionar Período</div>
-                <div id="listaOpcoesPeriodoMov"></div>
-              </div>
+            <!-- Opções do Dropdown de Período -->
+            <div id="dropdownFiltroPeriodo"
+              class="absolute right-0 mt-2 w-52 bg-white dark:bg-[#121E1A] border border-slate-200 dark:border-[#1C2C26] rounded-2xl shadow-xl hidden z-30 overflow-hidden text-xs py-1.5 divide-y divide-slate-100 dark:divide-[#1C2C26]">
+              <div class="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Selecionar Período</div>
+              <div id="listaOpcoesPeriodoMov"></div>
             </div>
           </div>
-
         </div>
+
       </div>
 
       <!-- Tabela Padronizada com 8 Colunas -->
