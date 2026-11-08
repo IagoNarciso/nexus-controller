@@ -1,5 +1,7 @@
 let isRedirectingConfig = false;
-let cacheUsuariosEmpresa = [];
+if (typeof window.cacheUsuariosEmpresa === 'undefined') {
+  window.cacheUsuariosEmpresa = [];
+}
 let filtroCargoUsuarioAtual = 'todos';
 
 const CHAVE_CACHE_USUARIOS_LOCAL = 'nexus_usuarios_empresa_cache';
@@ -214,7 +216,7 @@ async function carregarUsuariosEmpresa() {
   }
 
   if (listaServidor.length > 0) {
-    cacheUsuariosEmpresa = listaServidor;
+    window.cacheUsuariosEmpresa = listaServidor;
     salvarUsuariosLocalmente(listaServidor);
   } else {
     const empresaAtual = document.getElementById('cfgEmpresa')?.value || localStorage.getItem('nexus_user_empresa') || 'Nexus Controller';
@@ -222,7 +224,7 @@ async function carregarUsuariosEmpresa() {
     const emailAtual = document.getElementById('cfgEmail')?.value || localStorage.getItem('nexus_user_email') || 'admin@nexus.com';
     const cargoAtual = localStorage.getItem('nexus_user_role') || 'Administrador';
 
-    cacheUsuariosEmpresa = [{
+    window.cacheUsuariosEmpresa = [{
       id: 'atual',
       nome: nomeAtual,
       email: emailAtual,
@@ -239,8 +241,8 @@ async function carregarUsuariosEmpresa() {
 window.carregarUsuariosEmpresa = carregarUsuariosEmpresa;
 
 function atualizarContadoresUsuarios() {
-  const total = cacheUsuariosEmpresa.length;
-  const qtdAdmins = cacheUsuariosEmpresa.filter((u) => {
+  const total = window.cacheUsuariosEmpresa.length;
+  const qtdAdmins = window.cacheUsuariosEmpresa.filter((u) => {
     const c = String(u.cargo || u.role || u.nivel || '').toLowerCase();
     return c === 'admin' || c === 'administrador';
   }).length;
@@ -284,7 +286,7 @@ function renderizarTabelaUsuariosEmpresa() {
   const termo = (document.getElementById('inputBuscaUsuarios')?.value || '').toLowerCase().trim();
   const emailLogado = (document.getElementById('cfgEmail')?.value || localStorage.getItem('nexus_user_email') || '').toLowerCase().trim();
 
-  const filtrados = cacheUsuariosEmpresa.filter((u) => {
+  const filtrados = window.cacheUsuariosEmpresa.filter((u) => {
     const c = String(u.cargo || u.role || u.nivel || 'operador').toLowerCase();
     const isAdminUser = c === 'admin' || c === 'administrador';
 
