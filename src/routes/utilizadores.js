@@ -3,280 +3,547 @@ const router = express.Router();
 const { supabase, supabaseAdmin } = require('../config/supabase'); 
 const autenticarToken = require('../middlewares/auth');
 
-// Usa o supabaseAdmin para evitar bloqueios de RLS nas operações do backend
-const dbClient = supabaseAdmin || supabase;
+// Cache em memória para os dados do perfil do utilizador (válido por 5 minutos)
+const cachePerfil = new Map();
+const TEMPO_CACHE_MS = 5 * 60 * 1000;
 
-// Cache em memória para evitar consultar a tabela 'usuarios' em todas as requisições
-const cacheUsuarios = new Map();
-const TEMPO_CACHE_MS = 5 * 60 * 1000; // 5 minutos de validade
-
-// Função auxiliar otimizada para identificar o utilizador logado e a sua respetiva empresa
-async function obterDadosUsuario(req) {
-  const usuarioId = req.user?.id || req.user?.sub || req.user?.userId;
-  const usuarioEmail = req.user?.email;
-  const chaveCache = usuarioId || (usuarioEmail ? usuarioEmail.toLowerCase().trim() : null);
-
-  // 1. Retorno instantâneo (0ms): Verifica se o utilizador já está na memória do servidor
-  if (chaveCache && cacheUsuarios.has(chaveCache)) {
-    const itemCache = cacheUsuarios.get(chaveCache);
-    if (Date.now() - itemCache.timestamp < TEMPO_CACHE_MS) {
-      return itemCache.dados;
-    }
-    cacheUsuarios.delete(chaveCache);
-  }
-
-  // 2. Retorno sem consulta ao banco: Usa os metadados já validados no Token JWT
-  if (req.user?.user_metadata?.empresa || req.user?.empresa) {
-    const empresaToken = req.user?.user_metadata?.empresa || req.user?.empresa;
-    const usuarioJwt = {
-      id: usuarioId,
-      nome: req.user?.user_metadata?.nome || 'Utilizador Nexus',
-      email: usuarioEmail,
-      cargo: req.user?.user_metadata?.cargo || req.user?.cargo || 'admin',
-      empresa: empresaToken,
-      cnpj: req.user?.user_metadata?.cnpj || null
-    };
-    if (chaveCache) {
-      cacheUsuarios.set(chaveCache, { dados: usuarioJwt, timestamp: Date.now() });
-    }
-    return usuarioJwt;
-  }
-
-  // 3. Busca no banco pelo ID exato (apenas se não estiver em cache nem no JWT)
-  if (usuarioId) {
-    const { data: porId } = await dbClient
-      .from('usuarios')
-      .select('id, nome, email, cargo, empresa, cnpj')
-      .eq('id', usuarioId)
-      .maybeSingle();
-
-    if (porId && porId.empresa) {
-      cacheUsuarios.set(chaveCache, { dados: porId, timestamp: Date.now() });
-      return porId;
-    }
-  }
-
-  // 4. Fallback por E-mail
-  if (usuarioEmail) {
-    const { data: porEmail } = await dbClient
-      .from('usuarios')
-      .select('id, nome, email, cargo, empresa, cnpj')
-      .ilike('email', usuarioEmail.trim())
-      .maybeSingle();
-
-    if (porEmail && porEmail.empresa) {
-      cacheUsuarios.set(chaveCache, { dados: porEmail, timestamp: Date.now() });
-      return porEmail;
-    }
-  }
-
-  // 5. Fallback para a conta de demonstração
-  if (usuarioEmail && usuarioEmail.toLowerCase() === 'admin@nexusdemo.com') {
-    const usuarioDemo = {
-      id: usuarioId || '7d537a13-38d1-4447-a4f4-3a214a9be799',
-      nome: 'Admin Demonstração',
-      email: 'admin@nexusdemo.com',
-      cargo: 'admin',
-      empresa: 'Nexus Demo',
-      cnpj: null
-    };
-    if (chaveCache) {
-      cacheUsuarios.set(chaveCache, { dados: usuarioDemo, timestamp: Date.now() });
-    }
-    return usuarioDemo;
-  }
-
-  return null;
+// Função auxiliar para validar requisitos de segurança da senha
+function validarRequisitosSenha(senha) {
+  const temTamanho = senha.length >= 6;
+  const temMaiuscula = /[A-Z]/.test(senha);
+  const temNumero = /[0-9]/.test(senha);
+  const temEspecial = /[^A-Za-z0-9]/.test(senha);
+  return temTamanho && temMaiuscula && temNumero && temEspecial;
 }
 
-// Rota para buscar o perfil do utilizador logado de forma flexível
+// Função auxiliar para normalizar o cargo do utilizador
+function formatarCargo(cargoBruto) {
+  const cargoLower = String(cargoBruto || '').toLowerCase().trim();
+  if (cargoLower === 'operador' || cargoLower === 'operator') return 'Operador';
+  if (cargoLower === 'admin' || cargoLower === 'administrador') return 'Administrador';
+  return cargoBruto ? String(cargoBruto).charAt(0).toUpperCase() + String(cargoBruto).slice(1) : 'Administrador';
+}
+
+// Rota de Login Flexível e Blindada
+router.post('/login', async (req, res) => {
+  const { email, password, senha } = req.body;
+  const userPassword = password || senha;
+
+  if (!email || !userPassword) {
+    return res.status(400).json({ error: 'E-mail e senha são obrigatórios.' });
+  }
+
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({ 
+      email: email.trim(), 
+      password: userPassword 
+    });
+
+    if (error) {
+      return res.status(400).json({ error: error.message });
+    }
+
+    if (data.user?.id) {
+      cachePerfil.delete(data.user.id);
+    }
+
+    // Busca o cargo detalhado na tabela de utilizadores para sincronização imediata
+    const { data: userData } = await supabaseAdmin
+      .from('usuarios')
+      .select('cargo, empresa, regiao, ativo')
+      .eq('id', data.user.id)
+      .maybeSingle();
+
+    if (userData && userData.ativo === false) {
+      return res.status(403).json({ error: 'O acesso desta conta encontra-se desativado. Contacte o administrador.' });
+    }
+
+    const cargoFormatado = formatarCargo(userData?.cargo || data.user?.user_metadata?.cargo);
+    const nomeUsuario = data.user?.user_metadata?.nome || data.user?.email?.split('@')[0] || 'Utilizador';
+
+    return res.status(200).json({
+      token: data.session.access_token,
+      user: data.user,
+      nome: nomeUsuario,
+      cargo: cargoFormatado,
+      empresa: userData?.empresa || data.user?.user_metadata?.empresa || 'Nexus Controller'
+    });
+  } catch (err) {
+    console.error('Erro interno no servidor ao fazer login:', err);
+    return res.status(500).json({ error: 'Erro interno no servidor ao fazer login.' });
+  }
+});
+
+// Rota de Registo de Administrador com Convite Corporativo
+router.post('/register', async (req, res) => {
+  const { nome, empresa, cnpj, regiao, email, password, senha, codigoConvite } = req.body;
+  const userPassword = password || senha;
+
+  if (!email || !userPassword) {
+    return res.status(400).json({ error: 'E-mail e senha são obrigatórios.' });
+  }
+
+  if (!validarRequisitosSenha(userPassword)) {
+    return res.status(400).json({ 
+      error: 'A senha deve conter no mínimo 6 caracteres, 1 letra maiúscula, 1 número e 1 caractere especial.' 
+    });
+  }
+
+  if (!codigoConvite || !codigoConvite.trim()) {
+    return res.status(403).json({ error: 'O código de convite corporativo é obrigatório.' });
+  }
+
+  const cnpjLimpo = cnpj ? cnpj.replace(/\D/g, '') : '';
+  if (cnpjLimpo.length !== 14) {
+    return res.status(400).json({ error: 'O CNPJ deve conter exatamente 14 dígitos numéricos válidos.' });
+  }
+
+  try {
+    const codigoLimpo = codigoConvite.trim();
+
+    const { data: conviteData, error: conviteError } = await supabaseAdmin
+      .from('convites_empresas')
+      .select('*')
+      .eq('codigo', codigoLimpo)
+      .in('tipo', ['registro', 'convite'])
+      .eq('ativo', true)
+      .maybeSingle();
+
+    if (conviteError || !conviteData) {
+      return res.status(403).json({ error: 'Código de registo inválido, expirado ou já utilizado.' });
+    }
+
+    if (conviteData.expires_at && new Date() > new Date(conviteData.expires_at)) {
+      return res.status(403).json({ error: 'Este código de convite já expirou.' });
+    }
+
+    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+      email: email.trim(),
+      password: userPassword,
+      email_confirm: true,
+      user_metadata: {
+        nome: nome || 'Utilizador',
+        empresa: empresa || conviteData.empresa_nome,
+        cnpj: cnpj,
+        regiao: regiao || 'Nacional / PR',
+        cargo: 'Administrador'
+      }
+    });
+
+    if (authError) {
+      return res.status(400).json({ error: authError.message });
+    }
+
+    const userId = authData.user?.id;
+
+    const payloadUsuario = {
+      id: userId,
+      nome: nome || 'Utilizador',
+      email: email.trim(),
+      empresa: empresa || conviteData.empresa_nome,
+      cnpj: cnpj,
+      regiao: regiao || 'Nacional / PR',
+      cargo: 'Administrador',
+      senha: userPassword,
+      data_cadastro: new Date().toISOString(),
+      ativo: true
+    };
+
+    const { error: dbError } = await supabaseAdmin
+      .from('usuarios')
+      .upsert([payloadUsuario], { onConflict: 'id' });
+
+    if (dbError) {
+      return res.status(400).json({ error: 'Erro ao salvar dados do utilizador: ' + dbError.message });
+    }
+
+    await supabaseAdmin
+      .from('convites_empresas')
+      .update({ ativo: false })
+      .eq('id', conviteData.id);
+
+    return res.status(201).json({
+      message: 'Conta criada com sucesso!',
+      user: authData.user
+    });
+  } catch (err) {
+    console.error('Erro interno no registro:', err);
+    return res.status(500).json({ error: 'Erro interno ao criar conta.' });
+  }
+});
+
+// Rota de Redefinição Direta de Senha
+router.post('/recuperar-senha-direta', async (req, res) => {
+  const { email, novaSenha, codigoConvite } = req.body;
+
+  if (!email || !novaSenha || !codigoConvite) {
+    return res.status(400).json({ error: 'Preencha o e-mail, a nova senha e o código de recuperação.' });
+  }
+
+  if (!validarRequisitosSenha(novaSenha)) {
+    return res.status(400).json({ 
+      error: 'A nova senha deve conter no mínimo 6 caracteres, 1 letra maiúscula, 1 número e 1 caractere especial.' 
+    });
+  }
+
+  try {
+    const { data: conviteData, error: conviteError } = await supabaseAdmin
+      .from('convites_empresas')
+      .select('*')
+      .eq('codigo', codigoConvite.trim())
+      .eq('tipo', 'recuperacao')
+      .eq('ativo', true)
+      .maybeSingle();
+
+    if (conviteError || !conviteData) {
+      return res.status(403).json({ error: 'Código de recuperação inválido, expirado ou incorreto.' });
+    }
+
+    if (conviteData.expires_at && new Date() > new Date(conviteData.expires_at)) {
+      return res.status(403).json({ error: 'Este código de recuperação expirou após 24 horas.' });
+    }
+
+    const { data: usuariosList, error: listError } = await supabaseAdmin.auth.admin.listUsers();
+    if (listError) throw listError;
+
+    const utilizadorAuth = usuariosList?.users?.find(u => u.email.toLowerCase() === email.trim().toLowerCase());
+
+    if (!utilizadorAuth) {
+      return res.status(404).json({ error: 'E-mail corporativo não encontrado no sistema.' });
+    }
+
+    const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(utilizadorAuth.id, {
+      password: novaSenha
+    });
+
+    if (updateError) throw updateError;
+
+    cachePerfil.delete(utilizadorAuth.id);
+
+    await supabaseAdmin
+      .from('usuarios')
+      .update({ senha: novaSenha })
+      .eq('id', utilizadorAuth.id);
+
+    await supabaseAdmin
+      .from('convites_empresas')
+      .update({ ativo: false })
+      .eq('id', conviteData.id);
+
+    return res.status(200).json({ message: 'Senha redefinida com sucesso! Já pode fazer login.' });
+  } catch (err) {
+    console.error('Erro ao redefinir senha diretamente:', err);
+    return res.status(500).json({ error: 'Erro interno ao atualizar a senha no servidor.' });
+  }
+});
+
+// Rota para o Administrador gerar uma nova Chave de Recuperação
+router.post('/gerar-chave-recuperacao', autenticarToken, async (req, res) => {
+  const adminId = req.user?.id || req.user?.sub || req.user?.userId;
+
+  try {
+    const { data: admin, error: erroAdmin } = await supabaseAdmin
+      .from('usuarios')
+      .select('*')
+      .eq('id', adminId)
+      .maybeSingle();
+
+    if (erroAdmin || !admin) {
+      return res.status(401).json({ error: 'Sessão de administrador inválida.' });
+    }
+
+    const cargoAdmin = (admin.cargo || admin.role || '').toLowerCase();
+    if (cargoAdmin !== 'administrador' && cargoAdmin !== 'admin') {
+      return res.status(403).json({ error: 'Acesso negado: apenas administradores podem gerar chaves de recuperação.' });
+    }
+
+    const randomSuffix = Math.random().toString(36).substring(2, 8).toUpperCase();
+    const codigoRecuperacao = `REC-${randomSuffix}`;
+    const dataExpiracao = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+
+    const { data, error: insertError } = await supabaseAdmin
+      .from('convites_empresas')
+      .insert([
+        {
+          codigo: codigoRecuperacao,
+          empresa_nome: admin.empresa,
+          tipo: 'recuperacao',
+          ativo: true,
+          expires_at: dataExpiracao,
+          created_at: new Date().toISOString()
+        }
+      ])
+      .select()
+      .single();
+
+    if (insertError) throw insertError;
+
+    return res.status(201).json({ 
+      message: 'Chave de recuperação gerada com sucesso!', 
+      codigo: data.codigo 
+    });
+  } catch (err) {
+    console.error('Erro ao gerar chave de recuperação:', err);
+    return res.status(500).json({ error: 'Erro interno ao gerar a chave.' });
+  }
+});
+
+// Rota Otimizada com Cache em Memória para buscar o perfil do utilizador logado
 router.get('/perfil', autenticarToken, async (req, res) => {
   try {
-    const usuario = await obterDadosUsuario(req);
+    const usuarioId = req.user?.id || req.user?.sub || req.user?.userId;
+    const usuarioEmail = req.user?.email;
+    const chaveCache = usuarioId || (usuarioEmail ? usuarioEmail.toLowerCase().trim() : null);
 
-    if (!usuario) {
+    if (chaveCache && cachePerfil.has(chaveCache)) {
+      const itemCache = cachePerfil.get(chaveCache);
+      if (Date.now() - itemCache.timestamp < TEMPO_CACHE_MS) {
+        return res.json(itemCache.dados);
+      }
+      cachePerfil.delete(chaveCache);
+    }
+
+    let query = supabaseAdmin.from('usuarios').select('*');
+
+    if (usuarioId) {
+      query = query.eq('id', usuarioId);
+    } else if (usuarioEmail) {
+      query = query.eq('email', usuarioEmail);
+    } else {
+      return res.status(400).json({ error: 'Nenhum identificador válido encontrado no token.' });
+    }
+
+    const { data: usuario, error } = await query.maybeSingle();
+
+    if (error || !usuario) {
       return res.status(404).json({ error: 'Utilizador não encontrado na base de dados.' });
     }
 
-    // Busca detalhada opcional se faltarem campos na cache, ou usa o objeto direto
-    return res.json({
+    const perfilFormatado = {
       id: usuario.id,
       nome: usuario.nome || 'Utilizador Nexus',
       email: usuario.email,
-      cargo: usuario.cargo || usuario.role || 'Administrador',
+      cargo: formatarCargo(usuario.cargo || usuario.role),
       empresa: usuario.empresa || 'Nexus Controller',
       cnpj: usuario.cnpj || '12.345.678/0001-99',
       regiao: usuario.regiao || 'Nacional / PR',
-      data_cadastro: usuario.data_cadastro || usuario.created_at
-    });
+      data_cadastro: usuario.data_cadastro || usuario.created_at,
+      ativo: usuario.ativo !== false
+    };
+
+    if (chaveCache) {
+      cachePerfil.set(chaveCache, { dados: perfilFormatado, timestamp: Date.now() });
+    }
+
+    return res.json(perfilFormatado);
   } catch (err) {
     console.error('Erro interno ao buscar perfil:', err);
     return res.status(500).json({ error: 'Erro interno no servidor.' });
   }
 });
 
-// Rota para listar apenas os funcionários que pertencem à mesma empresa do utilizador logado
-router.get('/equipe', autenticarToken, async (req, res) => {
+// Rota para listar equipa com isolamento Multi-Tenant
+async function listarEquipeDaEmpresa(req, res) {
   try {
-    const usuario = await obterDadosUsuario(req);
+    const usuarioId = req.user?.id || req.user?.sub;
+    const { data: adminLogado } = await supabaseAdmin
+      .from('usuarios')
+      .select('empresa')
+      .eq('id', usuarioId)
+      .maybeSingle();
 
-    if (!usuario || !usuario.empresa) {
-      return res.status(401).json({ error: 'Empresa do utilizador não identificada.' });
+    if (!adminLogado || !adminLogado.empresa) {
+      return res.status(401).json({ error: 'Empresa do administrador não identificada.' });
     }
 
-    // Busca APENAS os utilizadores da mesma empresa (Isolamento Multi-Tenant)
-    const { data: equipe, error: erroEquipe } = await dbClient
+    const { data: equipe, error: erroEquipe } = await supabaseAdmin
       .from('usuarios')
-      .select('id, nome, email, cargo, cpf, data_nascimento, empresa, regiao, data_cadastro')
-      .eq('empresa', usuario.empresa)
+      .select('id, nome, email, cargo, cpf, data_nascimento, empresa, regiao, data_cadastro, ativo')
+      .eq('empresa', adminLogado.empresa)
       .order('nome', { ascending: true });
 
     if (erroEquipe) {
       return res.status(400).json({ error: erroEquipe.message });
     }
 
-    return res.status(200).json(equipe);
+    return res.status(200).json(equipe || []);
   } catch (err) {
     console.error('Erro interno ao listar equipa:', err);
     return res.status(500).json({ error: 'Erro interno no servidor.' });
   }
+}
+
+router.get('/equipe', autenticarToken, listarEquipeDaEmpresa);
+router.get('/', autenticarToken, listarEquipeDaEmpresa);
+
+// Rota para Ativar ou Desativar o acesso de um funcionário
+router.patch('/status/:id', autenticarToken, async (req, res) => {
+  const { id } = req.params;
+  const { ativo } = req.body;
+  const adminId = req.user?.id || req.user?.sub;
+
+  try {
+    const { data: adminLogado } = await supabaseAdmin
+      .from('usuarios')
+      .select('cargo, empresa, email')
+      .eq('id', adminId)
+      .maybeSingle();
+
+    if (!adminLogado) {
+      return res.status(401).json({ error: 'Sessão de administrador inválida.' });
+    }
+
+    const cargoAdmin = (adminLogado.cargo || '').toLowerCase();
+    if (cargoAdmin !== 'administrador' && cargoAdmin !== 'admin') {
+      return res.status(403).json({ error: 'Acesso negado: apenas administradores podem alterar o status.' });
+    }
+
+    const { data: funcionario, error: erroBusca } = await supabaseAdmin
+      .from('usuarios')
+      .select('id, empresa, email')
+      .eq('id', id)
+      .eq('empresa', adminLogado.empresa)
+      .maybeSingle();
+
+    if (erroBusca || !funcionario) {
+      return res.status(404).json({ error: 'Funcionário não encontrado na sua empresa.' });
+    }
+
+    if (funcionario.email.toLowerCase() === adminLogado.email.toLowerCase()) {
+      return res.status(400).json({ error: 'Não é permitido desativar a sua própria conta ativa.' });
+    }
+
+    const { error: erroUpdate } = await supabaseAdmin
+      .from('usuarios')
+      .update({ ativo: Boolean(ativo) })
+      .eq('id', id);
+
+    if (erroUpdate) {
+      return res.status(400).json({ error: erroUpdate.message });
+    }
+
+    cachePerfil.delete(id);
+
+    return res.status(200).json({ 
+      message: `Funcionário ${ativo ? 'ativado' : 'desativado'} com sucesso!` 
+    });
+  } catch (err) {
+    console.error('Erro ao alterar status:', err);
+    return res.status(500).json({ error: 'Erro interno no servidor.' });
+  }
 });
 
-// Rota protegida para cadastrar novo funcionário com Herança Obrigatória de Empresa (Exclusiva para Administradores)
+// Rota protegida para cadastrar novo funcionário
 router.post('/cadastrar', autenticarToken, async (req, res) => {
-  const { nome, regiao, cpf, data_nascimento, email, cargo, senha } = req.body;
+  const { nome, empresa, cnpj, regiao, cpf, data_nascimento, email, cargo, senha } = req.body;
+  const adminId = req.user?.id || req.user?.sub || req.user?.userId;
 
   if (!nome || !email || !senha) {
     return res.status(400).json({ error: 'Preencha todos os campos obrigatórios (nome, email e senha).' });
   }
 
-  try {
-    const usuario = await obterDadosUsuario(req);
+  if (!validarRequisitosSenha(senha)) {
+    return res.status(400).json({ 
+      error: 'A senha do funcionário deve conter no mínimo 6 caracteres, 1 letra maiúscula, 1 número e 1 caractere especial.' 
+    });
+  }
 
-    if (!usuario) {
+  try {
+    const { data: admin, error: erroAdmin } = await supabaseAdmin
+      .from('usuarios')
+      .select('*')
+      .eq('id', adminId)
+      .maybeSingle();
+
+    if (erroAdmin || !admin) {
       return res.status(401).json({ error: 'Sessão de administrador inválida.' });
     }
 
-    const cargoAdmin = (usuario.cargo || usuario.role || '').toLowerCase();
+    const cargoAdmin = (admin.cargo || admin.role || '').toLowerCase();
     if (cargoAdmin !== 'administrador' && cargoAdmin !== 'admin') {
       return res.status(403).json({ error: 'Acesso negado: apenas administradores podem cadastrar funcionários.' });
     }
 
-    if (!usuario.empresa) {
-      return res.status(400).json({ error: 'A conta de administrador não possui uma empresa associada.' });
-    }
-
-    // Dados corporativos herdados estritamente do Administrador logado
-    const empresaHerdada = usuario.empresa;
-    const cnpjHerdado = usuario.cnpj || '12.345.678/0001-99';
-    const regiaoHerdada = regiao || usuario.regiao || 'Nacional / PR';
-    const cargoDefinido = cargo || 'operador';
-
-    let novoId;
-
-    // Tenta criar o funcionário no Supabase Auth já com os metadados da empresa do Admin
-    const { data: authData, error: authError } = await dbClient.auth.admin.createUser({
+    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email: email.trim(),
       password: senha,
       email_confirm: true,
       user_metadata: {
         nome,
-        empresa: empresaHerdada,
-        cnpj: cnpjHerdado,
-        regiao: regiaoHerdada,
-        cargo: cargoDefinido
+        empresa: empresa || admin.empresa,
+        cnpj: cnpj || admin.cnpj,
+        regiao: regiao || admin.regiao,
+        cargo: cargo || 'operador'
       }
     });
 
     if (authError) {
-      if (authError.message.includes('already been registered')) {
-        const { data: existingUsers } = await dbClient.auth.admin.listUsers();
-        const existingUser = existingUsers?.users?.find(u => u.email.toLowerCase() === email.trim().toLowerCase());
-        
-        if (existingUser) {
-          const { data: usuarioExistente } = await dbClient
-            .from('usuarios')
-            .select('empresa')
-            .eq('id', existingUser.id)
-            .maybeSingle();
-
-          if (usuarioExistente && usuarioExistente.empresa && usuarioExistente.empresa !== empresaHerdada) {
-            return res.status(403).json({ 
-              error: 'Este e-mail já está vinculado a outra empresa no sistema.' 
-            });
-          }
-
-          novoId = existingUser.id;
-        } else {
-          return res.status(400).json({ error: 'Este e-mail já está registado, mas não foi possível localizar o ID de acesso.' });
-        }
-      } else {
-        return res.status(400).json({ error: 'Erro ao criar credenciais de acesso: ' + authError.message });
-      }
-    } else {
-      novoId = authData.user.id;
+      return res.status(400).json({ error: 'Erro ao criar credenciais automáticas: ' + authError.message });
     }
 
-    // Insere ou atualiza os dados detalhados na tabela `usuarios` forçando a empresa herdada
-    const { data, error: dbError } = await dbClient
+    const novoId = authData.user.id;
+
+    const { data, error: dbError } = await supabaseAdmin
       .from('usuarios')
       .upsert([
         {
           id: novoId,
           nome,
-          empresa: empresaHerdada,
-          cnpj: cnpjHerdado,
-          regiao: regiaoHerdada,
+          empresa: empresa || admin.empresa,
+          cnpj: cnpj || admin.cnpj,
+          regiao: regiao || admin.regiao,
           cpf: cpf || null,
           data_nascimento: data_nascimento || null,
           email: email.trim(),
-          cargo: cargoDefinido,
+          cargo: cargo || 'operador',
           senha, 
-          data_cadastro: new Date().toISOString()
+          data_cadastro: new Date().toISOString(),
+          ativo: true
         }
       ], { onConflict: 'id' })
       .select();
 
     if (dbError) {
-      console.error('Erro ao inserir na tabela usuarios:', dbError);
       return res.status(400).json({ error: dbError.message });
     }
 
-    return res.status(201).json({ 
-      message: `Funcionário cadastrado com sucesso na empresa ${empresaHerdada}!`, 
-      data 
-    });
+    return res.status(201).json({ message: 'Funcionário cadastrado com sucesso!', data });
   } catch (err) {
-    console.error('Erro interno no servidor:', err);
+    console.error('Erro interno no servidor ao cadastrar:', err);
     return res.status(500).json({ error: 'Erro interno no servidor.' });
   }
 });
 
-// Rota para Exclusão Segura de Funcionário com trava Multi-Empresa (Exclusiva para Administradores)
+// Rota para Exclusão Segura de Funcionário
 router.delete('/excluir', autenticarToken, async (req, res) => {
   const { nome, cpf, email, senha_admin } = req.body;
+  const adminId = req.user?.id || req.user?.sub || req.user?.userId;
 
   if (!nome || !cpf || !email || !senha_admin) {
     return res.status(400).json({ error: 'Preencha todos os campos obrigatórios para confirmar a exclusão.' });
   }
 
   try {
-    const usuario = await obterDadosUsuario(req);
+    const { data: admin, error: erroAdmin } = await supabaseAdmin
+      .from('usuarios')
+      .select('*')
+      .eq('id', adminId)
+      .maybeSingle();
 
-    if (!usuario) {
+    if (erroAdmin || !admin) {
       return res.status(401).json({ error: 'Sessão de administrador inválida.' });
     }
 
-    const cargoAdmin = (usuario.cargo || usuario.role || '').toLowerCase();
+    const cargoAdmin = (admin.cargo || admin.role || '').toLowerCase();
     if (cargoAdmin !== 'administrador' && cargoAdmin !== 'admin') {
       return res.status(403).json({ error: 'Acesso negado: apenas administradores podem excluir funcionários.' });
     }
 
-    if (usuario.senha && usuario.senha !== senha_admin) {
+    if (admin.senha && admin.senha !== senha_admin) {
       return res.status(401).json({ error: 'Senha de administrador incorreta.' });
-    } else if (!usuario.senha) {
+    } else if (!admin.senha) {
       const { error: authCheckError } = await supabase.auth.signInWithPassword({
-        email: usuario.email,
+        email: admin.email,
         password: senha_admin
       });
       if (authCheckError) {
@@ -284,44 +551,38 @@ router.delete('/excluir', autenticarToken, async (req, res) => {
       }
     }
 
-    if (usuario.email.toLowerCase() === email.trim().toLowerCase()) {
+    if (admin.email.toLowerCase() === email.trim().toLowerCase()) {
       return res.status(400).json({ error: 'Não é permitido excluir a própria conta de administrador ativa.' });
     }
 
-    // Busca o funcionário garantindo que pertence estritamente à MESMA empresa do Admin
-    const { data: funcionario, error: erroBusca } = await dbClient
+    const { data: funcionario, error: erroBusca } = await supabaseAdmin
       .from('usuarios')
       .select('*')
       .ilike('nome', nome.trim())
       .eq('cpf', cpf.trim())
       .ilike('email', email.trim())
-      .eq('empresa', usuario.empresa)
       .maybeSingle();
 
     if (erroBusca || !funcionario) {
       return res.status(404).json({ 
-        error: 'Funcionário não encontrado na sua empresa. Verifique se Nome, CPF e E-mail estão corretos.' 
+        error: 'Funcionário não encontrado. Verifique se o Nome, CPF e E-mail coincidem exatamente com o registo.' 
       });
     }
 
-    // Limpa o cache do funcionário excluído
-    cacheUsuarios.delete(funcionario.id);
+    cachePerfil.delete(funcionario.id);
 
-    // Remove o registo da tabela pública `usuarios`
-    const { error: erroExclusao } = await dbClient
+    const { error: erroExclusao } = await supabaseAdmin
       .from('usuarios')
       .delete()
-      .eq('id', funcionario.id)
-      .eq('empresa', usuario.empresa);
+      .eq('id', funcionario.id);
 
     if (erroExclusao) {
       return res.status(400).json({ error: erroExclusao.message });
     }
 
-    // Remove também do Supabase Auth para libertar o e-mail
-    await dbClient.auth.admin.deleteUser(funcionario.id);
+    await supabaseAdmin.auth.admin.deleteUser(funcionario.id);
 
-    return res.status(200).json({ message: 'Funcionário excluído do sistema com sucesso!' });
+    return res.status(200).json({ message: 'Funcionário excluído com sucesso!' });
   } catch (err) {
     console.error('Erro interno ao processar exclusão:', err);
     return res.status(500).json({ error: 'Erro interno no servidor.' });
