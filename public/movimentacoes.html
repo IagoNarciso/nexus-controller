@@ -205,8 +205,8 @@
         </button>
       </div>
 
-      <!-- TABELA COM BARRA DE FERRAMENTAS INTEGRADA NO TOPO (PADRÃO PRODUTOS) -->
-      <div class="bg-white dark:bg-[#121E1A] rounded-2xl border border-slate-200/80 dark:border-[#1C2C26] shadow-xs overflow-hidden p-5 space-y-4">
+      <!-- TABELA COM BARRA DE FERRAMENTAS E FUNDO ESVERDEADO PADRÃO (IGUAL A PRODUTOS) -->
+      <div class="bg-emerald-50/35 dark:bg-emerald-950/20 border border-emerald-100/50 dark:border-emerald-800/40 rounded-2xl p-6 space-y-4 shadow-xs">
         
         <!-- BARRA DE FERRAMENTAS SUPERIOR (PESQUISA + FILTROS NA MESMA LINHA) -->
         <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
@@ -255,30 +255,34 @@
 
         </div>
 
-        <!-- TABELA -->
-        <div class="overflow-x-auto pt-2">
-          <table class="w-full text-left border-collapse">
-            <thead>
-              <tr class="border-b border-slate-100 dark:border-[#1C2C26] text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                <th class="py-3.5 px-4">Data / ID</th>
-                <th class="py-3.5 px-4">Produto</th>
-                <th class="py-3.5 px-4">Quantidade</th>
-                <th class="py-3.5 px-4">Solicitante</th>
-                <th class="py-3.5 px-4">Tipo</th>
-                <th class="py-3.5 px-4">Status</th>
-                <th class="py-3.5 px-4">Observação</th>
-                <th class="py-3.5 px-4 text-right">Ações</th>
-              </tr>
-            </thead>
-            <tbody id="tabelaMovimentacoesBody" class="divide-y divide-slate-100 dark:divide-[#1C2C26] text-xs text-slate-700 dark:text-slate-300">
-              <tr>
-                <td colspan="8" class="py-12 text-center text-slate-400 font-medium text-xs">
-                  <i class="fa-solid fa-spinner fa-spin mr-2"></i> A carregar movimentações...
-                </td>
-              </tr>
-            </tbody>
-          </table>
+        <!-- TABELA INTERNA COM FUNDO BRANCO -->
+        <div class="bg-white dark:bg-[#121E1A] rounded-2xl border border-slate-200/80 dark:border-[#1C2C26] shadow-xs overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-slate-50/50 dark:bg-[#0E1A16] border-b border-slate-100 dark:border-[#1C2C26] text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                  <th class="py-3.5 px-4">Data / ID</th>
+                  <th class="py-3.5 px-4">Produto</th>
+                  <th class="py-3.5 px-4">Quantidade</th>
+                  <th class="py-3.5 px-4">Solicitante</th>
+                  <th class="py-3.5 px-4">Tipo</th>
+                  <th class="py-3.5 px-4">Status</th>
+                  <th class="py-3.5 px-4">Observação</th>
+                  <th class="py-3.5 px-4 text-right">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="tabelaMovimentacoesBody" class="divide-y divide-slate-100 dark:divide-[#1C2C26] text-xs text-slate-700 dark:text-slate-300">
+                <tr>
+                  <td colspan="8" class="py-12 text-center text-slate-400 font-medium text-xs">
+                    <i class="fa-solid fa-spinner fa-spin mr-2"></i> A carregar movimentações...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
+
+      </div>
 
       </div>
 
