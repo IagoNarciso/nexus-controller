@@ -7,7 +7,8 @@
   <title>Nexus Controller - Visão Geral</title>
 
   <!-- Favicon Oficial (Cubo Conectado Minimalista) -->
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' fill='none'%3E%3Crect width='100' height='100' rx='22' fill='%230F392B'/%3E%3Cpolygon points='50,14 82,32 82,68 50,86 18,68 18,32' stroke='%2310B981' stroke-width='7' stroke-linejoin='round'/%3E%3Cpolyline points='18,32 50,50 82,32' stroke='%2310B981' stroke-width='7' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cline x1='50' y1='50' x2='50' y2='86' stroke='%2310B981' stroke-width='7' stroke-linecap='round'/%3E%3Ccircle cx='50' cy='50' r='8' fill='%2334D399'/%3E%3C/svg%3E">
+  <link rel="icon" type="image/svg+xml"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' fill='none'%3E%3Crect width='100' height='100' rx='22' fill='%230F392B'/%3E%3Cpolygon points='50,14 82,32 82,68 50,86 18,68 18,32' stroke='%2310B981' stroke-width='7' stroke-linejoin='round'/%3E%3Cpolyline points='18,32 50,50 82,32' stroke='%2310B981' stroke-width='7' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cline x1='50' y1='50' x2='50' y2='86' stroke='%2310B981' stroke-width='7' stroke-linecap='round'/%3E%3Ccircle cx='50' cy='50' r='8' fill='%2334D399'/%3E%3C/svg%3E">
 
   <!-- Tailwind CSS + Configuração de Dark Mode por Classe -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -19,7 +20,8 @@
   <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <!-- Google Fonts Inter -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet">
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -33,30 +35,38 @@
   <script src="js/theme.js"></script>
 </head>
 
-<body class="bg-slate-50 dark:bg-[#0B1512] text-slate-800 dark:text-slate-100 antialiased min-h-screen flex transition-colors">
+<body
+  class="bg-slate-50 dark:bg-[#0B1512] text-slate-800 dark:text-slate-100 antialiased min-h-screen flex transition-colors">
 
   <!-- SIDEBAR -->
-  <aside class="w-64 bg-white dark:bg-[#0E1A16] border-r border-slate-200 dark:border-[#1C2C26] flex flex-col justify-between hidden md:flex shrink-0">
+  <aside
+    class="w-64 bg-white dark:bg-[#0E1A16] border-r border-slate-200 dark:border-[#1C2C26] flex flex-col justify-between hidden md:flex shrink-0">
     <div>
       <!-- Logo Oficial: Cubo Conectado Minimalista -->
       <div class="h-16 flex items-center px-6 border-b border-slate-100 dark:border-[#1C2C26]">
         <a href="dashboard.html" class="flex items-center space-x-3 group focus:outline-none">
-          <svg width="34" height="34" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" class="shrink-0 transition-transform duration-200 group-hover:scale-105">
-            <polygon points="50,8 88,30 88,72 50,94 12,72 12,30" class="stroke-[#0F392B] dark:stroke-emerald-500" stroke-width="7" stroke-linejoin="round" fill="none"/>
-            <polyline points="12,30 50,52 88,30" class="stroke-[#0F392B] dark:stroke-emerald-500" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-            <line x1="50" y1="52" x2="50" y2="94" class="stroke-[#0F392B] dark:stroke-emerald-500" stroke-width="7" stroke-linecap="round"/>
-            <circle cx="50" cy="52" r="9" class="fill-emerald-500 dark:fill-emerald-400"/>
+          <svg width="34" height="34" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"
+            class="shrink-0 transition-transform duration-200 group-hover:scale-105">
+            <polygon points="50,8 88,30 88,72 50,94 12,72 12,30" class="stroke-[#0F392B] dark:stroke-emerald-500"
+              stroke-width="7" stroke-linejoin="round" fill="none" />
+            <polyline points="12,30 50,52 88,30" class="stroke-[#0F392B] dark:stroke-emerald-500" stroke-width="7"
+              stroke-linecap="round" stroke-linejoin="round" fill="none" />
+            <line x1="50" y1="52" x2="50" y2="94" class="stroke-[#0F392B] dark:stroke-emerald-500" stroke-width="7"
+              stroke-linecap="round" />
+            <circle cx="50" cy="52" r="9" class="fill-emerald-500 dark:fill-emerald-400" />
           </svg>
           <div class="flex flex-col leading-none">
             <span class="font-extrabold text-slate-900 dark:text-white text-base tracking-tight">Nexus</span>
-            <span class="font-medium text-[#0F392B] dark:text-emerald-400 text-[10px] tracking-widest uppercase mt-0.5">Controller</span>
+            <span
+              class="font-medium text-[#0F392B] dark:text-emerald-400 text-[10px] tracking-widest uppercase mt-0.5">Controller</span>
           </div>
         </a>
       </div>
 
       <!-- Menu de Navegação -->
       <nav class="p-4 space-y-1">
-        <p class="px-3 text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Menu Principal</p>
+        <p class="px-3 text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Menu
+          Principal</p>
 
         <a href="dashboard.html"
           class="flex items-center space-x-3 px-3 py-2.5 text-xs font-semibold text-[#0F392B] dark:text-emerald-400 bg-[#0F392B]/10 dark:bg-emerald-950/40 rounded-xl dark:border dark:border-emerald-800/30 transition-colors">
@@ -86,7 +96,8 @@
           <span>Fornecedores</span>
         </a>
 
-        <p class="px-3 text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mt-6 mb-2">Gestão</p>
+        <p class="px-3 text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mt-6 mb-2">
+          Gestão</p>
 
         <a href="configuracoes.html"
           class="flex items-center space-x-3 px-3 py-2.5 text-xs font-medium text-slate-600 dark:text-slate-400 rounded-xl hover:bg-slate-50 dark:hover:bg-[#15241F] hover:text-slate-900 dark:hover:text-slate-100 transition-colors">
@@ -98,15 +109,18 @@
 
     <!-- Bloco de Suporte Personalizado na Sidebar e Logout -->
     <div class="p-4 space-y-4">
-      <div class="bg-slate-50 dark:bg-[#12211C] p-4 rounded-2xl border border-slate-100 dark:border-[#1C2C26] space-y-2">
-        <div class="w-7 h-7 rounded-lg bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-400 flex items-center justify-center text-xs font-bold border border-emerald-700/30">
+      <div
+        class="bg-slate-50 dark:bg-[#12211C] p-4 rounded-2xl border border-slate-100 dark:border-[#1C2C26] space-y-2">
+        <div
+          class="w-7 h-7 rounded-lg bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-400 flex items-center justify-center text-xs font-bold border border-emerald-700/30">
           <i class="fa-solid fa-chart-line"></i>
         </div>
         <div>
           <p class="text-xs font-bold text-slate-800 dark:text-slate-200">Resumo Operacional</p>
           <p class="text-[11px] text-slate-400 mt-0.5">Dúvidas sobre os gráficos ou métricas do sistema?</p>
         </div>
-        <button id="btnAbrirSuporte" type="button" class="inline-block text-xs font-semibold text-[#0F392B] dark:text-emerald-400 hover:underline pt-1 cursor-pointer">
+        <button id="btnAbrirSuporte" type="button"
+          class="inline-block text-xs font-semibold text-[#0F392B] dark:text-emerald-400 hover:underline pt-1 cursor-pointer">
           Central de Ajuda &rarr;
         </button>
       </div>
@@ -123,7 +137,8 @@
   <div class="flex-1 flex flex-col min-w-0 overflow-y-auto">
 
     <!-- TOPBAR PADRONIZADA: LUA -> SINO -> BARRA DIVISÓRIA -> PERFIL -->
-    <header class="h-16 bg-white dark:bg-[#0E1A16] border-b border-slate-200 dark:border-[#1C2C26] px-6 flex items-center justify-between sticky top-0 z-10 transition-colors">
+    <header
+      class="h-16 bg-white dark:bg-[#0E1A16] border-b border-slate-200 dark:border-[#1C2C26] px-6 flex items-center justify-between sticky top-0 z-10 transition-colors">
       <div class="flex items-center space-x-2 text-xs font-medium text-slate-500 dark:text-slate-400">
         <a href="dashboard.html" class="hover:text-slate-800 dark:hover:text-slate-200">Nexus Controller</a>
         <i class="fa-solid fa-chevron-right text-[10px] text-slate-300 dark:text-slate-600"></i>
@@ -148,12 +163,16 @@
           </button>
 
           <!-- Dropdown de Notificações -->
-          <div id="dropdownNotificacoes" class="absolute right-0 mt-2 w-80 bg-white dark:bg-[#121E1A] border border-slate-200 dark:border-[#1C2C26] rounded-2xl shadow-xl hidden z-50 overflow-hidden text-xs">
+          <div id="dropdownNotificacoes"
+            class="absolute right-0 mt-2 w-80 bg-white dark:bg-[#121E1A] border border-slate-200 dark:border-[#1C2C26] rounded-2xl shadow-xl hidden z-50 overflow-hidden text-xs">
             <div class="p-3 border-b border-slate-100 dark:border-[#1C2C26] flex items-center justify-between">
               <span class="font-bold text-slate-800 dark:text-slate-200">Notificações do Sistema</span>
-              <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold cursor-pointer hover:underline">Alertas ativos</span>
+              <span
+                class="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold cursor-pointer hover:underline">Alertas
+                ativos</span>
             </div>
-            <div id="listaNotificacoes" class="max-h-64 overflow-y-auto divide-y divide-slate-100 dark:divide-[#1C2C26]">
+            <div id="listaNotificacoes"
+              class="max-h-64 overflow-y-auto divide-y divide-slate-100 dark:divide-[#1C2C26]">
               <div class="p-4 text-slate-400 dark:text-slate-500 text-center flex items-center justify-center gap-2">
                 <i class="fa-solid fa-circle-notch fa-spin text-emerald-500"></i>
                 <span>Carregando alertas...</span>
@@ -169,15 +188,20 @@
               class="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-bold text-xs flex items-center justify-center border border-emerald-200 dark:border-emerald-800">
               IN</div>
             <div class="hidden md:block text-left">
-              <p id="userName" class="text-xs font-semibold text-slate-800 dark:text-slate-200 leading-tight group-hover:text-emerald-600 transition-colors">Iago Narciso</p>
+              <p id="userName"
+                class="text-xs font-semibold text-slate-800 dark:text-slate-200 leading-tight group-hover:text-emerald-600 transition-colors">
+                Iago Narciso</p>
               <p id="userRole" class="text-[10px] text-slate-400">Administrador</p>
             </div>
-            <i class="fa-solid fa-chevron-right text-[10px] text-slate-400 group-hover:translate-x-0.5 transition-transform"></i>
+            <i
+              class="fa-solid fa-chevron-right text-[10px] text-slate-400 group-hover:translate-x-0.5 transition-transform"></i>
           </button>
 
           <!-- Dropdown do Perfil -->
-          <div id="dropdownPerfil" class="absolute right-0 mt-2 w-48 bg-white dark:bg-[#121E1A] border border-slate-200 dark:border-[#1C2C26] rounded-2xl shadow-xl hidden z-50 py-1 text-xs">
-            <a href="configuracoes.html" class="flex items-center space-x-2 px-4 py-2 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#15241F] transition-colors">
+          <div id="dropdownPerfil"
+            class="absolute right-0 mt-2 w-48 bg-white dark:bg-[#121E1A] border border-slate-200 dark:border-[#1C2C26] rounded-2xl shadow-xl hidden z-50 py-1 text-xs">
+            <a href="configuracoes.html"
+              class="flex items-center space-x-2 px-4 py-2 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#15241F] transition-colors">
               <i class="fa-solid fa-gear text-slate-400"></i>
               <span>Configurações</span>
             </a>
@@ -193,26 +217,32 @@
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <div class="flex items-center space-x-2.5 mb-1">
-            <p class="text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">VISÃO GERAL DO SISTEMA</p>
+            <p class="text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">VISÃO GERAL
+              DO SISTEMA</p>
             <span class="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600"></span>
-            <span id="nomeEmpresaDestaque" class="text-[10px] font-bold text-[#0F392B] dark:text-emerald-400 bg-[#0F392B]/10 dark:bg-emerald-950/40 px-2 py-0.5 rounded-md uppercase tracking-wider">Empresa</span>
+            <span id="nomeEmpresaDestaque"
+              class="text-[10px] font-bold text-[#0F392B] dark:text-emerald-400 bg-[#0F392B]/10 dark:bg-emerald-950/40 px-2 py-0.5 rounded-md uppercase tracking-wider">Empresa</span>
           </div>
           <h1 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight mt-1">
-            Olá, <span id="welcomeName">Usuário</span>! <span class="text-slate-400 font-normal text-base">Tenha um ótimo dia.</span>
+            Olá, <span id="welcomeName">Usuário</span>! <span class="text-slate-400 font-normal text-base">Tenha um
+              ótimo dia.</span>
           </h1>
         </div>
         <div class="flex items-center space-x-3">
           <!-- DROPDOWN DE HISTÓRICO MENSAL CUSTOMIZADO -->
           <div class="relative">
-            <button id="btnFiltroMes" type="button" class="bg-white dark:bg-[#121E1A] border border-slate-200 dark:border-[#1C2C26] text-slate-700 dark:text-slate-200 text-xs px-3.5 py-2 rounded-xl shadow-xs font-semibold flex items-center space-x-2.5 hover:border-emerald-500/50 focus:outline-none transition-colors cursor-pointer">
+            <button id="btnFiltroMes" type="button"
+              class="bg-white dark:bg-[#121E1A] border border-slate-200 dark:border-[#1C2C26] text-slate-700 dark:text-slate-200 text-xs px-3.5 py-2 rounded-xl shadow-xs font-semibold flex items-center space-x-2.5 hover:border-emerald-500/50 focus:outline-none transition-colors cursor-pointer">
               <i class="fa-regular fa-calendar-days text-emerald-600 dark:text-emerald-400 text-xs"></i>
               <span id="labelMesAtual">Este mês</span>
               <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 ml-1"></i>
             </button>
 
             <!-- Dropdown flutuante -->
-            <div id="dropdownFiltroMes" class="absolute right-0 mt-2 w-52 bg-white dark:bg-[#121E1A] border border-slate-200 dark:border-[#1C2C26] rounded-2xl shadow-xl hidden z-50 py-1.5 text-xs">
-              <div class="px-3 py-1.5 border-b border-slate-100 dark:border-[#1C2C26] text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+            <div id="dropdownFiltroMes"
+              class="absolute right-0 mt-2 w-52 bg-white dark:bg-[#121E1A] border border-slate-200 dark:border-[#1C2C26] rounded-2xl shadow-xl hidden z-50 py-1.5 text-xs">
+              <div
+                class="px-3 py-1.5 border-b border-slate-100 dark:border-[#1C2C26] text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
                 Selecionar Período
               </div>
               <div id="listaOpcoesMes" class="max-h-60 overflow-y-auto py-1">
@@ -221,7 +251,8 @@
             </div>
           </div>
 
-          <a href="produtos.html" class="inline-flex items-center justify-center space-x-2 px-4 py-2.5 bg-[#0F392B] hover:bg-[#0a271d] dark:hover:bg-[#144737] text-white text-xs font-semibold rounded-xl shadow-xs border border-transparent dark:border-emerald-700/40 transition-colors">
+          <a href="produtos.html"
+            class="inline-flex items-center justify-center space-x-2 px-4 py-2.5 bg-[#0F392B] hover:bg-[#0a271d] dark:hover:bg-[#144737] text-white text-xs font-semibold rounded-xl shadow-xs border border-transparent dark:border-emerald-700/40 transition-colors">
             <i class="fa-solid fa-plus text-xs"></i>
             <span>Novo produto</span>
           </a>
@@ -231,33 +262,39 @@
       <!-- CARDS DE FLUXO FINANCEIRO DO MÊS -->
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <!-- Total de Vendas do Mês -->
-        <div class="bg-white dark:bg-[#121E1A] border border-slate-200/80 dark:border-[#1C2C26] p-5 rounded-2xl shadow-xs flex items-center justify-between">
+        <div
+          class="bg-white dark:bg-[#121E1A] border border-slate-200/80 dark:border-[#1C2C26] p-5 rounded-2xl shadow-xs flex items-center justify-between">
           <div>
             <p class="text-xs font-medium text-slate-400">Total de Vendas (Mês)</p>
             <h2 class="text-xl font-bold text-slate-900 dark:text-white mt-1" id="cardVendasMes">
-              <span class="inline-flex items-center gap-2 text-xs font-medium text-slate-400 dark:text-slate-500 animate-pulse">
+              <span
+                class="inline-flex items-center gap-2 text-xs font-medium text-slate-400 dark:text-slate-500 animate-pulse">
                 <i class="fa-solid fa-circle-notch fa-spin text-emerald-500"></i> Carregando...
               </span>
             </h2>
             <p class="text-[10px] text-emerald-600 dark:text-emerald-400 mt-1">Receita gerada por saídas</p>
           </div>
-          <div class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+          <div
+            class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
             <i class="fa-solid fa-chart-line text-base"></i>
           </div>
         </div>
 
         <!-- Total de Gastos/Compras do Mês -->
-        <div class="bg-white dark:bg-[#121E1A] border border-slate-200/80 dark:border-[#1C2C26] p-5 rounded-2xl shadow-xs flex items-center justify-between">
+        <div
+          class="bg-white dark:bg-[#121E1A] border border-slate-200/80 dark:border-[#1C2C26] p-5 rounded-2xl shadow-xs flex items-center justify-between">
           <div>
             <p class="text-xs font-medium text-slate-400">Total de Compras / Gastos (Mês)</p>
             <h2 class="text-xl font-bold text-slate-900 dark:text-white mt-1" id="cardGastosMes">
-              <span class="inline-flex items-center gap-2 text-xs font-medium text-slate-400 dark:text-slate-500 animate-pulse">
+              <span
+                class="inline-flex items-center gap-2 text-xs font-medium text-slate-400 dark:text-slate-500 animate-pulse">
                 <i class="fa-solid fa-circle-notch fa-spin text-amber-500"></i> Carregando...
               </span>
             </h2>
             <p class="text-[10px] text-amber-600 dark:text-amber-400 mt-1">Investimento em entradas</p>
           </div>
-          <div class="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+          <div
+            class="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 flex items-center justify-center">
             <i class="fa-solid fa-cart-shopping text-base"></i>
           </div>
         </div>
@@ -265,9 +302,11 @@
 
       <!-- Grid de Cards de Estatísticas -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="bg-white dark:bg-[#121E1A] border border-slate-200/80 dark:border-[#1C2C26] p-4 rounded-2xl shadow-xs">
+        <div
+          class="bg-white dark:bg-[#121E1A] border border-slate-200/80 dark:border-[#1C2C26] p-4 rounded-2xl shadow-xs">
           <div class="flex items-center justify-between">
-            <div class="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center border border-transparent dark:border-indigo-900/30">
+            <div
+              class="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center border border-transparent dark:border-indigo-900/30">
               <i class="fa-solid fa-box text-sm"></i>
             </div>
             <i class="fa-solid fa-ellipsis text-slate-300 dark:text-slate-600 text-xs"></i>
@@ -275,18 +314,23 @@
           <p class="text-xs font-medium text-slate-400 mt-3">Total de produtos</p>
           <div class="flex items-baseline justify-between mt-1">
             <h2 class="text-2xl font-bold text-slate-900 dark:text-white" id="statTotalProdutos">
-              <span class="inline-flex items-center gap-1.5 text-xs font-medium text-slate-400 dark:text-slate-500 animate-pulse">
+              <span
+                class="inline-flex items-center gap-1.5 text-xs font-medium text-slate-400 dark:text-slate-500 animate-pulse">
                 <i class="fa-solid fa-circle-notch fa-spin text-indigo-500"></i> Carregando...
               </span>
             </h2>
-            <span class="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-50 dark:bg-emerald-950/50 px-1.5 py-0.5 rounded border border-transparent dark:border-emerald-900/30">▲ +8,2%</span>
+            <span
+              class="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-50 dark:bg-emerald-950/50 px-1.5 py-0.5 rounded border border-transparent dark:border-emerald-900/30">▲
+              +8,2%</span>
           </div>
           <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-1">vs. mês anterior</p>
         </div>
 
-        <div class="bg-white dark:bg-[#121E1A] border border-slate-200/80 dark:border-[#1C2C26] p-4 rounded-2xl shadow-xs">
+        <div
+          class="bg-white dark:bg-[#121E1A] border border-slate-200/80 dark:border-[#1C2C26] p-4 rounded-2xl shadow-xs">
           <div class="flex items-center justify-between">
-            <div class="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-transparent dark:border-emerald-900/30">
+            <div
+              class="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-transparent dark:border-emerald-900/30">
               <i class="fa-solid fa-money-bill-wave text-sm"></i>
             </div>
             <i class="fa-solid fa-ellipsis text-slate-300 dark:text-slate-600 text-xs"></i>
@@ -294,18 +338,23 @@
           <p class="text-xs font-medium text-slate-400 mt-3">Valor em estoque</p>
           <div class="flex items-baseline justify-between mt-1">
             <h2 class="text-2xl font-bold text-slate-900 dark:text-white" id="statValorEstoque">
-              <span class="inline-flex items-center gap-1.5 text-xs font-medium text-slate-400 dark:text-slate-500 animate-pulse">
+              <span
+                class="inline-flex items-center gap-1.5 text-xs font-medium text-slate-400 dark:text-slate-500 animate-pulse">
                 <i class="fa-solid fa-circle-notch fa-spin text-emerald-500"></i> Carregando...
               </span>
             </h2>
-            <span class="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-50 dark:bg-emerald-950/50 px-1.5 py-0.5 rounded border border-transparent dark:border-emerald-900/30">▲ +12,5%</span>
+            <span
+              class="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-50 dark:bg-emerald-950/50 px-1.5 py-0.5 rounded border border-transparent dark:border-emerald-900/30">▲
+              +12,5%</span>
           </div>
           <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-1">vs. mês anterior</p>
         </div>
 
-        <div class="bg-white dark:bg-[#121E1A] border border-slate-200/80 dark:border-[#1C2C26] p-4 rounded-2xl shadow-xs">
+        <div
+          class="bg-white dark:bg-[#121E1A] border border-slate-200/80 dark:border-[#1C2C26] p-4 rounded-2xl shadow-xs">
           <div class="flex items-center justify-between">
-            <div class="w-8 h-8 rounded-xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 flex items-center justify-center border border-transparent dark:border-amber-900/30">
+            <div
+              class="w-8 h-8 rounded-xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 flex items-center justify-center border border-transparent dark:border-amber-900/30">
               <i class="fa-solid fa-triangle-exclamation text-sm"></i>
             </div>
             <i class="fa-solid fa-ellipsis text-slate-300 dark:text-slate-600 text-xs"></i>
@@ -313,18 +362,23 @@
           <p class="text-xs font-medium text-slate-400 mt-3">Estoque baixo</p>
           <div class="flex items-baseline justify-between mt-1">
             <h2 class="text-2xl font-bold text-slate-900 dark:text-white" id="statEstoqueBaixo">
-              <span class="inline-flex items-center gap-1.5 text-xs font-medium text-slate-400 dark:text-slate-500 animate-pulse">
+              <span
+                class="inline-flex items-center gap-1.5 text-xs font-medium text-slate-400 dark:text-slate-500 animate-pulse">
                 <i class="fa-solid fa-circle-notch fa-spin text-amber-500"></i> Carregando...
               </span>
             </h2>
-            <span class="text-[11px] text-rose-600 dark:text-rose-400 font-semibold bg-rose-50 dark:bg-rose-950/50 px-1.5 py-0.5 rounded border border-transparent dark:border-rose-900/30">▼ Atenção</span>
+            <span
+              class="text-[11px] text-rose-600 dark:text-rose-400 font-semibold bg-rose-50 dark:bg-rose-950/50 px-1.5 py-0.5 rounded border border-transparent dark:border-rose-900/30">▼
+              Atenção</span>
           </div>
           <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-1">necessitam de reposição</p>
         </div>
 
-        <div class="bg-white dark:bg-[#121E1A] border border-slate-200/80 dark:border-[#1C2C26] p-4 rounded-2xl shadow-xs">
+        <div
+          class="bg-white dark:bg-[#121E1A] border border-slate-200/80 dark:border-[#1C2C26] p-4 rounded-2xl shadow-xs">
           <div class="flex items-center justify-between">
-            <div class="w-8 h-8 rounded-xl bg-purple-50 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400 flex items-center justify-center border border-transparent dark:border-purple-900/30">
+            <div
+              class="w-8 h-8 rounded-xl bg-purple-50 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400 flex items-center justify-center border border-transparent dark:border-purple-900/30">
               <i class="fa-solid fa-arrow-up-from-bracket text-sm"></i>
             </div>
             <i class="fa-solid fa-ellipsis text-slate-300 dark:text-slate-600 text-xs"></i>
@@ -332,20 +386,26 @@
           <p class="text-xs font-medium text-slate-400 mt-3">Saídas este mês</p>
           <div class="flex items-baseline justify-between mt-1">
             <h2 class="text-2xl font-bold text-slate-900 dark:text-white" id="statSaidasMes">
-              <span class="inline-flex items-center gap-1.5 text-xs font-medium text-slate-400 dark:text-slate-500 animate-pulse">
+              <span
+                class="inline-flex items-center gap-1.5 text-xs font-medium text-slate-400 dark:text-slate-500 animate-pulse">
                 <i class="fa-solid fa-circle-notch fa-spin text-purple-500"></i> Carregando...
               </span>
             </h2>
-            <span class="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-50 dark:bg-emerald-950/50 px-1.5 py-0.5 rounded border border-transparent dark:border-emerald-900/30">▲ +4,1%</span>
+            <span
+              class="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-50 dark:bg-emerald-950/50 px-1.5 py-0.5 rounded border border-transparent dark:border-emerald-900/30">▲
+              +4,1%</span>
           </div>
           <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-1">vs. mês anterior</p>
         </div>
       </div>
 
       <!-- Resumo Operacional Verde Escuro -->
-      <div class="bg-[#0F392B] dark:bg-[#10231D] rounded-2xl p-6 text-white grid grid-cols-1 md:grid-cols-4 gap-6 shadow-xs border border-emerald-900/30 dark:border-emerald-900/40">
-        <div class="flex items-start space-x-3 border-b md:border-b-0 md:border-r border-emerald-900/50 dark:border-emerald-900/40 pb-4 md:pb-0">
-          <div class="w-9 h-9 rounded-xl bg-emerald-800/50 dark:bg-emerald-900/50 flex items-center justify-center text-emerald-300 border border-transparent dark:border-emerald-700/30">
+      <div
+        class="bg-[#0F392B] dark:bg-[#10231D] rounded-2xl p-6 text-white grid grid-cols-1 md:grid-cols-4 gap-6 shadow-xs border border-emerald-900/30 dark:border-emerald-900/40">
+        <div
+          class="flex items-start space-x-3 border-b md:border-b-0 md:border-r border-emerald-900/50 dark:border-emerald-900/40 pb-4 md:pb-0">
+          <div
+            class="w-9 h-9 rounded-xl bg-emerald-800/50 dark:bg-emerald-900/50 flex items-center justify-center text-emerald-300 border border-transparent dark:border-emerald-700/30">
             <i class="fa-solid fa-border-all text-sm"></i>
           </div>
           <div>
@@ -389,18 +449,21 @@
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
         <!-- TOP 3 MAIS VENDIDOS DO MÊS -->
-        <div class="bg-white dark:bg-[#121E1A] border border-slate-200/80 dark:border-[#1C2C26] p-6 rounded-2xl shadow-xs">
+        <div
+          class="bg-white dark:bg-[#121E1A] border border-slate-200/80 dark:border-[#1C2C26] p-6 rounded-2xl shadow-xs">
           <div class="flex items-center justify-between mb-4">
             <div>
               <h3 class="text-sm font-bold text-slate-800 dark:text-slate-100">Mais vendidos do mês</h3>
               <p class="text-[11px] text-slate-400 mt-0.5">Itens com maior volume de saída</p>
             </div>
-            <div class="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+            <div
+              class="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
               <i class="fa-solid fa-fire text-xs"></i>
             </div>
           </div>
           <div id="listaMaisVendidos" class="space-y-3">
-            <div class="p-4 bg-slate-50 dark:bg-[#14231E] rounded-xl text-xs text-slate-400 dark:text-slate-500 flex items-center justify-center gap-2 animate-pulse">
+            <div
+              class="p-4 bg-slate-50 dark:bg-[#14231E] rounded-xl text-xs text-slate-400 dark:text-slate-500 flex items-center justify-center gap-2 animate-pulse">
               <i class="fa-solid fa-circle-notch fa-spin text-emerald-500"></i>
               <span>Carregando mais vendidos...</span>
             </div>
@@ -408,18 +471,21 @@
         </div>
 
         <!-- TOP 3 ITENS MAIS CAROS -->
-        <div class="bg-white dark:bg-[#121E1A] border border-slate-200/80 dark:border-[#1C2C26] p-6 rounded-2xl shadow-xs">
+        <div
+          class="bg-white dark:bg-[#121E1A] border border-slate-200/80 dark:border-[#1C2C26] p-6 rounded-2xl shadow-xs">
           <div class="flex items-center justify-between mb-4">
             <div>
               <h3 class="text-sm font-bold text-slate-800 dark:text-slate-100">Itens de maior valor unitário</h3>
               <p class="text-[11px] text-slate-400 mt-0.5">Produtos com maior impacto financeiro no estoque</p>
             </div>
-            <div class="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+            <div
+              class="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
               <i class="fa-solid fa-gem text-xs"></i>
             </div>
           </div>
           <div id="listaMaisCaros" class="space-y-3">
-            <div class="p-4 bg-slate-50 dark:bg-[#14231E] rounded-xl text-xs text-slate-400 dark:text-slate-500 flex items-center justify-center gap-2 animate-pulse">
+            <div
+              class="p-4 bg-slate-50 dark:bg-[#14231E] rounded-xl text-xs text-slate-400 dark:text-slate-500 flex items-center justify-center gap-2 animate-pulse">
               <i class="fa-solid fa-circle-notch fa-spin text-indigo-500"></i>
               <span>Carregando itens de maior valor...</span>
             </div>
@@ -431,7 +497,8 @@
       <!-- Gráfico e Estoque Baixo -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-        <div class="lg:col-span-2 bg-white dark:bg-[#121E1A] border border-slate-200/80 dark:border-[#1C2C26] p-6 rounded-2xl shadow-xs">
+        <div
+          class="lg:col-span-2 bg-white dark:bg-[#121E1A] border border-slate-200/80 dark:border-[#1C2C26] p-6 rounded-2xl shadow-xs">
           <div class="flex items-center justify-between mb-4">
             <div>
               <h3 class="text-sm font-bold text-slate-800 dark:text-slate-100">Movimentações do estoque</h3>
@@ -440,17 +507,27 @@
 
             <!-- DROPDOWN CUSTOMIZADO DE PERÍODO DO GRÁFICO -->
             <div class="relative">
-              <button id="btnPeriodoMov" type="button" class="text-xs font-semibold text-slate-700 dark:text-slate-200 bg-slate-50 dark:bg-[#172722] border border-slate-200 dark:border-[#22362F] rounded-xl px-3 py-1.5 flex items-center space-x-2 hover:border-emerald-500/50 focus:outline-none transition-colors cursor-pointer">
+              <button id="btnPeriodoMov" type="button"
+                class="text-xs font-semibold text-slate-700 dark:text-slate-200 bg-slate-50 dark:bg-[#172722] border border-slate-200 dark:border-[#22362F] rounded-xl px-3 py-1.5 flex items-center space-x-2 hover:border-emerald-500/50 focus:outline-none transition-colors cursor-pointer">
                 <span id="labelPeriodoMov">1 mês</span>
                 <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 ml-1"></i>
               </button>
 
               <!-- Dropdown flutuante do gráfico -->
-              <div id="dropdownPeriodoMov" class="absolute right-0 mt-2 w-36 bg-white dark:bg-[#121E1A] border border-slate-200 dark:border-[#1C2C26] rounded-xl shadow-xl hidden z-50 py-1 text-xs">
-                <button type="button" data-valor="1" class="opcao-periodo w-full text-left px-3 py-1.5 hover:bg-slate-50 dark:hover:bg-[#172722] text-slate-700 dark:text-slate-300 font-bold text-emerald-600 dark:text-emerald-400 transition-colors cursor-pointer">1 mês</button>
-                <button type="button" data-valor="3" class="opcao-periodo w-full text-left px-3 py-1.5 hover:bg-slate-50 dark:hover:bg-[#172722] text-slate-700 dark:text-slate-300 transition-colors cursor-pointer">3 meses</button>
-                <button type="button" data-valor="7" class="opcao-periodo w-full text-left px-3 py-1.5 hover:bg-slate-50 dark:hover:bg-[#172722] text-slate-700 dark:text-slate-300 transition-colors cursor-pointer">7 meses</button>
-                <button type="button" data-valor="12" class="opcao-periodo w-full text-left px-3 py-1.5 hover:bg-slate-50 dark:hover:bg-[#172722] text-slate-700 dark:text-slate-300 transition-colors cursor-pointer">1 ano</button>
+              <div id="dropdownPeriodoMov"
+                class="absolute right-0 mt-2 w-36 bg-white dark:bg-[#121E1A] border border-slate-200 dark:border-[#1C2C26] rounded-xl shadow-xl hidden z-50 py-1 text-xs">
+                <button type="button" data-valor="1"
+                  class="opcao-periodo w-full text-left px-3 py-1.5 hover:bg-slate-50 dark:hover:bg-[#172722] text-slate-700 dark:text-slate-300 font-bold text-emerald-600 dark:text-emerald-400 transition-colors cursor-pointer">1
+                  mês</button>
+                <button type="button" data-valor="3"
+                  class="opcao-periodo w-full text-left px-3 py-1.5 hover:bg-slate-50 dark:hover:bg-[#172722] text-slate-700 dark:text-slate-300 transition-colors cursor-pointer">3
+                  meses</button>
+                <button type="button" data-valor="7"
+                  class="opcao-periodo w-full text-left px-3 py-1.5 hover:bg-slate-50 dark:hover:bg-[#172722] text-slate-700 dark:text-slate-300 transition-colors cursor-pointer">7
+                  meses</button>
+                <button type="button" data-valor="12"
+                  class="opcao-periodo w-full text-left px-3 py-1.5 hover:bg-slate-50 dark:hover:bg-[#172722] text-slate-700 dark:text-slate-300 transition-colors cursor-pointer">1
+                  ano</button>
               </div>
             </div>
           </div>
@@ -461,7 +538,8 @@
         </div>
 
         <!-- Card de Estoque Baixo -->
-        <div class="bg-white dark:bg-[#121E1A] border border-slate-200/80 dark:border-[#1C2C26] p-6 rounded-2xl shadow-xs flex flex-col justify-between">
+        <div
+          class="bg-white dark:bg-[#121E1A] border border-slate-200/80 dark:border-[#1C2C26] p-6 rounded-2xl shadow-xs flex flex-col justify-between">
           <div>
             <div class="flex items-center justify-between mb-4">
               <div>
@@ -475,14 +553,16 @@
             </div>
 
             <div id="lowStockList" class="space-y-4">
-              <div class="p-4 bg-slate-50 dark:bg-[#14231E] rounded-xl text-xs text-slate-400 dark:text-slate-500 flex items-center justify-center gap-2 animate-pulse">
+              <div
+                class="p-4 bg-slate-50 dark:bg-[#14231E] rounded-xl text-xs text-slate-400 dark:text-slate-500 flex items-center justify-center gap-2 animate-pulse">
                 <i class="fa-solid fa-circle-notch fa-spin text-amber-500"></i>
                 <span>Verificando estoque...</span>
               </div>
             </div>
           </div>
 
-          <a href="produtos.html" class="text-center text-xs font-semibold text-[#0F392B] dark:text-emerald-400 hover:underline mt-6 block">
+          <a href="produtos.html"
+            class="text-center text-xs font-semibold text-[#0F392B] dark:text-emerald-400 hover:underline mt-6 block">
             Ver aba de produtos <i class="fa-solid fa-chevron-right text-[10px] ml-1"></i>
           </a>
         </div>
@@ -492,7 +572,8 @@
       <!-- Valor por Categoria e Estatísticas -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-        <div class="bg-white dark:bg-[#121E1A] border border-slate-200/80 dark:border-[#1C2C26] p-6 rounded-2xl shadow-xs flex flex-col justify-between">
+        <div
+          class="bg-white dark:bg-[#121E1A] border border-slate-200/80 dark:border-[#1C2C26] p-6 rounded-2xl shadow-xs flex flex-col justify-between">
           <div>
             <div class="flex items-center justify-between mb-4">
               <div>
@@ -506,7 +587,8 @@
                 <canvas id="categoriaChart"></canvas>
               </div>
               <div class="space-y-3 flex-1 text-xs" id="listaCategoriasPercentual">
-                <div class="py-4 text-xs text-slate-400 dark:text-slate-500 flex items-center justify-center gap-2 animate-pulse">
+                <div
+                  class="py-4 text-xs text-slate-400 dark:text-slate-500 flex items-center justify-center gap-2 animate-pulse">
                   <i class="fa-solid fa-circle-notch fa-spin text-emerald-500"></i>
                   <span>Carregando categorias...</span>
                 </div>
@@ -515,14 +597,16 @@
           </div>
         </div>
 
-        <div class="bg-white dark:bg-[#121E1A] border border-slate-200/80 dark:border-[#1C2C26] p-6 rounded-2xl shadow-xs flex flex-col justify-between">
+        <div
+          class="bg-white dark:bg-[#121E1A] border border-slate-200/80 dark:border-[#1C2C26] p-6 rounded-2xl shadow-xs flex flex-col justify-between">
           <div>
             <div class="flex items-center justify-between mb-4">
               <div>
                 <h3 class="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
                   Estatísticas do inventário
                   <!-- Ícone de dica sutil -->
-                  <i class="fa-solid fa-circle-info text-slate-400 dark:text-slate-500 text-[11px] cursor-help" title="Métricas consolidadas com base no histórico de inventário e vendas."></i>
+                  <i class="fa-solid fa-circle-info text-slate-400 dark:text-slate-500 text-[11px] cursor-help"
+                    title="Métricas consolidadas com base no histórico de inventário e vendas."></i>
                 </h3>
                 <p class="text-[11px] text-slate-400 mt-0.5">Visão consolidada da operação</p>
               </div>
@@ -530,7 +614,9 @@
             </div>
 
             <div class="space-y-4 text-xs mt-2">
-              <div class="flex items-center justify-between py-2 border-b border-slate-100 dark:border-[#1C2C26] group cursor-help" title="Quantas vezes o inventário foi renovado ou vendido no período.">
+              <div
+                class="flex items-center justify-between py-2 border-b border-slate-100 dark:border-[#1C2C26] group cursor-help"
+                title="Quantas vezes o inventário foi renovado ou vendido no período.">
                 <span class="text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
                   Giro de estoque global
                   <i class="fa-regular fa-question-circle text-[10px] text-slate-400"></i>
@@ -540,7 +626,9 @@
                 </span>
               </div>
 
-              <div class="flex items-center justify-between py-2 border-b border-slate-100 dark:border-[#1C2C26] group cursor-help" title="Média de dias que os produtos permanecem guardados antes de serem vendidos.">
+              <div
+                class="flex items-center justify-between py-2 border-b border-slate-100 dark:border-[#1C2C26] group cursor-help"
+                title="Média de dias que os produtos permanecem guardados antes de serem vendidos.">
                 <span class="text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
                   Média de permanência
                   <i class="fa-regular fa-question-circle text-[10px] text-slate-400"></i>
@@ -550,7 +638,9 @@
                 </span>
               </div>
 
-              <div class="flex items-center justify-between py-2 border-b border-slate-100 dark:border-[#1C2C26] group cursor-help" title="Porcentagem estimada de produtos que ficaram esgotados (ruptura).">
+              <div
+                class="flex items-center justify-between py-2 border-b border-slate-100 dark:border-[#1C2C26] group cursor-help"
+                title="Porcentagem estimada de produtos que ficaram esgotados (ruptura).">
                 <span class="text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
                   Taxa de ruptura estimada
                   <i class="fa-regular fa-question-circle text-[10px] text-slate-400"></i>
@@ -560,7 +650,8 @@
                 </span>
               </div>
 
-              <div class="flex items-center justify-between py-2 group cursor-help" title="Nível de conformidade e precisão dos registros em relação ao estoque físico.">
+              <div class="flex items-center justify-between py-2 group cursor-help"
+                title="Nível de conformidade e precisão dos registros em relação ao estoque físico.">
                 <span class="text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
                   Acurácia de inventário
                   <i class="fa-regular fa-question-circle text-[10px] text-slate-400"></i>
@@ -571,7 +662,8 @@
           </div>
         </div>
 
-        <div class="bg-white dark:bg-[#121E1A] border border-slate-200/80 dark:border-[#1C2C26] p-6 rounded-2xl shadow-xs flex flex-col justify-between">
+        <div
+          class="bg-white dark:bg-[#121E1A] border border-slate-200/80 dark:border-[#1C2C26] p-6 rounded-2xl shadow-xs flex flex-col justify-between">
           <div>
             <div class="flex items-center justify-between mb-4">
               <div>
@@ -586,11 +678,14 @@
 
             <div class="mt-2">
               <div class="w-full h-2.5 bg-slate-100 dark:bg-[#1A2D27] rounded-full overflow-hidden flex">
-                <div id="barraSaudeProgresso" class="w-[0%] h-full bg-emerald-600 dark:bg-emerald-500 rounded-full transition-all duration-1000"></div>
+                <div id="barraSaudeProgresso"
+                  class="w-[0%] h-full bg-emerald-600 dark:bg-emerald-500 rounded-full transition-all duration-1000">
+                </div>
               </div>
               <div class="flex justify-between text-[10px] text-slate-400 mt-1 font-medium">
                 <span>Atenção</span>
-                <span id="saudeClassificacao" class="text-emerald-700 dark:text-emerald-400 font-semibold animate-pulse">Calculando...</span>
+                <span id="saudeClassificacao"
+                  class="text-emerald-700 dark:text-emerald-400 font-semibold animate-pulse">Calculando...</span>
               </div>
             </div>
 
@@ -630,11 +725,14 @@
   </div>
 
   <!-- MODAL DE SUPORTE (POP-UP FLUTUANTE) -->
-  <div id="modalSuporte" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs hidden transition-opacity">
-    <div class="bg-white dark:bg-[#121E1A] border border-slate-200 dark:border-[#1C2C26] rounded-2xl shadow-xl w-full max-w-md p-6 relative animate-in fade-in zoom-in-95 duration-200">
-      
+  <div id="modalSuporte"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs hidden transition-opacity">
+    <div
+      class="bg-white dark:bg-[#121E1A] border border-slate-200 dark:border-[#1C2C26] rounded-2xl shadow-xl w-full max-w-md p-6 relative animate-in fade-in zoom-in-95 duration-200">
+
       <!-- Botão Fechar (X) -->
-      <button id="btnFecharSuporte" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg">
+      <button id="btnFecharSuporte"
+        class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
         </svg>
@@ -642,9 +740,11 @@
 
       <!-- Cabeçalho -->
       <div class="flex items-center gap-3 mb-4">
-        <div class="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+        <div
+          class="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636l3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636l3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
           </svg>
         </div>
         <div>
@@ -655,7 +755,8 @@
 
       <!-- Lista de Contatos -->
       <div class="space-y-3 mt-4 text-xs">
-        <div class="p-3 rounded-xl bg-slate-50 dark:bg-[#14231E] border border-slate-100 dark:border-[#1C2C26] flex items-center justify-between">
+        <div
+          class="p-3 rounded-xl bg-slate-50 dark:bg-[#14231E] border border-slate-100 dark:border-[#1C2C26] flex items-center justify-between">
           <div class="flex items-center gap-3">
             <span class="p-2 rounded-lg bg-emerald-500/10 text-emerald-500">📧</span>
             <div>
@@ -665,7 +766,8 @@
           </div>
         </div>
 
-        <div class="p-3 rounded-xl bg-slate-50 dark:bg-[#14231E] border border-slate-100 dark:border-[#1C2C26] flex items-center justify-between">
+        <div
+          class="p-3 rounded-xl bg-slate-50 dark:bg-[#14231E] border border-slate-100 dark:border-[#1C2C26] flex items-center justify-between">
           <div class="flex items-center gap-3">
             <span class="p-2 rounded-lg bg-emerald-500/10 text-emerald-500">💬</span>
             <div>
@@ -675,7 +777,8 @@
           </div>
         </div>
 
-        <div class="p-3 rounded-xl bg-slate-50 dark:bg-[#14231E] border border-slate-100 dark:border-[#1C2C26] flex items-center justify-between">
+        <div
+          class="p-3 rounded-xl bg-slate-50 dark:bg-[#14231E] border border-slate-100 dark:border-[#1C2C26] flex items-center justify-between">
           <div class="flex items-center gap-3">
             <span class="p-2 rounded-lg bg-emerald-500/10 text-emerald-500">🕒</span>
             <div>
@@ -688,7 +791,8 @@
 
       <!-- Rodapé Modal -->
       <div class="mt-6 flex justify-end">
-        <button id="btnFecharSuporteModal" type="button" class="px-4 py-2 bg-slate-100 dark:bg-[#14231E] hover:bg-slate-200 dark:hover:bg-[#1C2C26] text-slate-700 dark:text-slate-300 font-medium rounded-xl transition-colors text-xs">
+        <button id="btnFecharSuporteModal" type="button"
+          class="px-4 py-2 bg-slate-100 dark:bg-[#14231E] hover:bg-slate-200 dark:hover:bg-[#1C2C26] text-slate-700 dark:text-slate-300 font-medium rounded-xl transition-colors text-xs">
           Fechar
         </button>
       </div>
@@ -716,7 +820,7 @@
         let userObj = {};
         try {
           userObj = JSON.parse(localStorage.getItem('nexus_user') || '{}');
-        } catch (e) {}
+        } catch (e) { }
 
         const rawRole =
           localStorage.getItem('nexus_user_role') ||
@@ -734,6 +838,24 @@
         } else {
           elUserRole.textContent = String(rawRole).charAt(0).toUpperCase() + String(rawRole).slice(1);
         }
+      }
+    });
+  </script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Atualiza o nome e o cargo globalmente a partir do localStorage logo ao abrir a página
+      const nomeSalvo = localStorage.getItem('nexus_user_name');
+      const cargoSalvo = localStorage.getItem('nexus_user_role');
+
+      const elUserName = document.getElementById('userName');
+      const elUserRole = document.getElementById('userRole');
+
+      if (elUserName && nomeSalvo) {
+        elUserName.textContent = nomeSalvo;
+      }
+
+      if (elUserRole && cargoSalvo) {
+        elUserRole.textContent = cargoSalvo;
       }
     });
   </script>

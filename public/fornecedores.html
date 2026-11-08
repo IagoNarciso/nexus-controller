@@ -7,7 +7,8 @@
   <title>Nexus Controller - Fornecedores</title>
 
   <!-- Favicon Oficial (Cubo Conectado Minimalista) -->
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' fill='none'%3E%3Crect width='100' height='100' rx='22' fill='%230F392B'/%3E%3Cpolygon points='50,14 82,32 82,68 50,86 18,68 18,32' stroke='%2310B981' stroke-width='7' stroke-linejoin='round'/%3E%3Cpolyline points='18,32 50,50 82,32' stroke='%2310B981' stroke-width='7' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cline x1='50' y1='50' x2='50' y2='86' stroke='%2310B981' stroke-width='7' stroke-linecap='round'/%3E%3Ccircle cx='50' cy='50' r='8' fill='%2334D399'/%3E%3C/svg%3E">
+  <link rel="icon" type="image/svg+xml"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' fill='none'%3E%3Crect width='100' height='100' rx='22' fill='%230F392B'/%3E%3Cpolygon points='50,14 82,32 82,68 50,86 18,68 18,32' stroke='%2310B981' stroke-width='7' stroke-linejoin='round'/%3E%3Cpolyline points='18,32 50,50 82,32' stroke='%2310B981' stroke-width='7' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cline x1='50' y1='50' x2='50' y2='86' stroke='%2310B981' stroke-width='7' stroke-linecap='round'/%3E%3Ccircle cx='50' cy='50' r='8' fill='%2334D399'/%3E%3C/svg%3E">
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -20,7 +21,8 @@
   <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <!-- Google Fonts (Inter) -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet">
 
   <style>
     body {
@@ -29,30 +31,38 @@
   </style>
 </head>
 
-<body class="bg-slate-50 dark:bg-[#0B1512] text-slate-800 dark:text-slate-100 antialiased min-h-screen flex transition-colors">
+<body
+  class="bg-slate-50 dark:bg-[#0B1512] text-slate-800 dark:text-slate-100 antialiased min-h-screen flex transition-colors">
 
   <!-- SIDEBAR -->
-  <aside class="w-64 bg-white dark:bg-[#0E1A16] border-r border-slate-200 dark:border-[#1C2C26] flex flex-col justify-between hidden md:flex shrink-0">
+  <aside
+    class="w-64 bg-white dark:bg-[#0E1A16] border-r border-slate-200 dark:border-[#1C2C26] flex flex-col justify-between hidden md:flex shrink-0">
     <div>
       <!-- Logo Oficial: Cubo Conectado Minimalista -->
       <div class="h-16 flex items-center px-6 border-b border-slate-100 dark:border-[#1C2C26]">
         <a href="dashboard.html" class="flex items-center space-x-3 group focus:outline-none">
-          <svg width="34" height="34" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" class="shrink-0 transition-transform duration-200 group-hover:scale-105">
-            <polygon points="50,8 88,30 88,72 50,94 12,72 12,30" class="stroke-[#0F392B] dark:stroke-emerald-500" stroke-width="7" stroke-linejoin="round" fill="none"/>
-            <polyline points="12,30 50,52 88,30" class="stroke-[#0F392B] dark:stroke-emerald-500" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-            <line x1="50" y1="52" x2="50" y2="94" class="stroke-[#0F392B] dark:stroke-emerald-500" stroke-width="7" stroke-linecap="round"/>
-            <circle cx="50" cy="52" r="9" class="fill-emerald-500 dark:fill-emerald-400"/>
+          <svg width="34" height="34" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"
+            class="shrink-0 transition-transform duration-200 group-hover:scale-105">
+            <polygon points="50,8 88,30 88,72 50,94 12,72 12,30" class="stroke-[#0F392B] dark:stroke-emerald-500"
+              stroke-width="7" stroke-linejoin="round" fill="none" />
+            <polyline points="12,30 50,52 88,30" class="stroke-[#0F392B] dark:stroke-emerald-500" stroke-width="7"
+              stroke-linecap="round" stroke-linejoin="round" fill="none" />
+            <line x1="50" y1="52" x2="50" y2="94" class="stroke-[#0F392B] dark:stroke-emerald-500" stroke-width="7"
+              stroke-linecap="round" />
+            <circle cx="50" cy="52" r="9" class="fill-emerald-500 dark:fill-emerald-400" />
           </svg>
           <div class="flex flex-col leading-none">
             <span class="font-extrabold text-slate-900 dark:text-white text-base tracking-tight">Nexus</span>
-            <span class="font-medium text-[#0F392B] dark:text-emerald-400 text-[10px] tracking-widest uppercase mt-0.5">Controller</span>
+            <span
+              class="font-medium text-[#0F392B] dark:text-emerald-400 text-[10px] tracking-widest uppercase mt-0.5">Controller</span>
           </div>
         </a>
       </div>
 
       <!-- Menu -->
       <nav class="p-4 space-y-1">
-        <p class="px-3 text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Menu Principal</p>
+        <p class="px-3 text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Menu
+          Principal</p>
 
         <a href="dashboard.html"
           class="flex items-center space-x-3 px-3 py-2.5 text-xs font-medium text-slate-600 dark:text-slate-400 rounded-xl hover:bg-slate-50 dark:hover:bg-[#15241F] hover:text-slate-900 dark:hover:text-slate-100 transition-colors">
@@ -82,7 +92,8 @@
           <span>Fornecedores</span>
         </a>
 
-        <p class="px-3 text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mt-6 mb-2">Gestão</p>
+        <p class="px-3 text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mt-6 mb-2">
+          Gestão</p>
 
         <a href="configuracoes.html"
           class="flex items-center space-x-3 px-3 py-2.5 text-xs font-medium text-slate-600 dark:text-slate-400 rounded-xl hover:bg-slate-50 dark:hover:bg-[#15241F] hover:text-slate-900 dark:hover:text-slate-100 transition-colors">
@@ -94,7 +105,8 @@
 
     <!-- Bloco Suporte e Logout -->
     <div class="p-4 space-y-4">
-      <div class="bg-slate-50 dark:bg-[#12211C] p-4 rounded-2xl border border-slate-100 dark:border-[#1C2C26] space-y-2">
+      <div
+        class="bg-slate-50 dark:bg-[#12211C] p-4 rounded-2xl border border-slate-100 dark:border-[#1C2C26] space-y-2">
         <div
           class="w-7 h-7 rounded-lg bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-400 flex items-center justify-center text-xs font-bold border border-emerald-700/30">
           <i class="fa-solid fa-triangle-exclamation"></i>
@@ -103,7 +115,9 @@
           <p class="text-xs font-bold text-slate-800 dark:text-slate-200">Precisa de ajuda?</p>
           <p class="text-[11px] text-slate-400 mt-0.5">Acesse nossa central de suporte.</p>
         </div>
-        <a href="#" class="inline-block text-xs font-semibold text-[#0F392B] dark:text-emerald-400 hover:underline pt-1">Ver central</a>
+        <a href="#"
+          class="inline-block text-xs font-semibold text-[#0F392B] dark:text-emerald-400 hover:underline pt-1">Ver
+          central</a>
       </div>
 
       <button id="logoutBtn"
@@ -118,7 +132,8 @@
   <div class="flex-1 flex flex-col min-w-0 overflow-y-auto">
 
     <!-- TOPBAR PADRONIZADA -->
-    <header class="h-16 bg-white dark:bg-[#0E1A16] border-b border-slate-200 dark:border-[#1C2C26] px-6 flex items-center justify-between sticky top-0 z-10 transition-colors">
+    <header
+      class="h-16 bg-white dark:bg-[#0E1A16] border-b border-slate-200 dark:border-[#1C2C26] px-6 flex items-center justify-between sticky top-0 z-10 transition-colors">
       <div class="flex items-center space-x-2 text-xs font-medium text-slate-500 dark:text-slate-400">
         <a href="dashboard.html" class="hover:text-slate-800 dark:hover:text-slate-200">Nexus Controller</a>
         <i class="fa-solid fa-chevron-right text-[10px] text-slate-300 dark:text-slate-600"></i>
@@ -139,7 +154,8 @@
             class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-[#15241F] transition-colors relative cursor-pointer"
             title="Notificações">
             <i class="fa-regular fa-bell text-sm"></i>
-            <span id="dotNotificacao" class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-emerald-500 hidden"></span>
+            <span id="dotNotificacao"
+              class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-emerald-500 hidden"></span>
           </button>
 
           <!-- Dropdown de Notificações -->
@@ -158,7 +174,8 @@
 
         <!-- PERFIL DO UTILIZADOR COM BARRA DIVISÓRIA ANTES -->
         <div class="relative border-l border-slate-200 dark:border-[#1C2C26] pl-3">
-          <button id="btnPerfilMenu" type="button" class="flex items-center space-x-3 pl-1 focus:outline-none cursor-pointer group">
+          <button id="btnPerfilMenu" type="button"
+            class="flex items-center space-x-3 pl-1 focus:outline-none cursor-pointer group">
             <div id="userAvatar"
               class="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-bold text-xs flex items-center justify-center border border-emerald-200 dark:border-emerald-800">
               IN</div>
@@ -168,7 +185,8 @@
                 Carregando...</p>
               <p id="userRole" class="text-[10px] text-slate-400">Carregando...</p>
             </div>
-            <i class="fa-solid fa-chevron-right text-[10px] text-slate-400 group-hover:translate-x-0.5 transition-transform"></i>
+            <i
+              class="fa-solid fa-chevron-right text-[10px] text-slate-400 group-hover:translate-x-0.5 transition-transform"></i>
           </button>
 
           <!-- Dropdown do Perfil -->
@@ -188,9 +206,11 @@
     <main class="p-8 space-y-6 max-w-7xl w-full mx-auto">
 
       <!-- CABEÇALHO COM BANNER VERDE EXTRA CLARO -->
-      <div class="bg-emerald-50/35 dark:bg-emerald-950/20 border border-emerald-100/50 dark:border-emerald-800/40 rounded-2xl p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shadow-xs">
+      <div
+        class="bg-emerald-50/35 dark:bg-emerald-950/20 border border-emerald-100/50 dark:border-emerald-800/40 rounded-2xl p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shadow-xs">
         <div>
-          <p class="text-[11px] font-bold text-emerald-800/80 dark:text-emerald-400 uppercase tracking-wider">REDE DE PARCEIROS</p>
+          <p class="text-[11px] font-bold text-emerald-800/80 dark:text-emerald-400 uppercase tracking-wider">REDE DE
+            PARCEIROS</p>
           <div class="flex items-baseline space-x-3 mt-1">
             <h1 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Fornecedores</h1>
             <span id="totalFornecedoresBadge" class="text-xs text-slate-400 font-medium">Carregando...</span>
@@ -207,10 +227,12 @@
       </div>
 
       <!-- BARRA DE FILTROS E BUSCA -->
-      <div class="bg-white dark:bg-[#121E1A] rounded-2xl border border-slate-200/80 dark:border-[#1C2C26] p-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 shadow-xs">
+      <div
+        class="bg-white dark:bg-[#121E1A] rounded-2xl border border-slate-200/80 dark:border-[#1C2C26] p-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 shadow-xs">
         <!-- Input de Busca -->
         <div class="relative w-full sm:w-72">
-          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
+          <div
+            class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
             <i class="fa-solid fa-magnifying-glass text-xs"></i>
           </div>
           <input id="inputSearchFornecedores" type="text" placeholder="Buscar por nome ou CNPJ..."
@@ -218,7 +240,8 @@
         </div>
 
         <!-- Filtros Rápidos por Status -->
-        <div id="filtrosStatusFornecedor" class="flex items-center bg-slate-100/80 dark:bg-[#14231E] p-1 rounded-xl border border-slate-200/60 dark:border-[#1C2C26] space-x-1 overflow-x-auto">
+        <div id="filtrosStatusFornecedor"
+          class="flex items-center bg-slate-100/80 dark:bg-[#14231E] p-1 rounded-xl border border-slate-200/60 dark:border-[#1C2C26] space-x-1 overflow-x-auto">
           <button type="button" data-status="todos"
             class="btn-filtro-forn px-3 py-1.5 rounded-lg text-[11px] font-semibold bg-white dark:bg-[#1E332C] text-slate-800 dark:text-slate-100 shadow-2xs transition-all cursor-pointer whitespace-nowrap">
             Todos
@@ -247,11 +270,15 @@
   </div>
 
   <!-- MODAL DE DETALHES DO FORNECEDOR -->
-  <div id="modalDetalhesFornecedor" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white dark:bg-[#121E1A] rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden border border-slate-100 dark:border-[#1C2C26]">
+  <div id="modalDetalhesFornecedor"
+    class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+    <div
+      class="bg-white dark:bg-[#121E1A] rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden border border-slate-100 dark:border-[#1C2C26]">
       <!-- Topo Escuro (Verde Escuro) -->
-      <div class="bg-[#0F392B] dark:bg-[#0E1A16] border-b border-emerald-900/40 text-white p-6 relative flex items-start gap-4">
-        <div id="detalheAvatar" class="w-16 h-16 rounded-2xl bg-emerald-100 dark:bg-emerald-950 text-[#0F392B] dark:text-emerald-300 font-bold text-xl flex items-center justify-center shrink-0 border border-emerald-200 dark:border-emerald-800">
+      <div
+        class="bg-[#0F392B] dark:bg-[#0E1A16] border-b border-emerald-900/40 text-white p-6 relative flex items-start gap-4">
+        <div id="detalheAvatar"
+          class="w-16 h-16 rounded-2xl bg-emerald-100 dark:bg-emerald-950 text-[#0F392B] dark:text-emerald-300 font-bold text-xl flex items-center justify-center shrink-0 border border-emerald-200 dark:border-emerald-800">
           --
         </div>
         <div class="flex-1">
@@ -262,13 +289,15 @@
           <h2 id="detalheNome" class="text-2xl font-bold text-white">--</h2>
           <p id="detalheSubtitulo" class="text-xs text-emerald-200 mt-0.5">--</p>
         </div>
-        <button id="btnFecharModalDetalhes" type="button" class="w-8 h-8 rounded-lg bg-emerald-800/40 hover:bg-emerald-800 text-white flex items-center justify-center transition-colors cursor-pointer">
+        <button id="btnFecharModalDetalhes" type="button"
+          class="w-8 h-8 rounded-lg bg-emerald-800/40 hover:bg-emerald-800 text-white flex items-center justify-center transition-colors cursor-pointer">
           <i class="fa-solid fa-xmark text-sm"></i>
         </button>
       </div>
 
       <!-- Indicadores/Métricas -->
-      <div class="grid grid-cols-3 border-b border-slate-100 dark:border-[#1C2C26] divide-x divide-slate-100 dark:divide-[#1C2C26] p-6 bg-slate-50/50 dark:bg-[#0E1A16]/50">
+      <div
+        class="grid grid-cols-3 border-b border-slate-100 dark:border-[#1C2C26] divide-x divide-slate-100 dark:divide-[#1C2C26] p-6 bg-slate-50/50 dark:bg-[#0E1A16]/50">
         <div>
           <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Produtos vinculados</span>
           <div id="detalheProdutos" class="text-xl font-bold text-slate-800 dark:text-slate-100 mt-1">0</div>
@@ -338,20 +367,25 @@
       </div>
 
       <!-- Rodapé do Modal de Detalhes -->
-      <div class="p-6 bg-slate-50 dark:bg-[#0E1A16] border-t border-slate-100 dark:border-[#1C2C26] flex items-center justify-between gap-2 flex-wrap">
+      <div
+        class="p-6 bg-slate-50 dark:bg-[#0E1A16] border-t border-slate-100 dark:border-[#1C2C26] flex items-center justify-between gap-2 flex-wrap">
         <div class="flex items-center gap-3">
-          <button id="btnAlternarStatusDetalhe" type="button" class="text-xs font-semibold text-amber-600 dark:text-amber-400 hover:underline transition-colors cursor-pointer">
+          <button id="btnAlternarStatusDetalhe" type="button"
+            class="text-xs font-semibold text-amber-600 dark:text-amber-400 hover:underline transition-colors cursor-pointer">
             Desativar
           </button>
-          <button id="btnExcluirDetalhe" type="button" class="text-xs font-semibold text-rose-600 dark:text-rose-400 hover:underline transition-colors cursor-pointer">
+          <button id="btnExcluirDetalhe" type="button"
+            class="text-xs font-semibold text-rose-600 dark:text-rose-400 hover:underline transition-colors cursor-pointer">
             Excluir
           </button>
         </div>
         <div class="flex items-center gap-2">
-          <button id="btnEditarFornecedorDetalhe" type="button" class="px-3.5 py-2 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/50 text-[#0F392B] dark:text-emerald-300 font-semibold text-xs rounded-xl hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-colors cursor-pointer">
+          <button id="btnEditarFornecedorDetalhe" type="button"
+            class="px-3.5 py-2 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/50 text-[#0F392B] dark:text-emerald-300 font-semibold text-xs rounded-xl hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-colors cursor-pointer">
             Editar
           </button>
-          <button id="btnFecharModalDetalhes2" type="button" class="px-4 py-2 bg-white dark:bg-[#172722] border border-slate-200 dark:border-[#22362F] text-slate-700 dark:text-slate-300 font-medium text-xs rounded-xl hover:bg-slate-50 dark:hover:bg-[#1E312B] transition-colors cursor-pointer">
+          <button id="btnFecharModalDetalhes2" type="button"
+            class="px-4 py-2 bg-white dark:bg-[#172722] border border-slate-200 dark:border-[#22362F] text-slate-700 dark:text-slate-300 font-medium text-xs rounded-xl hover:bg-slate-50 dark:hover:bg-[#1E312B] transition-colors cursor-pointer">
             Fechar
           </button>
         </div>
@@ -360,9 +394,11 @@
   </div>
 
   <!-- MODAL ADICIONAR FORNECEDOR -->
-  <div id="modalFornecedor" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
-    <div class="bg-white dark:bg-[#121E1A] w-full max-w-lg rounded-2xl shadow-xl border border-slate-100 dark:border-[#1C2C26] overflow-hidden">
-      
+  <div id="modalFornecedor"
+    class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
+    <div
+      class="bg-white dark:bg-[#121E1A] w-full max-w-lg rounded-2xl shadow-xl border border-slate-100 dark:border-[#1C2C26] overflow-hidden">
+
       <!-- Cabeçalho -->
       <div class="px-6 pt-6 pb-4 border-b border-slate-100 dark:border-[#1C2C26] flex items-start justify-between">
         <div>
@@ -370,7 +406,8 @@
           <h3 class="text-base font-bold text-slate-800 dark:text-slate-100 mt-0.5">Adicionar fornecedor</h3>
           <p class="text-xs text-slate-400">Centralize os dados de contato e as condições comerciais.</p>
         </div>
-        <button id="btnFecharModalForn" type="button" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg transition-colors cursor-pointer">
+        <button id="btnFecharModalForn" type="button"
+          class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg transition-colors cursor-pointer">
           <i class="fa-solid fa-xmark text-sm"></i>
         </button>
       </div>
@@ -379,60 +416,72 @@
       <form id="formFornecedor" class="p-6 space-y-4 text-xs">
         <div>
           <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Razão social ou nome *</label>
-          <input type="text" id="fornNome" required placeholder="Ex.: Distribuidora Nexus" class="w-full px-3 py-2 text-xs border border-slate-200 dark:border-[#1C2C26] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0F392B] bg-white dark:bg-[#14231E] text-slate-800 dark:text-slate-100" />
+          <input type="text" id="fornNome" required placeholder="Ex.: Distribuidora Nexus"
+            class="w-full px-3 py-2 text-xs border border-slate-200 dark:border-[#1C2C26] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0F392B] bg-white dark:bg-[#14231E] text-slate-800 dark:text-slate-100" />
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Categoria</label>
-            <input type="text" id="fornCategoria" placeholder="Ex.: Eletrônicos" class="w-full px-3 py-2 text-xs border border-slate-200 dark:border-[#1C2C26] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0F392B] bg-white dark:bg-[#14231E] text-slate-800 dark:text-slate-100" />
+            <input type="text" id="fornCategoria" placeholder="Ex.: Eletrônicos"
+              class="w-full px-3 py-2 text-xs border border-slate-200 dark:border-[#1C2C26] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0F392B] bg-white dark:bg-[#14231E] text-slate-800 dark:text-slate-100" />
           </div>
           <div>
             <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">CNPJ</label>
-            <input type="text" id="fornCnpj" placeholder="00.000.000/0000-00" class="w-full px-3 py-2 text-xs border border-slate-200 dark:border-[#1C2C26] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0F392B] bg-white dark:bg-[#14231E] text-slate-800 dark:text-slate-100" />
+            <input type="text" id="fornCnpj" placeholder="00.000.000/0000-00"
+              class="w-full px-3 py-2 text-xs border border-slate-200 dark:border-[#1C2C26] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0F392B] bg-white dark:bg-[#14231E] text-slate-800 dark:text-slate-100" />
           </div>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Responsável</label>
-            <input type="text" id="fornResponsavel" placeholder="Nome do contato" class="w-full px-3 py-2 text-xs border border-slate-200 dark:border-[#1C2C26] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0F392B] bg-white dark:bg-[#14231E] text-slate-800 dark:text-slate-100" />
+            <input type="text" id="fornResponsavel" placeholder="Nome do contato"
+              class="w-full px-3 py-2 text-xs border border-slate-200 dark:border-[#1C2C26] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0F392B] bg-white dark:bg-[#14231E] text-slate-800 dark:text-slate-100" />
           </div>
           <div>
             <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Telefone</label>
-            <input type="text" id="fornTelefone" placeholder="(00) 00000-0000" class="w-full px-3 py-2 text-xs border border-slate-200 dark:border-[#1C2C26] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0F392B] bg-white dark:bg-[#14231E] text-slate-800 dark:text-slate-100" />
+            <input type="text" id="fornTelefone" placeholder="(00) 00000-0000"
+              class="w-full px-3 py-2 text-xs border border-slate-200 dark:border-[#1C2C26] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0F392B] bg-white dark:bg-[#14231E] text-slate-800 dark:text-slate-100" />
           </div>
         </div>
 
         <div>
           <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">E-mail comercial</label>
-          <input type="email" id="fornEmail" placeholder="comercial@empresa.com.br" class="w-full px-3 py-2 text-xs border border-slate-200 dark:border-[#1C2C26] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0F392B] bg-white dark:bg-[#14231E] text-slate-800 dark:text-slate-100" />
+          <input type="email" id="fornEmail" placeholder="comercial@empresa.com.br"
+            class="w-full px-3 py-2 text-xs border border-slate-200 dark:border-[#1C2C26] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0F392B] bg-white dark:bg-[#14231E] text-slate-800 dark:text-slate-100" />
         </div>
 
         <div>
           <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Cidade / Estado</label>
-          <input type="text" id="fornCidadeEstado" placeholder="Ex.: São Paulo, SP" class="w-full px-3 py-2 text-xs border border-slate-200 dark:border-[#1C2C26] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0F392B] bg-white dark:bg-[#14231E] text-slate-800 dark:text-slate-100" />
+          <input type="text" id="fornCidadeEstado" placeholder="Ex.: São Paulo, SP"
+            class="w-full px-3 py-2 text-xs border border-slate-200 dark:border-[#1C2C26] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0F392B] bg-white dark:bg-[#14231E] text-slate-800 dark:text-slate-100" />
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Produtos vinculados</label>
-            <input type="number" id="fornProdutosVinculados" min="0" value="0" class="w-full px-3 py-2 text-xs border border-slate-200 dark:border-[#1C2C26] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0F392B] bg-white dark:bg-[#14231E] text-slate-800 dark:text-slate-100" />
+            <input type="number" id="fornProdutosVinculados" min="0" value="0"
+              class="w-full px-3 py-2 text-xs border border-slate-200 dark:border-[#1C2C26] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0F392B] bg-white dark:bg-[#14231E] text-slate-800 dark:text-slate-100" />
           </div>
           <div>
             <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Prazo médio (dias)</label>
-            <input type="number" id="fornPrazoMedio" min="0" value="1" class="w-full px-3 py-2 text-xs border border-slate-200 dark:border-[#1C2C26] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0F392B] bg-white dark:bg-[#14231E] text-slate-800 dark:text-slate-100" />
+            <input type="number" id="fornPrazoMedio" min="0" value="1"
+              class="w-full px-3 py-2 text-xs border border-slate-200 dark:border-[#1C2C26] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0F392B] bg-white dark:bg-[#14231E] text-slate-800 dark:text-slate-100" />
           </div>
         </div>
 
         <div>
           <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Pedido mínimo (R$)</label>
-          <input type="number" step="0.01" id="fornPedidoMinimo" min="0" value="0" class="w-full px-3 py-2 text-xs border border-slate-200 dark:border-[#1C2C26] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0F392B] bg-white dark:bg-[#14231E] text-slate-800 dark:text-slate-100" />
+          <input type="number" step="0.01" id="fornPedidoMinimo" min="0" value="0"
+            class="w-full px-3 py-2 text-xs border border-slate-200 dark:border-[#1C2C26] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0F392B] bg-white dark:bg-[#14231E] text-slate-800 dark:text-slate-100" />
         </div>
 
         <div class="pt-4 border-t border-slate-100 dark:border-[#1C2C26] flex items-center justify-end space-x-2">
-          <button type="button" id="btnCancelarModalForn" class="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#172722] rounded-xl transition-colors cursor-pointer">Cancelar</button>
-          <button type="submit" id="btnSalvarForn" class="px-4 py-2 text-xs font-semibold text-white bg-[#0F392B] hover:bg-[#0a271d] rounded-xl shadow-xs transition-colors cursor-pointer">Salvar</button>
+          <button type="button" id="btnCancelarModalForn"
+            class="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#172722] rounded-xl transition-colors cursor-pointer">Cancelar</button>
+          <button type="submit" id="btnSalvarForn"
+            class="px-4 py-2 text-xs font-semibold text-white bg-[#0F392B] hover:bg-[#0a271d] rounded-xl shadow-xs transition-colors cursor-pointer">Salvar</button>
         </div>
       </form>
 
@@ -440,17 +489,22 @@
   </div>
 
   <!-- MODAL PERSONALIZADO DE CONFIRMAÇÃO -->
-  <div id="modalConfirmacaoPersonalizado" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white dark:bg-[#121E1A] rounded-2xl shadow-xl w-full max-w-md overflow-hidden border border-slate-100 dark:border-[#1C2C26] p-6 space-y-4">
+  <div id="modalConfirmacaoPersonalizado"
+    class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+    <div
+      class="bg-white dark:bg-[#121E1A] rounded-2xl shadow-xl w-full max-w-md overflow-hidden border border-slate-100 dark:border-[#1C2C26] p-6 space-y-4">
       <div>
         <h3 id="tituloModalConfirmacao" class="text-base font-bold text-slate-800 dark:text-slate-100">Confirmação</h3>
-        <p id="textoMensagemConfirmacao" class="text-xs text-slate-500 dark:text-slate-400 mt-1">Deseja realmente realizar esta ação?</p>
+        <p id="textoMensagemConfirmacao" class="text-xs text-slate-500 dark:text-slate-400 mt-1">Deseja realmente
+          realizar esta ação?</p>
       </div>
       <div class="flex items-center justify-end space-x-2 pt-2 border-t border-slate-100 dark:border-[#1C2C26]">
-        <button id="btnCancelarConfirmacao" type="button" class="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#172722] rounded-xl transition-colors cursor-pointer">
+        <button id="btnCancelarConfirmacao" type="button"
+          class="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#172722] rounded-xl transition-colors cursor-pointer">
           Cancelar
         </button>
-        <button id="btnAceitarConfirmacao" type="button" class="px-4 py-2 text-xs font-semibold text-white bg-[#0F392B] hover:bg-[#0a271d] rounded-xl shadow-xs transition-colors cursor-pointer">
+        <button id="btnAceitarConfirmacao" type="button"
+          class="px-4 py-2 text-xs font-semibold text-white bg-[#0F392B] hover:bg-[#0a271d] rounded-xl shadow-xs transition-colors cursor-pointer">
           Confirmar
         </button>
       </div>
@@ -483,7 +537,7 @@
             localStorage.getItem('usuario') ||
             '{}'
           );
-        } catch (e) {}
+        } catch (e) { }
 
         let jwtPayload = {};
         try {
@@ -494,7 +548,7 @@
           if (token && token.includes('.')) {
             jwtPayload = JSON.parse(atob(token.split('.')[1]));
           }
-        } catch (e) {}
+        } catch (e) { }
 
         const rawRole =
           localStorage.getItem('nexus_user_role') ||
@@ -519,6 +573,24 @@
         } else {
           elUserRole.textContent = String(rawRole).charAt(0).toUpperCase() + String(rawRole).slice(1);
         }
+      }
+    });
+  </script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Atualiza o nome e o cargo globalmente a partir do localStorage logo ao abrir a página
+      const nomeSalvo = localStorage.getItem('nexus_user_name');
+      const cargoSalvo = localStorage.getItem('nexus_user_role');
+
+      const elUserName = document.getElementById('userName');
+      const elUserRole = document.getElementById('userRole');
+
+      if (elUserName && nomeSalvo) {
+        elUserName.textContent = nomeSalvo;
+      }
+
+      if (elUserRole && cargoSalvo) {
+        elUserRole.textContent = cargoSalvo;
       }
     });
   </script>

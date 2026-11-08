@@ -7,7 +7,8 @@
   <title>Nexus Controller - Produtos</title>
 
   <!-- Favicon Oficial (Cubo Conectado Minimalista) -->
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' fill='none'%3E%3Crect width='100' height='100' rx='22' fill='%230F392B'/%3E%3Cpolygon points='50,14 82,32 82,68 50,86 18,68 18,32' stroke='%2310B981' stroke-width='7' stroke-linejoin='round'/%3E%3Cpolyline points='18,32 50,50 82,32' stroke='%2310B981' stroke-width='7' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cline x1='50' y1='50' x2='50' y2='86' stroke='%2310B981' stroke-width='7' stroke-linecap='round'/%3E%3Ccircle cx='50' cy='50' r='8' fill='%2334D399'/%3E%3C/svg%3E">
+  <link rel="icon" type="image/svg+xml"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' fill='none'%3E%3Crect width='100' height='100' rx='22' fill='%230F392B'/%3E%3Cpolygon points='50,14 82,32 82,68 50,86 18,68 18,32' stroke='%2310B981' stroke-width='7' stroke-linejoin='round'/%3E%3Cpolyline points='18,32 50,50 82,32' stroke='%2310B981' stroke-width='7' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cline x1='50' y1='50' x2='50' y2='86' stroke='%2310B981' stroke-width='7' stroke-linecap='round'/%3E%3Ccircle cx='50' cy='50' r='8' fill='%2334D399'/%3E%3C/svg%3E">
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -21,7 +22,8 @@
   <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <!-- Google Fonts (Inter) -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet">
 
   <style>
     body {
@@ -32,6 +34,7 @@
     body[data-aba-ativa="catalogo"] #secaoCatalogo {
       display: block !important;
     }
+
     body[data-aba-ativa="catalogo"] #secaoSolicitacoes,
     body[data-aba-ativa="catalogo"] #secaoAprovacoes {
       display: none !important;
@@ -40,6 +43,7 @@
     body[data-aba-ativa="solicitacoes"] #secaoSolicitacoes {
       display: block !important;
     }
+
     body[data-aba-ativa="solicitacoes"] #secaoCatalogo,
     body[data-aba-ativa="solicitacoes"] #secaoAprovacoes {
       display: none !important;
@@ -48,6 +52,7 @@
     body[data-aba-ativa="aprovacoes"] #secaoAprovacoes {
       display: block !important;
     }
+
     body[data-aba-ativa="aprovacoes"] #secaoCatalogo,
     body[data-aba-ativa="aprovacoes"] #secaoSolicitacoes {
       display: none !important;
@@ -65,15 +70,20 @@
       <!-- Logo Oficial: Cubo Conectado Minimalista -->
       <div class="h-16 flex items-center px-6 border-b border-slate-100 dark:border-[#1C2C26]">
         <a href="dashboard.html" class="flex items-center space-x-3 group focus:outline-none">
-          <svg width="34" height="34" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" class="shrink-0 transition-transform duration-200 group-hover:scale-105">
-            <polygon points="50,8 88,30 88,72 50,94 12,72 12,30" class="stroke-[#0F392B] dark:stroke-emerald-500" stroke-width="7" stroke-linejoin="round" fill="none"/>
-            <polyline points="12,30 50,52 88,30" class="stroke-[#0F392B] dark:stroke-emerald-500" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-            <line x1="50" y1="52" x2="50" y2="94" class="stroke-[#0F392B] dark:stroke-emerald-500" stroke-width="7" stroke-linecap="round"/>
-            <circle cx="50" cy="52" r="9" class="fill-emerald-500 dark:fill-emerald-400"/>
+          <svg width="34" height="34" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"
+            class="shrink-0 transition-transform duration-200 group-hover:scale-105">
+            <polygon points="50,8 88,30 88,72 50,94 12,72 12,30" class="stroke-[#0F392B] dark:stroke-emerald-500"
+              stroke-width="7" stroke-linejoin="round" fill="none" />
+            <polyline points="12,30 50,52 88,30" class="stroke-[#0F392B] dark:stroke-emerald-500" stroke-width="7"
+              stroke-linecap="round" stroke-linejoin="round" fill="none" />
+            <line x1="50" y1="52" x2="50" y2="94" class="stroke-[#0F392B] dark:stroke-emerald-500" stroke-width="7"
+              stroke-linecap="round" />
+            <circle cx="50" cy="52" r="9" class="fill-emerald-500 dark:fill-emerald-400" />
           </svg>
           <div class="flex flex-col leading-none">
             <span class="font-extrabold text-slate-900 dark:text-white text-base tracking-tight">Nexus</span>
-            <span class="font-medium text-[#0F392B] dark:text-emerald-400 text-[10px] tracking-widest uppercase mt-0.5">Controller</span>
+            <span
+              class="font-medium text-[#0F392B] dark:text-emerald-400 text-[10px] tracking-widest uppercase mt-0.5">Controller</span>
           </div>
         </a>
       </div>
@@ -158,7 +168,8 @@
   <div class="flex-1 flex flex-col min-w-0 overflow-y-auto">
 
     <!-- TOPBAR PADRONIZADA -->
-    <header class="h-16 bg-white dark:bg-[#0E1A16] border-b border-slate-200 dark:border-[#1C2C26] px-6 flex items-center justify-between sticky top-0 z-10 transition-colors">
+    <header
+      class="h-16 bg-white dark:bg-[#0E1A16] border-b border-slate-200 dark:border-[#1C2C26] px-6 flex items-center justify-between sticky top-0 z-10 transition-colors">
       <div class="flex items-center space-x-2 text-xs font-medium text-slate-500 dark:text-slate-400">
         <a href="dashboard.html" class="hover:text-slate-800 dark:hover:text-slate-200">Nexus Controller</a>
         <i class="fa-solid fa-chevron-right text-[10px] text-slate-300 dark:text-slate-600"></i>
@@ -184,7 +195,9 @@
             class="absolute right-0 mt-2 w-80 bg-white dark:bg-[#121E1A] border border-slate-200 dark:border-[#1C2C26] rounded-2xl shadow-xl hidden z-50 overflow-hidden text-xs">
             <div class="p-3 border-b border-slate-100 dark:border-[#1C2C26] flex items-center justify-between">
               <span class="font-bold text-slate-800 dark:text-slate-200">Notificações do Sistema</span>
-              <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold cursor-pointer hover:underline">Alertas ativos</span>
+              <span
+                class="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold cursor-pointer hover:underline">Alertas
+                ativos</span>
             </div>
             <div id="listaNotificacoes"
               class="max-h-64 overflow-y-auto divide-y divide-slate-100 dark:divide-[#1C2C26]">
@@ -204,7 +217,8 @@
                 Carregando...</p>
               <p id="userRole" class="text-[10px] text-slate-400">Administrador</p>
             </div>
-            <i class="fa-solid fa-chevron-right text-[10px] text-slate-400 group-hover:translate-x-0.5 transition-transform"></i>
+            <i
+              class="fa-solid fa-chevron-right text-[10px] text-slate-400 group-hover:translate-x-0.5 transition-transform"></i>
           </button>
 
           <div id="dropdownPerfil"
@@ -226,7 +240,8 @@
       <div
         class="bg-emerald-50/35 dark:bg-emerald-950/20 border border-emerald-100/50 dark:border-emerald-800/40 rounded-2xl p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shadow-xs">
         <div>
-          <p class="text-[11px] font-bold text-emerald-800/80 dark:text-emerald-400 uppercase tracking-wider">GESTÃO DE ESTOQUE</p>
+          <p class="text-[11px] font-bold text-emerald-800/80 dark:text-emerald-400 uppercase tracking-wider">GESTÃO DE
+            ESTOQUE</p>
           <div class="flex items-baseline space-x-3 mt-1">
             <h1 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Produtos</h1>
             <span id="totalItensBadge" class="text-xs text-slate-400 font-medium">Carregando itens...</span>
@@ -274,7 +289,8 @@
       </div>
 
       <!-- CONTAINER DAS SECÇÕES -->
-      <div class="bg-white dark:bg-[#121E1A] rounded-2xl border border-slate-200/80 dark:border-[#1C2C26] shadow-xs overflow-hidden">
+      <div
+        class="bg-white dark:bg-[#121E1A] rounded-2xl border border-slate-200/80 dark:border-[#1C2C26] shadow-xs overflow-hidden">
 
         <!-- ================= CATÁLOGO ================= -->
         <div id="secaoCatalogo">
@@ -282,7 +298,8 @@
             class="p-4 border-b border-slate-100 dark:border-[#1C2C26] flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
             <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-1">
               <div class="relative w-full sm:w-64">
-                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
+                <div
+                  class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
                   <i class="fa-solid fa-magnifying-glass text-xs"></i>
                 </div>
                 <input id="inputSearchProdutos" type="text" placeholder="Buscar por nome ou SKU..."
@@ -320,7 +337,8 @@
           <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
               <thead>
-                <tr class="bg-slate-50/50 dark:bg-[#0E1A16] border-b border-slate-100 dark:border-[#1C2C26] text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                <tr
+                  class="bg-slate-50/50 dark:bg-[#0E1A16] border-b border-slate-100 dark:border-[#1C2C26] text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                   <th class="py-3.5 px-6">Produto</th>
                   <th class="py-3.5 px-4">Categoria</th>
                   <th class="py-3.5 px-4">Estoque / Mín.</th>
@@ -330,7 +348,8 @@
                   <th class="py-3.5 px-6 text-right"></th>
                 </tr>
               </thead>
-              <tbody id="tabelaProdutosBody" class="divide-y divide-slate-100 dark:divide-[#1C2C26] text-xs text-slate-700 dark:text-slate-300">
+              <tbody id="tabelaProdutosBody"
+                class="divide-y divide-slate-100 dark:divide-[#1C2C26] text-xs text-slate-700 dark:text-slate-300">
                 <tr>
                   <td colspan="7" class="py-12 text-center text-slate-400 font-medium text-xs">
                     <i class="fa-solid fa-spinner fa-spin mr-2"></i> Carregando produtos...
@@ -344,12 +363,14 @@
         <!-- ================= SOLICITAÇÕES ================= -->
         <div id="secaoSolicitacoes">
           <div class="p-4 border-b border-slate-100 dark:border-[#1C2C26]">
-            <p class="text-xs font-semibold text-slate-700 dark:text-slate-200">Histórico de Solicitações de Reposição</p>
+            <p class="text-xs font-semibold text-slate-700 dark:text-slate-200">Histórico de Solicitações de Reposição
+            </p>
           </div>
           <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
               <thead>
-                <tr class="bg-slate-50/50 dark:bg-[#0E1A16] border-b border-slate-100 dark:border-[#1C2C26] text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                <tr
+                  class="bg-slate-50/50 dark:bg-[#0E1A16] border-b border-slate-100 dark:border-[#1C2C26] text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                   <th class="py-3.5 px-6">Data / ID</th>
                   <th class="py-3.5 px-6">Produto</th>
                   <th class="py-3.5 px-6">Quantidade</th>
@@ -360,9 +381,11 @@
                   <th class="py-3.5 px-6 text-right">Ações</th>
                 </tr>
               </thead>
-              <tbody id="tabelaSolicitacoesBody" class="divide-y divide-slate-100 dark:divide-[#1C2C26] text-xs text-slate-700 dark:text-slate-300">
+              <tbody id="tabelaSolicitacoesBody"
+                class="divide-y divide-slate-100 dark:divide-[#1C2C26] text-xs text-slate-700 dark:text-slate-300">
                 <tr>
-                  <td colspan="8" class="py-12 text-center text-slate-400 font-medium text-xs">Carregando solicitações...</td>
+                  <td colspan="8" class="py-12 text-center text-slate-400 font-medium text-xs">Carregando
+                    solicitações...</td>
                 </tr>
               </tbody>
             </table>
@@ -371,23 +394,30 @@
 
         <!-- ================= APROVAÇÕES ================= -->
         <div id="secaoAprovacoes">
-          <div class="p-4 border-b border-slate-100 dark:border-[#1C2C26] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div
+            class="p-4 border-b border-slate-100 dark:border-[#1C2C26] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <p class="text-xs font-semibold text-slate-700 dark:text-slate-200">Produtos Pendentes de Aprovação</p>
-              <p class="text-[11px] text-slate-400 mt-0.5">Valide ou rejeite os novos itens submetidos ao sistema antes de entrarem no catálogo oficial.</p>
+              <p class="text-[11px] text-slate-400 mt-0.5">Valide ou rejeite os novos itens submetidos ao sistema antes
+                de entrarem no catálogo oficial.</p>
             </div>
-            
+
             <!-- Controles de Ação em Massa -->
             <div id="containerAcoesEmMassa" class="flex items-center space-x-2 hidden">
-              <div class="flex items-center space-x-1.5 bg-slate-100 dark:bg-[#14231E] px-2 py-1 rounded-xl border border-slate-200 dark:border-[#1C2C26]">
+              <div
+                class="flex items-center space-x-1.5 bg-slate-100 dark:bg-[#14231E] px-2 py-1 rounded-xl border border-slate-200 dark:border-[#1C2C26]">
                 <span class="text-[10px] font-semibold text-slate-500 dark:text-slate-400">Qtd:</span>
-                <input type="number" id="inputQtdLote" min="1" value="10" class="w-12 text-center bg-white dark:bg-[#1B2E28] text-slate-800 dark:text-slate-200 text-xs font-bold rounded-lg border border-slate-200 dark:border-[#1C2C26] focus:outline-none py-0.5" title="Quantidade máxima de itens a processar" />
+                <input type="number" id="inputQtdLote" min="1" value="10"
+                  class="w-12 text-center bg-white dark:bg-[#1B2E28] text-slate-800 dark:text-slate-200 text-xs font-bold rounded-lg border border-slate-200 dark:border-[#1C2C26] focus:outline-none py-0.5"
+                  title="Quantidade máxima de itens a processar" />
               </div>
-              <button type="button" id="btnAprovarLote" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl text-xs transition-colors shadow-xs cursor-pointer flex items-center space-x-1">
+              <button type="button" id="btnAprovarLote"
+                class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl text-xs transition-colors shadow-xs cursor-pointer flex items-center space-x-1">
                 <i class="fa-solid fa-check-double text-[11px]"></i>
                 <span>Aprovar Lote</span>
               </button>
-              <button type="button" id="btnRejeitarLote" class="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-semibold rounded-xl text-xs transition-colors shadow-xs cursor-pointer flex items-center space-x-1">
+              <button type="button" id="btnRejeitarLote"
+                class="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-semibold rounded-xl text-xs transition-colors shadow-xs cursor-pointer flex items-center space-x-1">
                 <i class="fa-solid fa-ban text-[11px]"></i>
                 <span>Rejeitar Lote</span>
               </button>
@@ -397,7 +427,8 @@
           <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
               <thead>
-                <tr class="bg-slate-50/50 dark:bg-[#0E1A16] border-b border-slate-100 dark:border-[#1C2C26] text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                <tr
+                  class="bg-slate-50/50 dark:bg-[#0E1A16] border-b border-slate-100 dark:border-[#1C2C26] text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                   <th class="py-3.5 px-6">Produto</th>
                   <th class="py-3.5 px-4">Categoria</th>
                   <th class="py-3.5 px-4">Estoque Inicial</th>
@@ -406,9 +437,11 @@
                   <th class="py-3.5 px-6 text-right">Ações de Moderação</th>
                 </tr>
               </thead>
-              <tbody id="tabelaAprovacoesBody" class="divide-y divide-slate-100 dark:divide-[#1C2C26] text-xs text-slate-700 dark:text-slate-300">
+              <tbody id="tabelaAprovacoesBody"
+                class="divide-y divide-slate-100 dark:divide-[#1C2C26] text-xs text-slate-700 dark:text-slate-300">
                 <tr>
-                  <td colspan="6" class="py-12 text-center text-slate-400 font-medium text-xs">Carregando produtos pendentes...</td>
+                  <td colspan="6" class="py-12 text-center text-slate-400 font-medium text-xs">Carregando produtos
+                    pendentes...</td>
                 </tr>
               </tbody>
             </table>
@@ -421,11 +454,14 @@
   </div>
 
   <!-- MODAL DE CADASTRO / EDIÇÃO DE PRODUTO -->
-  <div id="modalProduto" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
-    <div class="bg-white dark:bg-[#121E1A] w-full max-w-lg rounded-2xl shadow-xl border border-slate-100 dark:border-[#1C2C26] overflow-hidden">
+  <div id="modalProduto"
+    class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
+    <div
+      class="bg-white dark:bg-[#121E1A] w-full max-w-lg rounded-2xl shadow-xl border border-slate-100 dark:border-[#1C2C26] overflow-hidden">
       <div class="px-6 py-4 border-b border-slate-100 dark:border-[#1C2C26] flex items-center justify-between">
         <h3 id="modalTitulo" class="text-base font-bold text-slate-800 dark:text-slate-100">Novo Produto</h3>
-        <button id="btnFecharModal" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg cursor-pointer">
+        <button id="btnFecharModal"
+          class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg cursor-pointer">
           <i class="fa-solid fa-xmark text-base"></i>
         </button>
       </div>
@@ -445,26 +481,31 @@
             <span class="text-[10px] text-slate-400 mt-1 block">Gerado automaticamente ao salvar</span>
           </div>
           <div>
-            <label for="prodCategoria" class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Categoria *</label>
+            <label for="prodCategoria" class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Categoria
+              *</label>
             <input type="text" id="prodCategoria" required autocomplete="off" placeholder="Digite a categoria..."
               class="w-full px-3 py-2 border border-slate-200 dark:border-[#1C2C26] rounded-xl bg-white dark:bg-[#14231E] text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#0F392B]" />
           </div>
         </div>
         <div>
-          <label for="prodFornecedor" class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Fornecedor Principal</label>
-          <input type="text" id="prodFornecedor" list="listaFornecedores" autocomplete="off" placeholder="Selecione ou digite..."
+          <label for="prodFornecedor" class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Fornecedor
+            Principal</label>
+          <input type="text" id="prodFornecedor" list="listaFornecedores" autocomplete="off"
+            placeholder="Selecione ou digite..."
             class="w-full px-3 py-2 border border-slate-200 dark:border-[#1C2C26] rounded-xl bg-white dark:bg-[#14231E] text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#0F392B]" />
           <datalist id="listaFornecedores"></datalist>
         </div>
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label for="prodPrecoCusto" class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Preço de Custo (R$) *</label>
+            <label for="prodPrecoCusto" class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Preço de
+              Custo (R$) *</label>
             <input type="number" step="0.01" min="0" id="prodPrecoCusto" required placeholder="0,00"
               class="w-full px-3 py-2 border border-slate-200 dark:border-[#1C2C26] rounded-xl bg-white dark:bg-[#14231E] text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#0F392B]" />
           </div>
           <div>
             <div class="flex items-center justify-between mb-1">
-              <label for="prodPrecoVenda" class="font-semibold text-slate-700 dark:text-slate-300">Preço de Venda (R$) *</label>
+              <label for="prodPrecoVenda" class="font-semibold text-slate-700 dark:text-slate-300">Preço de Venda (R$)
+                *</label>
               <span id="previewMargemModal" class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400"></span>
             </div>
             <input type="number" step="0.01" min="0" id="prodPrecoVenda" required placeholder="0,00"
@@ -473,51 +514,63 @@
         </div>
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label for="prodEstoque" class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Qtd. em Estoque *</label>
+            <label for="prodEstoque" class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Qtd. em Estoque
+              *</label>
             <input type="number" min="0" id="prodEstoque" required placeholder="0"
               class="w-full px-3 py-2 border border-slate-200 dark:border-[#1C2C26] rounded-xl bg-white dark:bg-[#14231E] text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#0F392B]" />
           </div>
           <div>
-            <label for="prodEstoqueMinimo" class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Estoque Mínimo</label>
+            <label for="prodEstoqueMinimo" class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Estoque
+              Mínimo</label>
             <input type="number" min="1" id="prodEstoqueMinimo" placeholder="Padrão: 12"
               class="w-full px-3 py-2 border border-slate-200 dark:border-[#1C2C26] rounded-xl bg-white dark:bg-[#14231E] text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#0F392B]" />
           </div>
         </div>
         <div class="pt-4 border-t border-slate-100 dark:border-[#1C2C26] flex items-center justify-end space-x-2">
-          <button type="button" id="btnCancelarModal" class="px-4 py-2 font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#172722] rounded-xl cursor-pointer">Cancelar</button>
-          <button type="submit" class="px-4 py-2 font-semibold text-white bg-[#0F392B] hover:bg-[#0a271d] rounded-xl shadow-xs cursor-pointer">Salvar Produto</button>
+          <button type="button" id="btnCancelarModal"
+            class="px-4 py-2 font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#172722] rounded-xl cursor-pointer">Cancelar</button>
+          <button type="submit"
+            class="px-4 py-2 font-semibold text-white bg-[#0F392B] hover:bg-[#0a271d] rounded-xl shadow-xs cursor-pointer">Salvar
+            Produto</button>
         </div>
       </form>
     </div>
   </div>
 
   <!-- MODAL DE NOVA SOLICITAÇÃO DE REPOSIÇÃO -->
-  <div id="modalSolicitacao" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
-    <div class="bg-white dark:bg-[#121E1A] w-full max-w-lg rounded-2xl shadow-xl border border-slate-100 dark:border-[#1C2C26] overflow-hidden">
+  <div id="modalSolicitacao"
+    class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
+    <div
+      class="bg-white dark:bg-[#121E1A] w-full max-w-lg rounded-2xl shadow-xl border border-slate-100 dark:border-[#1C2C26] overflow-hidden">
       <div class="px-6 py-4 border-b border-slate-100 dark:border-[#1C2C26] flex items-center justify-between">
         <h3 class="text-base font-bold text-slate-800 dark:text-slate-100">Nova Solicitação de Reposição</h3>
-        <button id="btnFecharModalSol" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg cursor-pointer">
+        <button id="btnFecharModalSol"
+          class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg cursor-pointer">
           <i class="fa-solid fa-xmark text-base"></i>
         </button>
       </div>
       <form id="formSolicitacao" class="p-6 space-y-4 text-xs">
-        
+
         <!-- Seletor Personalizado de Produto -->
         <div class="relative">
           <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Produto *</label>
           <input type="hidden" id="solProdutoId" required />
-          <button type="button" id="btnToggleCustomSelect" class="w-full px-3 py-2 border border-slate-200 dark:border-[#1C2C26] rounded-xl bg-white dark:bg-[#14231E] text-left flex items-center justify-between cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#0F392B]">
+          <button type="button" id="btnToggleCustomSelect"
+            class="w-full px-3 py-2 border border-slate-200 dark:border-[#1C2C26] rounded-xl bg-white dark:bg-[#14231E] text-left flex items-center justify-between cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#0F392B]">
             <span id="textoProdutoSelecionado" class="truncate text-slate-400">Selecione o produto...</span>
-            <i id="iconeSetaSelect" class="fa-solid fa-chevron-down text-slate-400 transition-transform text-[10px]"></i>
+            <i id="iconeSetaSelect"
+              class="fa-solid fa-chevron-down text-slate-400 transition-transform text-[10px]"></i>
           </button>
-          <div id="dropdownCustomOptions" class="absolute left-0 right-0 mt-1 bg-white dark:bg-[#121E1A] border border-slate-200 dark:border-[#1C2C26] rounded-xl shadow-xl hidden z-50 max-h-48 overflow-y-auto divide-y divide-slate-100 dark:divide-[#1C2C26]">
+          <div id="dropdownCustomOptions"
+            class="absolute left-0 right-0 mt-1 bg-white dark:bg-[#121E1A] border border-slate-200 dark:border-[#1C2C26] rounded-xl shadow-xl hidden z-50 max-h-48 overflow-y-auto divide-y divide-slate-100 dark:divide-[#1C2C26]">
             <!-- Preenchido via JS -->
           </div>
         </div>
 
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label for="solQuantidade" class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Quantidade *</label>
+            <label for="solQuantidade" class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Quantidade
+              *</label>
             <input type="number" min="1" id="solQuantidade" required value="1" placeholder="Ex: 10"
               class="w-full px-3 py-2 border border-slate-200 dark:border-[#1C2C26] rounded-xl bg-white dark:bg-[#14231E] text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#0F392B]" />
           </div>
@@ -526,43 +579,60 @@
           <div class="relative">
             <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Prioridade</label>
             <input type="hidden" id="solPrioridade" value="media" />
-            <button type="button" id="btnToggleCustomPrioridade" class="w-full px-3 py-2 border border-slate-200 dark:border-[#1C2C26] rounded-xl bg-white dark:bg-[#14231E] text-left flex items-center justify-between cursor-pointer focus:outline-none">
+            <button type="button" id="btnToggleCustomPrioridade"
+              class="w-full px-3 py-2 border border-slate-200 dark:border-[#1C2C26] rounded-xl bg-white dark:bg-[#14231E] text-left flex items-center justify-between cursor-pointer focus:outline-none">
               <span id="textoPrioridadeSelecionada" class="text-slate-800 dark:text-slate-100 font-medium">Média</span>
-              <i id="iconeSetaPrioridade" class="fa-solid fa-chevron-down text-slate-400 transition-transform text-[10px]"></i>
+              <i id="iconeSetaPrioridade"
+                class="fa-solid fa-chevron-down text-slate-400 transition-transform text-[10px]"></i>
             </button>
-            <div id="dropdownCustomOptionsPrioridade" class="absolute left-0 right-0 mt-1 bg-white dark:bg-[#121E1A] border border-slate-200 dark:border-[#1C2C26] rounded-xl shadow-xl hidden z-50 divide-y divide-slate-100 dark:divide-[#1C2C26]">
-              <div class="p-2.5 hover:bg-slate-50 dark:hover:bg-[#15241F] transition-colors cursor-pointer item-opcao-prioridade" data-valor="baixa">Baixa</div>
-              <div class="p-2.5 hover:bg-slate-50 dark:hover:bg-[#15241F] transition-colors cursor-pointer item-opcao-prioridade" data-valor="media">Média</div>
-              <div class="p-2.5 hover:bg-slate-50 dark:hover:bg-[#15241F] transition-colors cursor-pointer item-opcao-prioridade" data-valor="alta">Alta</div>
+            <div id="dropdownCustomOptionsPrioridade"
+              class="absolute left-0 right-0 mt-1 bg-white dark:bg-[#121E1A] border border-slate-200 dark:border-[#1C2C26] rounded-xl shadow-xl hidden z-50 divide-y divide-slate-100 dark:divide-[#1C2C26]">
+              <div
+                class="p-2.5 hover:bg-slate-50 dark:hover:bg-[#15241F] transition-colors cursor-pointer item-opcao-prioridade"
+                data-valor="baixa">Baixa</div>
+              <div
+                class="p-2.5 hover:bg-slate-50 dark:hover:bg-[#15241F] transition-colors cursor-pointer item-opcao-prioridade"
+                data-valor="media">Média</div>
+              <div
+                class="p-2.5 hover:bg-slate-50 dark:hover:bg-[#15241F] transition-colors cursor-pointer item-opcao-prioridade"
+                data-valor="alta">Alta</div>
             </div>
           </div>
         </div>
 
         <div>
-          <label for="solSolicitante" class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Solicitante</label>
+          <label for="solSolicitante"
+            class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Solicitante</label>
           <input type="text" id="solSolicitante" readonly
             class="w-full px-3 py-2 bg-slate-50 dark:bg-[#14231E]/60 border border-slate-200 dark:border-[#1C2C26] rounded-xl text-slate-500 dark:text-slate-400 focus:outline-none" />
         </div>
 
         <div>
-          <label for="solObservacao" class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Observação</label>
+          <label for="solObservacao"
+            class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Observação</label>
           <textarea id="solObservacao" rows="2" placeholder="Motivo da reposição (opcional)..."
             class="w-full px-3 py-2 border border-slate-200 dark:border-[#1C2C26] rounded-xl bg-white dark:bg-[#14231E] text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#0F392B] resize-none"></textarea>
         </div>
 
         <div class="pt-4 border-t border-slate-100 dark:border-[#1C2C26] flex items-center justify-end space-x-2">
-          <button type="button" id="btnCancelarModalSol" class="px-4 py-2 font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#172722] rounded-xl cursor-pointer">Cancelar</button>
-          <button type="submit" class="px-4 py-2 font-semibold text-white bg-[#0F392B] hover:bg-[#0a271d] rounded-xl shadow-xs cursor-pointer">Enviar Solicitação</button>
+          <button type="button" id="btnCancelarModalSol"
+            class="px-4 py-2 font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#172722] rounded-xl cursor-pointer">Cancelar</button>
+          <button type="submit"
+            class="px-4 py-2 font-semibold text-white bg-[#0F392B] hover:bg-[#0a271d] rounded-xl shadow-xs cursor-pointer">Enviar
+            Solicitação</button>
         </div>
       </form>
     </div>
   </div>
 
   <!-- MODAL DE CONFIRMAÇÃO PERSONALIZADO (Com diferenciação visual para sucesso ou perigo) -->
-  <div id="modalConfirmacaoCustom" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs hidden">
-    <div id="modalConfirmacaoContent" class="bg-white dark:bg-[#121E1A] border border-slate-200 dark:border-[#1C2C26] rounded-2xl p-6 w-full max-w-md shadow-2xl transform scale-95 opacity-0 transition-all duration-200">
+  <div id="modalConfirmacaoCustom"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs hidden">
+    <div id="modalConfirmacaoContent"
+      class="bg-white dark:bg-[#121E1A] border border-slate-200 dark:border-[#1C2C26] rounded-2xl p-6 w-full max-w-md shadow-2xl transform scale-95 opacity-0 transition-all duration-200">
       <div class="flex items-center space-x-3 mb-4">
-        <div class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-200/50 dark:border-emerald-800/50 transition-colors">
+        <div
+          class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-200/50 dark:border-emerald-800/50 transition-colors">
           <i class="fa-solid fa-circle-question text-lg"></i>
         </div>
         <div>
@@ -570,16 +640,18 @@
           <p class="text-xs text-slate-500 dark:text-slate-400">Nexus Controller - Moderação</p>
         </div>
       </div>
-      
+
       <p id="modalConfirmacaoTexto" class="text-xs text-slate-600 dark:text-slate-300 mb-6 leading-relaxed">
         Tem a certeza de que deseja realizar esta ação?
       </p>
 
       <div class="flex items-center justify-end space-x-3">
-        <button type="button" id="btnCancelarConfirmacao" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#182B24] transition-colors cursor-pointer">
+        <button type="button" id="btnCancelarConfirmacao"
+          class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#182B24] transition-colors cursor-pointer">
           Cancelar
         </button>
-        <button type="button" id="btnAceitarConfirmacao" class="px-4 py-2 rounded-xl text-xs font-semibold text-white bg-[#236E50] hover:bg-[#1b5840] transition-colors shadow-lg shadow-emerald-900/20 cursor-pointer">
+        <button type="button" id="btnAceitarConfirmacao"
+          class="px-4 py-2 rounded-xl text-xs font-semibold text-white bg-[#236E50] hover:bg-[#1b5840] transition-colors shadow-lg shadow-emerald-900/20 cursor-pointer">
           Confirmar
         </button>
       </div>
@@ -593,7 +665,7 @@
   <!-- Controlador estrito de abas e helper global de confirmação -->
   <script>
     // Função global moderna com suporte a cores e ícones dinâmicos ('sucesso' ou 'perigo')
-    window.mostrarConfirmacaoCustomizada = function(mensagem, tipo = 'sucesso') {
+    window.mostrarConfirmacaoCustomizada = function (mensagem, tipo = 'sucesso') {
       return new Promise((resolve) => {
         const modal = document.getElementById('modalConfirmacaoCustom');
         const content = document.getElementById('modalConfirmacaoContent');
@@ -636,7 +708,7 @@
         }
 
         modal.classList.remove('hidden');
-        
+
         setTimeout(() => {
           content.classList.remove('scale-95', 'opacity-0');
           content.classList.add('scale-100', 'opacity-100');
@@ -683,11 +755,32 @@
         const elUserRole = document.getElementById('userRole');
         if (elUserRole) {
           let userObj = {};
-          try { userObj = JSON.parse(localStorage.getItem('nexus_user') || '{}'); } catch (e) {}
+          try { userObj = JSON.parse(localStorage.getItem('nexus_user') || '{}'); } catch (e) { }
           elUserRole.textContent = userObj.cargo || localStorage.getItem('nexus_user_role') || 'Administrador';
         }
       });
     })();
   </script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Atualiza o nome e o cargo globalmente a partir do localStorage logo ao abrir a página
+      const nomeSalvo = localStorage.getItem('nexus_user_name');
+      const cargoSalvo = localStorage.getItem('nexus_user_role');
+
+      const elUserName = document.getElementById('userName');
+      const elUserRole = document.getElementById('userRole');
+
+      if (elUserName && nomeSalvo) {
+        elUserName.textContent = nomeSalvo;
+      }
+
+      if (elUserRole && cargoSalvo) {
+        elUserRole.textContent = cargoSalvo;
+      }
+    });
+  </script>
+
 </body>
+
 </html>

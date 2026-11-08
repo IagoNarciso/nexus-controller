@@ -5,9 +5,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Nexus Controller - Movimentações de Estoque</title>
-  
+
   <!-- Favicon Oficial (Cubo Conectado Minimalista) -->
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' fill='none'%3E%3Crect width='100' height='100' rx='22' fill='%230F392B'/%3E%3Cpolygon points='50,14 82,32 82,68 50,86 18,68 18,32' stroke='%2310B981' stroke-width='7' stroke-linejoin='round'/%3E%3Cpolyline points='18,32 50,50 82,32' stroke='%2310B981' stroke-width='7' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cline x1='50' y1='50' x2='50' y2='86' stroke='%2310B981' stroke-width='7' stroke-linecap='round'/%3E%3Ccircle cx='50' cy='50' r='8' fill='%2334D399'/%3E%3C/svg%3E">
+  <link rel="icon" type="image/svg+xml"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' fill='none'%3E%3Crect width='100' height='100' rx='22' fill='%230F392B'/%3E%3Cpolygon points='50,14 82,32 82,68 50,86 18,68 18,32' stroke='%2310B981' stroke-width='7' stroke-linejoin='round'/%3E%3Cpolyline points='18,32 50,50 82,32' stroke='%2310B981' stroke-width='7' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cline x1='50' y1='50' x2='50' y2='86' stroke='%2310B981' stroke-width='7' stroke-linecap='round'/%3E%3Ccircle cx='50' cy='50' r='8' fill='%2334D399'/%3E%3C/svg%3E">
 
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -20,7 +21,8 @@
   <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <!-- Google Fonts Inter -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet">
   <style>
     body {
       font-family: 'Inter', sans-serif;
@@ -28,30 +30,38 @@
   </style>
 </head>
 
-<body class="bg-slate-50 dark:bg-[#0B1512] text-slate-800 dark:text-slate-100 antialiased min-h-screen flex transition-colors">
+<body
+  class="bg-slate-50 dark:bg-[#0B1512] text-slate-800 dark:text-slate-100 antialiased min-h-screen flex transition-colors">
 
   <!-- SIDEBAR PADRONIZADA -->
-  <aside class="w-64 bg-white dark:bg-[#0E1A16] border-r border-slate-200 dark:border-[#1C2C26] flex flex-col justify-between hidden md:flex shrink-0">
+  <aside
+    class="w-64 bg-white dark:bg-[#0E1A16] border-r border-slate-200 dark:border-[#1C2C26] flex flex-col justify-between hidden md:flex shrink-0">
     <div>
       <!-- Logo Oficial: Cubo Conectado Minimalista -->
       <div class="h-16 flex items-center px-6 border-b border-slate-100 dark:border-[#1C2C26]">
         <a href="dashboard.html" class="flex items-center space-x-3 group focus:outline-none">
-          <svg width="34" height="34" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" class="shrink-0 transition-transform duration-200 group-hover:scale-105">
-            <polygon points="50,8 88,30 88,72 50,94 12,72 12,30" class="stroke-[#0F392B] dark:stroke-emerald-500" stroke-width="7" stroke-linejoin="round" fill="none"/>
-            <polyline points="12,30 50,52 88,30" class="stroke-[#0F392B] dark:stroke-emerald-500" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-            <line x1="50" y1="52" x2="50" y2="94" class="stroke-[#0F392B] dark:stroke-emerald-500" stroke-width="7" stroke-linecap="round"/>
-            <circle cx="50" cy="52" r="9" class="fill-emerald-500 dark:fill-emerald-400"/>
+          <svg width="34" height="34" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"
+            class="shrink-0 transition-transform duration-200 group-hover:scale-105">
+            <polygon points="50,8 88,30 88,72 50,94 12,72 12,30" class="stroke-[#0F392B] dark:stroke-emerald-500"
+              stroke-width="7" stroke-linejoin="round" fill="none" />
+            <polyline points="12,30 50,52 88,30" class="stroke-[#0F392B] dark:stroke-emerald-500" stroke-width="7"
+              stroke-linecap="round" stroke-linejoin="round" fill="none" />
+            <line x1="50" y1="52" x2="50" y2="94" class="stroke-[#0F392B] dark:stroke-emerald-500" stroke-width="7"
+              stroke-linecap="round" />
+            <circle cx="50" cy="52" r="9" class="fill-emerald-500 dark:fill-emerald-400" />
           </svg>
           <div class="flex flex-col leading-none">
             <span class="font-extrabold text-slate-900 dark:text-white text-base tracking-tight">Nexus</span>
-            <span class="font-medium text-[#0F392B] dark:text-emerald-400 text-[10px] tracking-widest uppercase mt-0.5">Controller</span>
+            <span
+              class="font-medium text-[#0F392B] dark:text-emerald-400 text-[10px] tracking-widest uppercase mt-0.5">Controller</span>
           </div>
         </a>
       </div>
 
       <!-- Menu de Navegação Padronizado -->
       <nav class="p-4 space-y-1">
-        <p class="px-3 text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Menu Principal</p>
+        <p class="px-3 text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Menu
+          Principal</p>
 
         <a href="dashboard.html"
           class="flex items-center space-x-3 px-3 py-2.5 text-xs font-medium text-slate-600 dark:text-slate-400 rounded-xl hover:bg-slate-50 dark:hover:bg-[#15241F] hover:text-slate-900 dark:hover:text-slate-100 transition-colors">
@@ -81,7 +91,8 @@
           <span>Fornecedores</span>
         </a>
 
-        <p class="px-3 text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mt-6 mb-2">Gestão</p>
+        <p class="px-3 text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mt-6 mb-2">
+          Gestão</p>
 
         <a href="configuracoes.html"
           class="flex items-center space-x-3 px-3 py-2.5 text-xs font-medium text-slate-600 dark:text-slate-400 rounded-xl hover:bg-slate-50 dark:hover:bg-[#15241F] hover:text-slate-900 dark:hover:text-slate-100 transition-colors">
@@ -93,15 +104,19 @@
 
     <!-- Bloco de Suporte Contextual e Logout na Sidebar -->
     <div class="p-4 space-y-4">
-      <div class="bg-slate-50 dark:bg-[#12211C] p-4 rounded-2xl border border-slate-100 dark:border-[#1C2C26] space-y-2">
-        <div class="w-7 h-7 rounded-lg bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-400 flex items-center justify-center text-xs font-bold border border-emerald-700/30">
+      <div
+        class="bg-slate-50 dark:bg-[#12211C] p-4 rounded-2xl border border-slate-100 dark:border-[#1C2C26] space-y-2">
+        <div
+          class="w-7 h-7 rounded-lg bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-400 flex items-center justify-center text-xs font-bold border border-emerald-700/30">
           <i class="fa-solid fa-right-left"></i>
         </div>
         <div>
           <p class="text-xs font-bold text-slate-800 dark:text-slate-200">Auditoria & Registros</p>
-          <p class="text-[11px] text-slate-400 mt-0.5">Toda entrada e saída gera histórico para controle do inventário.</p>
+          <p class="text-[11px] text-slate-400 mt-0.5">Toda entrada e saída gera histórico para controle do inventário.
+          </p>
         </div>
-        <button id="btnAbrirSuporte" type="button" class="inline-block text-xs font-semibold text-[#0F392B] dark:text-emerald-400 hover:underline pt-1 cursor-pointer">
+        <button id="btnAbrirSuporte" type="button"
+          class="inline-block text-xs font-semibold text-[#0F392B] dark:text-emerald-400 hover:underline pt-1 cursor-pointer">
           Ajuda em Registros &rarr;
         </button>
       </div>
@@ -118,7 +133,8 @@
   <div class="flex-1 flex flex-col min-w-0 overflow-y-auto">
 
     <!-- TOPBAR PADRONIZADA -->
-    <header class="h-16 bg-white dark:bg-[#0E1A16] border-b border-slate-200 dark:border-[#1C2C26] px-6 flex items-center justify-between sticky top-0 z-10 transition-colors">
+    <header
+      class="h-16 bg-white dark:bg-[#0E1A16] border-b border-slate-200 dark:border-[#1C2C26] px-6 flex items-center justify-between sticky top-0 z-10 transition-colors">
       <div class="flex items-center space-x-2 text-xs font-medium text-slate-500 dark:text-slate-400">
         <a href="dashboard.html" class="hover:text-slate-800 dark:hover:text-slate-200">Nexus Controller</a>
         <i class="fa-solid fa-chevron-right text-[10px] text-slate-300 dark:text-slate-600"></i>
@@ -139,7 +155,8 @@
             class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-[#15241F] transition-colors relative cursor-pointer"
             title="Notificações">
             <i class="fa-regular fa-bell text-sm"></i>
-            <span id="dotNotificacao" class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-emerald-500 hidden"></span>
+            <span id="dotNotificacao"
+              class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-emerald-500 hidden"></span>
           </button>
 
           <!-- Dropdown de Notificações -->
@@ -158,7 +175,8 @@
 
         <!-- PERFIL DO USUÁRIO -->
         <div class="relative border-l border-slate-200 dark:border-[#1C2C26] pl-3">
-          <button id="btnPerfilMenu" type="button" class="flex items-center space-x-3 pl-1 focus:outline-none cursor-pointer group">
+          <button id="btnPerfilMenu" type="button"
+            class="flex items-center space-x-3 pl-1 focus:outline-none cursor-pointer group">
             <div id="userAvatar"
               class="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-bold text-xs flex items-center justify-center border border-emerald-200 dark:border-emerald-800">
               IN</div>
@@ -168,7 +186,8 @@
                 Carregando...</p>
               <p id="userRole" class="text-[10px] text-slate-400">Carregando...</p>
             </div>
-            <i class="fa-solid fa-chevron-right text-[10px] text-slate-400 group-hover:translate-x-0.5 transition-transform"></i>
+            <i
+              class="fa-solid fa-chevron-right text-[10px] text-slate-400 group-hover:translate-x-0.5 transition-transform"></i>
           </button>
 
           <!-- Dropdown do Perfil -->
@@ -188,9 +207,11 @@
     <main class="p-8 space-y-6 max-w-7xl w-full mx-auto">
 
       <!-- BLOCO 1: CABEÇALHO COM FUNDO VERDE SUAVE (PADRÃO PRODUTOS E FORNECEDORES) -->
-      <div class="bg-emerald-50/35 dark:bg-emerald-950/20 border border-emerald-100/50 dark:border-emerald-800/40 rounded-2xl p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shadow-xs">
+      <div
+        class="bg-emerald-50/35 dark:bg-emerald-950/20 border border-emerald-100/50 dark:border-emerald-800/40 rounded-2xl p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shadow-xs">
         <div>
-          <p class="text-[11px] font-bold text-emerald-800/80 dark:text-emerald-400 uppercase tracking-wider">GESTÃO DE ESTOQUE</p>
+          <p class="text-[11px] font-bold text-emerald-800/80 dark:text-emerald-400 uppercase tracking-wider">GESTÃO DE
+            ESTOQUE</p>
           <div class="flex items-baseline space-x-3 mt-1">
             <h1 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Movimentações</h1>
             <span id="totalMovimentacoesBadge" class="text-xs text-slate-400 font-medium">Carregando...</span>
@@ -206,15 +227,18 @@
       </div>
 
       <!-- BLOCO 2: CARD BRANCO COM BARRA DE PESQUISA NO TOPO E TABELA ABAIXO -->
-      <div class="bg-white dark:bg-[#121E1A] rounded-2xl border border-slate-200/80 dark:border-[#1C2C26] shadow-xs overflow-hidden">
-        
+      <div
+        class="bg-white dark:bg-[#121E1A] rounded-2xl border border-slate-200/80 dark:border-[#1C2C26] shadow-xs overflow-hidden">
+
         <!-- Barra Superior de Pesquisa e Filtros integrada ao Card da Tabela -->
-        <div class="p-4 border-b border-slate-100 dark:border-[#1C2C26] flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
-          
+        <div
+          class="p-4 border-b border-slate-100 dark:border-[#1C2C26] flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+
           <!-- Lado Esquerdo: Barra de Pesquisa + Botões de Status -->
           <div class="flex flex-col sm:flex-row sm:items-center gap-3 flex-1">
             <div class="relative w-full sm:w-64">
-              <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
+              <div
+                class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
                 <i class="fa-solid fa-magnifying-glass text-xs"></i>
               </div>
               <input type="text" id="inputSearchMovimentacoes" placeholder="Buscar por produto ou obs..."
@@ -222,13 +246,17 @@
             </div>
 
             <div class="flex items-center space-x-2 flex-wrap gap-2">
-              <button type="button" id="btnFiltroNaoVistas" class="inline-flex items-center space-x-1.5 px-3 py-2 bg-white dark:bg-[#121E1A] hover:bg-slate-50 dark:hover:bg-[#172722] text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold transition-colors cursor-pointer border border-slate-200 dark:border-[#1C2C26] shadow-2xs">
+              <button type="button" id="btnFiltroNaoVistas"
+                class="inline-flex items-center space-x-1.5 px-3 py-2 bg-white dark:bg-[#121E1A] hover:bg-slate-50 dark:hover:bg-[#172722] text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold transition-colors cursor-pointer border border-slate-200 dark:border-[#1C2C26] shadow-2xs">
                 <i class="fa-solid fa-eye-slash text-amber-500 text-xs"></i>
                 <span>Não Vistas</span>
-                <span id="badgeNaoVistasCount" class="ml-1 px-1.5 py-0.2 bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 rounded-full text-[10px] font-bold hidden">0</span>
+                <span id="badgeNaoVistasCount"
+                  class="ml-1 px-1.5 py-0.2 bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 rounded-full text-[10px] font-bold hidden">0</span>
               </button>
 
-              <button type="button" id="btnMarcarTodasVistas" class="inline-flex items-center justify-center space-x-1.5 px-3 py-2 bg-white dark:bg-[#121E1A] hover:bg-slate-50 dark:hover:bg-[#172722] text-xs font-medium text-emerald-700 dark:text-emerald-400 rounded-xl transition-colors cursor-pointer border border-slate-200 dark:border-[#1C2C26] shadow-2xs" title="Marcar todas as movimentações como vistas">
+              <button type="button" id="btnMarcarTodasVistas"
+                class="inline-flex items-center justify-center space-x-1.5 px-3 py-2 bg-white dark:bg-[#121E1A] hover:bg-slate-50 dark:hover:bg-[#172722] text-xs font-medium text-emerald-700 dark:text-emerald-400 rounded-xl transition-colors cursor-pointer border border-slate-200 dark:border-[#1C2C26] shadow-2xs"
+                title="Marcar todas as movimentações como vistas">
                 <i class="fa-solid fa-check-double text-xs"></i>
                 <span>Marcar vistas</span>
               </button>
@@ -247,7 +275,8 @@
             <!-- Opções do Dropdown de Período -->
             <div id="dropdownFiltroPeriodo"
               class="absolute right-0 mt-2 w-52 bg-white dark:bg-[#121E1A] border border-slate-200 dark:border-[#1C2C26] rounded-2xl shadow-xl hidden z-30 overflow-hidden text-xs py-1.5 divide-y divide-slate-100 dark:divide-[#1C2C26]">
-              <div class="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Selecionar Período</div>
+              <div class="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Selecionar Período
+              </div>
               <div id="listaOpcoesPeriodoMov"></div>
             </div>
           </div>
@@ -258,7 +287,8 @@
         <div class="overflow-x-auto">
           <table class="w-full text-left border-collapse">
             <thead>
-              <tr class="bg-slate-50/50 dark:bg-[#0E1A16] border-b border-slate-100 dark:border-[#1C2C26] text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+              <tr
+                class="bg-slate-50/50 dark:bg-[#0E1A16] border-b border-slate-100 dark:border-[#1C2C26] text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                 <th class="py-3.5 px-6">Data / ID</th>
                 <th class="py-3.5 px-6">Produto</th>
                 <th class="py-3.5 px-6">Quantidade</th>
@@ -269,7 +299,8 @@
                 <th class="py-3.5 px-6 text-right">Ações</th>
               </tr>
             </thead>
-            <tbody id="tabelaMovimentacoesBody" class="divide-y divide-slate-100 dark:divide-[#1C2C26] text-xs text-slate-700 dark:text-slate-300">
+            <tbody id="tabelaMovimentacoesBody"
+              class="divide-y divide-slate-100 dark:divide-[#1C2C26] text-xs text-slate-700 dark:text-slate-300">
               <tr>
                 <td colspan="8" class="py-12 text-center text-slate-400 font-medium text-xs">
                   <i class="fa-solid fa-spinner fa-spin mr-2"></i> Carregando movimentações...
@@ -287,11 +318,14 @@
   <!-- MODAL DE NOVA MOVIMENTAÇÃO (COM SUPORTE A MÚLTIPLOS PRODUTOS) -->
   <div id="modalMovimentacao"
     class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs hidden p-4">
-    <div class="bg-white dark:bg-[#121E1A] rounded-3xl shadow-2xl w-full max-w-xl max-h-[92vh] flex flex-col overflow-hidden border border-slate-200/80 dark:border-[#1C2C26] animate-in fade-in zoom-in-95 duration-200">
-      
-      <div class="px-6 py-4 border-b border-slate-100 dark:border-[#1C2C26] flex justify-between items-center bg-slate-50/50 dark:bg-[#15241F]/40 shrink-0">
+    <div
+      class="bg-white dark:bg-[#121E1A] rounded-3xl shadow-2xl w-full max-w-xl max-h-[92vh] flex flex-col overflow-hidden border border-slate-200/80 dark:border-[#1C2C26] animate-in fade-in zoom-in-95 duration-200">
+
+      <div
+        class="px-6 py-4 border-b border-slate-100 dark:border-[#1C2C26] flex justify-between items-center bg-slate-50/50 dark:bg-[#15241F]/40 shrink-0">
         <div class="flex items-center space-x-3">
-          <div class="w-10 h-10 rounded-2xl bg-emerald-100 dark:bg-emerald-950/80 text-[#0F392B] dark:text-emerald-400 flex items-center justify-center border border-emerald-200/60 dark:border-emerald-800/50 shadow-xs">
+          <div
+            class="w-10 h-10 rounded-2xl bg-emerald-100 dark:bg-emerald-950/80 text-[#0F392B] dark:text-emerald-400 flex items-center justify-center border border-emerald-200/60 dark:border-emerald-800/50 shadow-xs">
             <i class="fa-solid fa-arrow-right-arrow-left text-sm"></i>
           </div>
           <div>
@@ -299,32 +333,36 @@
             <p class="text-[11px] text-slate-400 dark:text-slate-500">Adicione um ou mais produtos na mesma operação</p>
           </div>
         </div>
-        <button type="button" id="btnFecharModalMov" class="w-8 h-8 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1C2C26] transition-colors flex items-center justify-center cursor-pointer">
+        <button type="button" id="btnFecharModalMov"
+          class="w-8 h-8 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1C2C26] transition-colors flex items-center justify-center cursor-pointer">
           <i class="fa-solid fa-xmark text-sm"></i>
         </button>
       </div>
 
       <form id="formMovimentacao" class="p-6 space-y-4 text-xs overflow-y-auto flex-1">
-        
+
         <!-- 1. Tipo de Movimentação -->
         <div class="space-y-1.5">
           <label class="block font-semibold text-slate-700 dark:text-slate-300">Tipo de Movimentação *</label>
           <div class="grid grid-cols-3 gap-2.5">
             <label class="cursor-pointer">
               <input type="radio" name="movTipo" value="venda" checked class="peer hidden">
-              <div class="p-2.5 text-center font-semibold rounded-xl border border-slate-200 dark:border-[#1C2C26] text-slate-600 dark:text-slate-400 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-950/60 peer-checked:border-emerald-500 peer-checked:text-emerald-700 dark:peer-checked:text-emerald-400 transition-all shadow-2xs">
+              <div
+                class="p-2.5 text-center font-semibold rounded-xl border border-slate-200 dark:border-[#1C2C26] text-slate-600 dark:text-slate-400 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-950/60 peer-checked:border-emerald-500 peer-checked:text-emerald-700 dark:peer-checked:text-emerald-400 transition-all shadow-2xs">
                 <i class="fa-solid fa-cart-shopping mb-0.5 block text-sm"></i> Venda
               </div>
             </label>
             <label class="cursor-pointer">
               <input type="radio" name="movTipo" value="compra" class="peer hidden">
-              <div class="p-2.5 text-center font-semibold rounded-xl border border-slate-200 dark:border-[#1C2C26] text-slate-600 dark:text-slate-400 peer-checked:bg-blue-50 dark:peer-checked:bg-blue-950/60 peer-checked:border-blue-500 peer-checked:text-blue-700 dark:peer-checked:text-blue-400 transition-all shadow-2xs">
+              <div
+                class="p-2.5 text-center font-semibold rounded-xl border border-slate-200 dark:border-[#1C2C26] text-slate-600 dark:text-slate-400 peer-checked:bg-blue-50 dark:peer-checked:bg-blue-950/60 peer-checked:border-blue-500 peer-checked:text-blue-700 dark:peer-checked:text-blue-400 transition-all shadow-2xs">
                 <i class="fa-solid fa-truck-ramp-box mb-0.5 block text-sm"></i> Compra
               </div>
             </label>
             <label class="cursor-pointer">
               <input type="radio" name="movTipo" value="retirada" class="peer hidden">
-              <div class="p-2.5 text-center font-semibold rounded-xl border border-slate-200 dark:border-[#1C2C26] text-slate-600 dark:text-slate-400 peer-checked:bg-rose-50 dark:peer-checked:bg-rose-950/60 peer-checked:border-rose-500 peer-checked:text-rose-700 dark:peer-checked:text-rose-400 transition-all shadow-2xs">
+              <div
+                class="p-2.5 text-center font-semibold rounded-xl border border-slate-200 dark:border-[#1C2C26] text-slate-600 dark:text-slate-400 peer-checked:bg-rose-50 dark:peer-checked:bg-rose-950/60 peer-checked:border-rose-500 peer-checked:text-rose-700 dark:peer-checked:text-rose-400 transition-all shadow-2xs">
                 <i class="fa-solid fa-arrow-up-from-bracket mb-0.5 block text-sm"></i> Retirada
               </div>
             </label>
@@ -332,17 +370,20 @@
         </div>
 
         <!-- 2. Caixa de Seleção e Adição de Produto -->
-        <div class="p-4 rounded-2xl bg-slate-50/70 dark:bg-[#15241F]/40 border border-slate-200/80 dark:border-[#1C2C26] space-y-3">
+        <div
+          class="p-4 rounded-2xl bg-slate-50/70 dark:bg-[#15241F]/40 border border-slate-200/80 dark:border-[#1C2C26] space-y-3">
           <div class="space-y-1.5 relative" id="wrapperCustomSelectMov">
             <label class="block font-semibold text-slate-700 dark:text-slate-300">Selecionar Produto *</label>
-            
+
             <div id="btnToggleCustomSelectMov"
               class="w-full relative pl-10 pr-10 py-2.5 border border-slate-200 dark:border-[#1C2C26] bg-white dark:bg-[#121E1A] text-slate-800 dark:text-slate-100 rounded-xl focus:ring-2 focus:ring-[#0F392B]/20 focus:border-[#0F392B] dark:focus:ring-emerald-600/50 outline-none transition-all flex items-center justify-between cursor-pointer">
               <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                 <i class="fa-solid fa-box text-xs"></i>
               </div>
               <span id="textoProdutoSelecionadoMov" class="truncate text-slate-400">Selecione um produto...</span>
-              <div class="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none text-slate-400 transition-transform duration-200" id="iconeSetaSelectMov">
+              <div
+                class="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none text-slate-400 transition-transform duration-200"
+                id="iconeSetaSelectMov">
                 <i class="fa-solid fa-chevron-down text-[10px]"></i>
               </div>
             </div>
@@ -385,12 +426,14 @@
             <span class="font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider text-[10px]">
               Produtos na Operação (<span id="contadorItensCarrinhoMov">0</span>)
             </span>
-            <button type="button" id="btnLimparCarrinhoMov" class="text-[11px] font-semibold text-rose-600 dark:text-rose-400 hover:underline cursor-pointer">
+            <button type="button" id="btnLimparCarrinhoMov"
+              class="text-[11px] font-semibold text-rose-600 dark:text-rose-400 hover:underline cursor-pointer">
               Limpar lista
             </button>
           </div>
 
-          <div id="listaItensCarrinhoMov" class="max-h-40 overflow-y-auto divide-y divide-slate-100 dark:divide-[#1C2C26] border border-slate-200/80 dark:border-[#1C2C26] rounded-2xl bg-white dark:bg-[#121E1A]">
+          <div id="listaItensCarrinhoMov"
+            class="max-h-40 overflow-y-auto divide-y divide-slate-100 dark:divide-[#1C2C26] border border-slate-200/80 dark:border-[#1C2C26] rounded-2xl bg-white dark:bg-[#121E1A]">
           </div>
         </div>
 
@@ -401,7 +444,8 @@
             <i class="fa-solid fa-calculator text-emerald-600 dark:text-emerald-400 mr-1.5"></i>
             Total da Operação:
           </span>
-          <span id="labelTotalComDesconto" class="font-bold text-emerald-700 dark:text-emerald-400 text-sm">R$ 0,00</span>
+          <span id="labelTotalComDesconto" class="font-bold text-emerald-700 dark:text-emerald-400 text-sm">R$
+            0,00</span>
         </div>
 
         <!-- 5. Observação -->
@@ -415,7 +459,8 @@
           <button type="button" id="btnCancelarModalMov"
             class="px-4.5 py-2.5 font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#172722] rounded-xl transition-colors cursor-pointer">Cancelar</button>
           <button type="submit"
-            class="px-5 py-2.5 font-semibold text-white bg-[#0F392B] hover:bg-[#0a271d] dark:hover:bg-[#144737] rounded-xl shadow-md shadow-emerald-950/20 transition-all cursor-pointer">Registrar Movimentação</button>
+            class="px-5 py-2.5 font-semibold text-white bg-[#0F392B] hover:bg-[#0a271d] dark:hover:bg-[#144737] rounded-xl shadow-md shadow-emerald-950/20 transition-all cursor-pointer">Registrar
+            Movimentação</button>
         </div>
       </form>
     </div>
@@ -424,11 +469,14 @@
   <!-- MODAL DE DETALHES DA MOVIMENTAÇÃO -->
   <div id="modalDetalhesMov"
     class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs hidden p-4">
-    <div class="bg-white dark:bg-[#121E1A] rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden border border-slate-200/80 dark:border-[#1C2C26] animate-in fade-in zoom-in-95 duration-200">
+    <div
+      class="bg-white dark:bg-[#121E1A] rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden border border-slate-200/80 dark:border-[#1C2C26] animate-in fade-in zoom-in-95 duration-200">
 
-      <div class="px-6 py-5 border-b border-slate-100 dark:border-[#1C2C26] flex justify-between items-center bg-slate-50/50 dark:bg-[#15241F]/40">
+      <div
+        class="px-6 py-5 border-b border-slate-100 dark:border-[#1C2C26] flex justify-between items-center bg-slate-50/50 dark:bg-[#15241F]/40">
         <div class="flex items-center space-x-3">
-          <div class="w-10 h-10 rounded-2xl bg-emerald-100 dark:bg-emerald-950/80 text-[#0F392B] dark:text-emerald-400 flex items-center justify-center border border-emerald-200/60 dark:border-emerald-800/50 shadow-xs">
+          <div
+            class="w-10 h-10 rounded-2xl bg-emerald-100 dark:bg-emerald-950/80 text-[#0F392B] dark:text-emerald-400 flex items-center justify-center border border-emerald-200/60 dark:border-emerald-800/50 shadow-xs">
             <i class="fa-solid fa-file-invoice text-sm"></i>
           </div>
           <div>
@@ -436,13 +484,15 @@
             <p id="detalhesIdData" class="text-[11px] text-slate-400 dark:text-slate-500">ID e Data do registro</p>
           </div>
         </div>
-        <button type="button" id="btnFecharModalDetalhes" class="w-8 h-8 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1C2C26] transition-colors flex items-center justify-center cursor-pointer">
+        <button type="button" id="btnFecharModalDetalhes"
+          class="w-8 h-8 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1C2C26] transition-colors flex items-center justify-center cursor-pointer">
           <i class="fa-solid fa-xmark text-sm"></i>
         </button>
       </div>
 
       <div class="p-6 space-y-4 text-xs">
-        <div class="grid grid-cols-2 gap-3 p-4 bg-slate-50 dark:bg-[#15241F]/40 rounded-2xl border border-slate-100 dark:border-[#1C2C26]">
+        <div
+          class="grid grid-cols-2 gap-3 p-4 bg-slate-50 dark:bg-[#15241F]/40 rounded-2xl border border-slate-100 dark:border-[#1C2C26]">
           <div>
             <span class="block text-[10px] font-bold text-slate-400 uppercase">Produto</span>
             <span id="detalhesProduto" class="font-bold text-slate-800 dark:text-slate-100 text-sm">-</span>
@@ -468,18 +518,23 @@
           </div>
         </div>
 
-        <div class="flex items-center justify-between p-4 bg-emerald-50/60 dark:bg-emerald-950/40 border border-emerald-100 dark:border-emerald-900/40 rounded-2xl">
+        <div
+          class="flex items-center justify-between p-4 bg-emerald-50/60 dark:bg-emerald-950/40 border border-emerald-100 dark:border-emerald-900/40 rounded-2xl">
           <span class="font-semibold text-slate-600 dark:text-slate-300">Valor Total da Operação:</span>
-          <span id="detalhesValorTotal" class="font-bold text-emerald-700 dark:text-emerald-400 text-base">R$ 0,00</span>
+          <span id="detalhesValorTotal" class="font-bold text-emerald-700 dark:text-emerald-400 text-base">R$
+            0,00</span>
         </div>
 
         <div class="space-y-1">
           <span class="block text-[10px] font-bold text-slate-400 uppercase">Observação</span>
-          <p id="detalhesObservacao" class="p-3 bg-slate-50 dark:bg-[#15241F]/40 rounded-xl text-slate-600 dark:text-slate-300 italic min-h-[40px]">-</p>
+          <p id="detalhesObservacao"
+            class="p-3 bg-slate-50 dark:bg-[#15241F]/40 rounded-xl text-slate-600 dark:text-slate-300 italic min-h-[40px]">
+            -</p>
         </div>
       </div>
 
-      <div class="px-6 py-4 bg-slate-50/50 dark:bg-[#15241F]/40 border-t border-slate-100 dark:border-[#1C2C26] flex items-center justify-end space-x-2">
+      <div
+        class="px-6 py-4 bg-slate-50/50 dark:bg-[#15241F]/40 border-t border-slate-100 dark:border-[#1C2C26] flex items-center justify-end space-x-2">
         <button type="button" id="btnFecharDetalhesModal"
           class="px-5 py-2.5 font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-[#1C2C26] rounded-xl transition-colors cursor-pointer text-xs">
           Fechar
@@ -489,17 +544,22 @@
   </div>
 
   <!-- MODAL DE SUPORTE -->
-  <div id="modalSuporte" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs hidden transition-opacity">
-    <div class="bg-white dark:bg-[#121E1A] border border-slate-200 dark:border-[#1C2C26] rounded-2xl shadow-xl w-full max-w-md p-6 relative animate-in fade-in zoom-in-95 duration-200">
-      <button id="btnFecharSuporte" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg cursor-pointer">
+  <div id="modalSuporte"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs hidden transition-opacity">
+    <div
+      class="bg-white dark:bg-[#121E1A] border border-slate-200 dark:border-[#1C2C26] rounded-2xl shadow-xl w-full max-w-md p-6 relative animate-in fade-in zoom-in-95 duration-200">
+      <button id="btnFecharSuporte"
+        class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg cursor-pointer">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
         </svg>
       </button>
       <div class="flex items-center gap-3 mb-4">
-        <div class="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+        <div
+          class="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636l3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636l3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
           </svg>
         </div>
         <div>
@@ -508,7 +568,8 @@
         </div>
       </div>
       <div class="space-y-3 mt-4 text-xs">
-        <div class="p-3 rounded-xl bg-slate-50 dark:bg-[#14231E] border border-slate-100 dark:border-[#1C2C26] flex items-center justify-between">
+        <div
+          class="p-3 rounded-xl bg-slate-50 dark:bg-[#14231E] border border-slate-100 dark:border-[#1C2C26] flex items-center justify-between">
           <div class="flex items-center gap-3">
             <span class="p-2 rounded-lg bg-emerald-500/10 text-emerald-500">📧</span>
             <div>
@@ -517,7 +578,8 @@
             </div>
           </div>
         </div>
-        <div class="p-3 rounded-xl bg-slate-50 dark:bg-[#14231E] border border-slate-100 dark:border-[#1C2C26] flex items-center justify-between">
+        <div
+          class="p-3 rounded-xl bg-slate-50 dark:bg-[#14231E] border border-slate-100 dark:border-[#1C2C26] flex items-center justify-between">
           <div class="flex items-center gap-3">
             <span class="p-2 rounded-lg bg-emerald-500/10 text-emerald-500">💬</span>
             <div>
@@ -526,7 +588,8 @@
             </div>
           </div>
         </div>
-        <div class="p-3 rounded-xl bg-slate-50 dark:bg-[#14231E] border border-slate-100 dark:border-[#1C2C26] flex items-center justify-between">
+        <div
+          class="p-3 rounded-xl bg-slate-50 dark:bg-[#14231E] border border-slate-100 dark:border-[#1C2C26] flex items-center justify-between">
           <div class="flex items-center gap-3">
             <span class="p-2 rounded-lg bg-emerald-500/10 text-emerald-500">🕒</span>
             <div>
@@ -537,7 +600,8 @@
         </div>
       </div>
       <div class="mt-6 flex justify-end">
-        <button id="btnFecharSuporteModal" type="button" class="px-4 py-2 bg-slate-100 dark:bg-[#14231E] hover:bg-slate-200 dark:hover:bg-[#1C2C26] text-slate-700 dark:text-slate-300 font-medium rounded-xl transition-colors text-xs cursor-pointer">
+        <button id="btnFecharSuporteModal" type="button"
+          class="px-4 py-2 bg-slate-100 dark:bg-[#14231E] hover:bg-slate-200 dark:hover:bg-[#1C2C26] text-slate-700 dark:text-slate-300 font-medium rounded-xl transition-colors text-xs cursor-pointer">
           Fechar
         </button>
       </div>
@@ -567,7 +631,7 @@
             localStorage.getItem('usuario') ||
             '{}'
           );
-        } catch (e) {}
+        } catch (e) { }
 
         let jwtPayload = {};
         try {
@@ -578,7 +642,7 @@
           if (token && token.includes('.')) {
             jwtPayload = JSON.parse(atob(token.split('.')[1]));
           }
-        } catch (e) {}
+        } catch (e) { }
 
         const rawRole =
           localStorage.getItem('nexus_user_role') ||
@@ -617,10 +681,10 @@
       function renderizarFiltroMovimentacoes() {
         const data = new Date();
         const mesesNomes = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
-        
+
         const mes0 = data.getMonth();
         const ano0 = data.getFullYear();
-        
+
         data.setMonth(data.getMonth() - 1);
         const mes1 = data.getMonth();
         const ano1 = data.getFullYear();
@@ -660,6 +724,24 @@
       }
 
       renderizarFiltroMovimentacoes();
+    });
+  </script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Atualiza o nome e o cargo globalmente a partir do localStorage logo ao abrir a página
+      const nomeSalvo = localStorage.getItem('nexus_user_name');
+      const cargoSalvo = localStorage.getItem('nexus_user_role');
+
+      const elUserName = document.getElementById('userName');
+      const elUserRole = document.getElementById('userRole');
+
+      if (elUserName && nomeSalvo) {
+        elUserName.textContent = nomeSalvo;
+      }
+
+      if (elUserRole && cargoSalvo) {
+        elUserRole.textContent = cargoSalvo;
+      }
     });
   </script>
 
