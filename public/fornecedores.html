@@ -172,7 +172,7 @@
           </div>
         </div>
 
-        <!-- PERFIL DO UTILIZADOR COM BARRA DIVISÓRIA ANTES -->
+        <!-- PERFIL DO UTILIZADOR -->
         <div class="relative border-l border-slate-200 dark:border-[#1C2C26] pl-3">
           <button id="btnPerfilMenu" type="button"
             class="flex items-center space-x-3 pl-1 focus:outline-none cursor-pointer group">
@@ -205,7 +205,7 @@
     <!-- CONTEÚDO PRINCIPAL DA PÁGINA -->
     <main class="p-8 space-y-6 max-w-7xl w-full mx-auto">
 
-      <!-- CABEÇALHO COM BANNER VERDE EXTRA CLARO -->
+      <!-- CABEÇALHO COM BANNER -->
       <div
         class="bg-emerald-50/35 dark:bg-emerald-950/20 border border-emerald-100/50 dark:border-emerald-800/40 rounded-2xl p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shadow-xs">
         <div>
@@ -229,7 +229,6 @@
       <!-- BARRA DE FILTROS E BUSCA -->
       <div
         class="bg-white dark:bg-[#121E1A] rounded-2xl border border-slate-200/80 dark:border-[#1C2C26] p-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 shadow-xs">
-        <!-- Input de Busca -->
         <div class="relative w-full sm:w-72">
           <div
             class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
@@ -239,7 +238,6 @@
             class="w-full pl-9 pr-3 py-2 text-xs text-slate-700 dark:text-slate-200 bg-slate-50 dark:bg-[#14231E] border border-slate-200 dark:border-[#1C2C26] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0F392B] dark:focus:ring-emerald-600/50 placeholder:text-slate-400 dark:placeholder:text-slate-500" />
         </div>
 
-        <!-- Filtros Rápidos por Status -->
         <div id="filtrosStatusFornecedor"
           class="flex items-center bg-slate-100/80 dark:bg-[#14231E] p-1 rounded-xl border border-slate-200/60 dark:border-[#1C2C26] space-x-1 overflow-x-auto">
           <button type="button" data-status="todos"
@@ -259,7 +257,7 @@
         </div>
       </div>
 
-      <!-- CONTAINER EM GRELHA (CARDS DOS FORNECEDORES) -->
+      <!-- CONTAINER EM GRELHA -->
       <div id="cardsFornecedoresContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
         <div class="col-span-full py-12 text-center text-slate-400 font-medium text-xs">
           <i class="fa-solid fa-spinner fa-spin mr-2"></i> Carregando fornecedores...
@@ -269,12 +267,11 @@
     </main>
   </div>
 
-  <!-- MODAL DE DETALHES DO FORNECEDOR -->
+  <!-- MODAL DE DETALHES -->
   <div id="modalDetalhesFornecedor"
     class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
     <div
       class="bg-white dark:bg-[#121E1A] rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden border border-slate-100 dark:border-[#1C2C26]">
-      <!-- Topo Escuro (Verde Escuro) -->
       <div
         class="bg-[#0F392B] dark:bg-[#0E1A16] border-b border-emerald-900/40 text-white p-6 relative flex items-start gap-4">
         <div id="detalheAvatar"
@@ -295,7 +292,6 @@
         </button>
       </div>
 
-      <!-- Indicadores/Métricas -->
       <div
         class="grid grid-cols-3 border-b border-slate-100 dark:border-[#1C2C26] divide-x divide-slate-100 dark:divide-[#1C2C26] p-6 bg-slate-50/50 dark:bg-[#0E1A16]/50">
         <div>
@@ -315,9 +311,7 @@
         </div>
       </div>
 
-      <!-- Dados do Fornecedor em Duas Colunas -->
       <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
-        <!-- Coluna Contacto Comercial -->
         <div class="space-y-4">
           <div class="flex items-center gap-2 mb-2">
             <i class="fa-regular fa-user text-[#0F392B] dark:text-emerald-400 text-sm"></i>
@@ -326,7 +320,6 @@
               <p class="text-[10px] text-slate-400">Canal principal de relacionamento</p>
             </div>
           </div>
-
           <div>
             <span class="text-[10px] font-medium text-slate-400 block">Responsável</span>
             <p id="detalheResponsavel" class="text-xs font-semibold text-slate-700 dark:text-slate-300">--</p>
@@ -341,7 +334,6 @@
           </div>
         </div>
 
-        <!-- Coluna Dados Cadastrais -->
         <div class="space-y-4">
           <div class="flex items-center gap-2 mb-2">
             <i class="fa-solid fa-truck text-[#0F392B] dark:text-emerald-400 text-sm"></i>
@@ -350,7 +342,6 @@
               <p class="text-[10px] text-slate-400">Informações da empresa</p>
             </div>
           </div>
-
           <div>
             <span class="text-[10px] font-medium text-slate-400 block">CNPJ</span>
             <p id="detalheCnpj" class="text-xs font-semibold text-slate-700 dark:text-slate-300">--</p>
@@ -366,7 +357,6 @@
         </div>
       </div>
 
-      <!-- Rodapé do Modal de Detalhes -->
       <div
         class="p-6 bg-slate-50 dark:bg-[#0E1A16] border-t border-slate-100 dark:border-[#1C2C26] flex items-center justify-between gap-2 flex-wrap">
         <div class="flex items-center gap-3">
@@ -398,8 +388,6 @@
     class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
     <div
       class="bg-white dark:bg-[#121E1A] w-full max-w-lg rounded-2xl shadow-xl border border-slate-100 dark:border-[#1C2C26] overflow-hidden">
-
-      <!-- Cabeçalho -->
       <div class="px-6 pt-6 pb-4 border-b border-slate-100 dark:border-[#1C2C26] flex items-start justify-between">
         <div>
           <span class="text-[10px] font-bold tracking-wider text-slate-400 uppercase">NOVO PARCEIRO</span>
@@ -412,7 +400,6 @@
         </button>
       </div>
 
-      <!-- Formulário -->
       <form id="formFornecedor" class="p-6 space-y-4 text-xs">
         <div>
           <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Razão social ou nome *</label>
@@ -484,11 +471,10 @@
             class="px-4 py-2 text-xs font-semibold text-white bg-[#0F392B] hover:bg-[#0a271d] rounded-xl shadow-xs transition-colors cursor-pointer">Salvar</button>
         </div>
       </form>
-
     </div>
   </div>
 
-  <!-- MODAL PERSONALIZADO DE CONFIRMAÇÃO -->
+  <!-- MODAL DE CONFIRMAÇÃO -->
   <div id="modalConfirmacaoPersonalizado"
     class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
     <div
@@ -511,72 +497,9 @@
     </div>
   </div>
 
-  <!-- JS -->
+  <!-- Scripts -->
+  <script src="js/auth.js"></script>
   <script src="js/fornecedores.js"></script>
-  <script src="js/auth.js"></script>
-
-  <!-- Script de Sincronização de Cargo Dinâmico e Prevenção de Duplicação na Topbar -->
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      // 1. Remove botões de tema duplicados caso o theme.js injete um extra
-      const botoesTema = document.querySelectorAll('#btnThemeToggle, #themeToggleBtn');
-      if (botoesTema.length > 1) {
-        for (let i = 1; i < botoesTema.length; i++) {
-          botoesTema[i].remove();
-        }
-      }
-
-      // 2. Extrai o cargo dinâmico do localStorage ou JWT
-      const elUserRole = document.getElementById('userRole');
-      if (elUserRole) {
-        let userObj = {};
-        try {
-          userObj = JSON.parse(
-            localStorage.getItem('nexus_user') ||
-            localStorage.getItem('user') ||
-            localStorage.getItem('usuario') ||
-            '{}'
-          );
-        } catch (e) { }
-
-        let jwtPayload = {};
-        try {
-          const token =
-            localStorage.getItem('token') ||
-            localStorage.getItem('access_token') ||
-            localStorage.getItem('nexus_token');
-          if (token && token.includes('.')) {
-            jwtPayload = JSON.parse(atob(token.split('.')[1]));
-          }
-        } catch (e) { }
-
-        const rawRole =
-          localStorage.getItem('nexus_user_role') ||
-          localStorage.getItem('nexus_user_nivel') ||
-          localStorage.getItem('user_role') ||
-          localStorage.getItem('role') ||
-          localStorage.getItem('nivel') ||
-          userObj.role ||
-          userObj.nivel ||
-          userObj.cargo ||
-          userObj.perfil ||
-          jwtPayload.role ||
-          jwtPayload.nivel ||
-          jwtPayload.cargo ||
-          'Administrador';
-
-        const roleLower = String(rawRole).toLowerCase();
-        if (roleLower === 'admin' || roleLower === 'administrador') {
-          elUserRole.textContent = 'Administrador';
-        } else if (roleLower === 'operador' || roleLower === 'operator') {
-          elUserRole.textContent = 'Operador';
-        } else {
-          elUserRole.textContent = String(rawRole).charAt(0).toUpperCase() + String(rawRole).slice(1);
-        }
-      }
-    });
-  </script>
-  <script src="js/auth.js"></script>
 </body>
 
 </html>

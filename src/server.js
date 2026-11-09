@@ -24,22 +24,22 @@ const inspecionarRota = (nomeSubpasta) => {
   }
 };
 
-const authRoutes = inspecionarRota('auth');
 const produtosRoutes = inspecionarRota('produtos');
 const movimentacoesRoutes = inspecionarRota('movimentacoes');
 const solicitacoesRoutes = inspecionarRota('solicitacoes');
 const utilizadoresRoutes = inspecionarRota('utilizadores');
 const dashboardRoutes = inspecionarRota('dashboard');
 const fornecedoresRoutes = inspecionarRota('fornecedores');
-const relatoriosRoutes = inspecionarRota('relatorios'); // 👈 Nova rota de relatórios por chat
+const relatoriosRoutes = inspecionarRota('relatorios');
 
-app.use('/api/auth', authRoutes);
+// ⚠️ CORREÇÃO CRUCIAL: Aponta /api/auth diretamente para o utilizadoresRoutes para processar o login com sucesso
+app.use('/api/auth', utilizadoresRoutes);
 app.use('/api/produtos', produtosRoutes);
 app.use('/api/movimentacoes', movimentacoesRoutes);
 app.use('/api/solicitacoes', solicitacoesRoutes);
 app.use('/api/fornecedores', fornecedoresRoutes);
 app.use('/api/dashboard', dashboardRoutes);
-app.use('/api/relatorios', relatoriosRoutes); // 👈 Registo do endpoint do chatbot de relatórios
+app.use('/api/relatorios', relatoriosRoutes);
 
 // Suporte para ambas as variações de endpoint (/api/utilizadores e /api/utilizador)
 app.use('/api/utilizadores', utilizadoresRoutes);

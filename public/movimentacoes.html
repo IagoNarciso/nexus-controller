@@ -122,7 +122,7 @@
       </div>
 
       <button id="logoutBtnSidebar"
-        class="w-full flex items-center space-x-3 px-3 py-2 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-rose-400 transition-colors">
+        class="w-full flex items-center space-x-3 px-3 py-2 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-rose-400 transition-colors cursor-pointer">
         <i class="fa-solid fa-right-from-bracket text-sm"></i>
         <span>Sair da conta</span>
       </button>
@@ -206,7 +206,7 @@
     <!-- ÁREA CENTRAL DE CONTEÚDO -->
     <main class="p-8 space-y-6 max-w-7xl w-full mx-auto">
 
-      <!-- BLOCO 1: CABEÇALHO COM FUNDO VERDE SUAVE (PADRÃO PRODUTOS E FORNECEDORES) -->
+      <!-- BLOCO 1: CABEÇALHO COM FUNDO VERDE SUAVE -->
       <div
         class="bg-emerald-50/35 dark:bg-emerald-950/20 border border-emerald-100/50 dark:border-emerald-800/40 rounded-2xl p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shadow-xs">
         <div>
@@ -230,11 +230,10 @@
       <div
         class="bg-white dark:bg-[#121E1A] rounded-2xl border border-slate-200/80 dark:border-[#1C2C26] shadow-xs overflow-hidden">
 
-        <!-- Barra Superior de Pesquisa e Filtros integrada ao Card da Tabela -->
+        <!-- Barra Superior de Pesquisa e Filtros -->
         <div
           class="p-4 border-b border-slate-100 dark:border-[#1C2C26] flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
 
-          <!-- Lado Esquerdo: Barra de Pesquisa + Botões de Status -->
           <div class="flex flex-col sm:flex-row sm:items-center gap-3 flex-1">
             <div class="relative w-full sm:w-64">
               <div
@@ -263,7 +262,7 @@
             </div>
           </div>
 
-          <!-- Lado Direito: Seletor de Período -->
+          <!-- Seletor de Período -->
           <div class="relative self-start lg:self-auto">
             <button id="btnToggleFiltroPeriodo" type="button"
               class="inline-flex items-center space-x-2 px-3.5 py-2 bg-white dark:bg-[#121E1A] hover:bg-slate-50 dark:hover:bg-[#172722] text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl border border-slate-200 dark:border-[#1C2C26] shadow-2xs transition-colors cursor-pointer">
@@ -283,7 +282,7 @@
 
         </div>
 
-        <!-- Tabela Padronizada com 8 Colunas -->
+        <!-- Tabela Padronizada -->
         <div class="overflow-x-auto">
           <table class="w-full text-left border-collapse">
             <thead>
@@ -315,7 +314,7 @@
     </main>
   </div>
 
-  <!-- MODAL DE NOVA MOVIMENTAÇÃO (COM SUPORTE A MÚLTIPLOS PRODUTOS) -->
+  <!-- MODAL DE NOVA MOVIMENTAÇÃO -->
   <div id="modalMovimentacao"
     class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs hidden p-4">
     <div
@@ -340,8 +339,6 @@
       </div>
 
       <form id="formMovimentacao" class="p-6 space-y-4 text-xs overflow-y-auto flex-1">
-
-        <!-- 1. Tipo de Movimentação -->
         <div class="space-y-1.5">
           <label class="block font-semibold text-slate-700 dark:text-slate-300">Tipo de Movimentação *</label>
           <div class="grid grid-cols-3 gap-2.5">
@@ -369,7 +366,6 @@
           </div>
         </div>
 
-        <!-- 2. Caixa de Seleção e Adição de Produto -->
         <div
           class="p-4 rounded-2xl bg-slate-50/70 dark:bg-[#15241F]/40 border border-slate-200/80 dark:border-[#1C2C26] space-y-3">
           <div class="space-y-1.5 relative" id="wrapperCustomSelectMov">
@@ -420,7 +416,6 @@
           </button>
         </div>
 
-        <!-- 3. Lista de Produtos Adicionados na Operação (Carrinho) -->
         <div id="containerCarrinhoMov" class="hidden space-y-2">
           <div class="flex items-center justify-between px-1">
             <span class="font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider text-[10px]">
@@ -437,7 +432,6 @@
           </div>
         </div>
 
-        <!-- 4. Total da Operação -->
         <div id="boxTotalCalculado"
           class="flex items-center justify-between p-3.5 bg-emerald-50/60 dark:bg-emerald-950/40 border border-emerald-100 dark:border-emerald-900/40 rounded-xl text-xs">
           <span class="font-semibold text-slate-600 dark:text-slate-300">
@@ -448,7 +442,6 @@
             0,00</span>
         </div>
 
-        <!-- 5. Observação -->
         <div class="space-y-1.5">
           <label class="block font-semibold text-slate-700 dark:text-slate-300">Observação</label>
           <textarea id="movObservacao" rows="2" placeholder="Ex: Venda no balcão / Nota fiscal com múltiplos itens"
@@ -608,68 +601,9 @@
     </div>
   </div>
 
-  <!-- JS Externo das Movimentações -->
+  <!-- Scripts -->
+  <script src="js/auth.js"></script>
   <script src="js/movimentacoes.js"></script>
-
-  <!-- Script de Sincronização e Prevenção de Duplicação na Topbar -->
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const botoesTema = document.querySelectorAll('#btnThemeToggle, #themeToggleBtn');
-      if (botoesTema.length > 1) {
-        for (let i = 1; i < botoesTema.length; i++) {
-          botoesTema[i].remove();
-        }
-      }
-
-      const elUserRole = document.getElementById('userRole');
-      if (elUserRole) {
-        let userObj = {};
-        try {
-          userObj = JSON.parse(
-            localStorage.getItem('nexus_user') ||
-            localStorage.getItem('user') ||
-            localStorage.getItem('usuario') ||
-            '{}'
-          );
-        } catch (e) { }
-
-        let jwtPayload = {};
-        try {
-          const token =
-            localStorage.getItem('token') ||
-            localStorage.getItem('access_token') ||
-            localStorage.getItem('nexus_token');
-          if (token && token.includes('.')) {
-            jwtPayload = JSON.parse(atob(token.split('.')[1]));
-          }
-        } catch (e) { }
-
-        const rawRole =
-          localStorage.getItem('nexus_user_role') ||
-          localStorage.getItem('nexus_user_nivel') ||
-          localStorage.getItem('user_role') ||
-          localStorage.getItem('role') ||
-          localStorage.getItem('nivel') ||
-          userObj.role ||
-          userObj.nivel ||
-          userObj.cargo ||
-          userObj.perfil ||
-          jwtPayload.role ||
-          jwtPayload.nivel ||
-          jwtPayload.cargo ||
-          'Administrador';
-
-        const roleLower = String(rawRole).toLowerCase();
-        if (roleLower === 'admin' || roleLower === 'administrador') {
-          elUserRole.textContent = 'Administrador';
-        } else if (roleLower === 'operador' || roleLower === 'operator') {
-          elUserRole.textContent = 'Operador';
-        } else {
-          elUserRole.textContent = String(rawRole).charAt(0).toUpperCase() + String(rawRole).slice(1);
-        }
-      }
-    });
-  </script>
 
   <!-- Script Gerador de Períodos Dinâmicos -->
   <script>
@@ -726,7 +660,6 @@
       renderizarFiltroMovimentacoes();
     });
   </script>
-  <script src="js/auth.js"></script>
 
 </body>
 
