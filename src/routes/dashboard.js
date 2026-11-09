@@ -1,10 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const { supabase, supabaseAdmin } = require('../config/supabase');
-const auth = require('../middlewares/auth');
+const authMiddleware = require('../middlewares/auth');
 
 // Usa o supabaseAdmin para evitar bloqueios de RLS nas consultas filtradas por empresa
 const dbClient = supabaseAdmin || supabase;
+
+// Proteger todas as rotas do dashboard
+router.use(authMiddleware);
 
 // Helper para extrair o preço de custo/aquisição do produto
 function obterPrecoCustoProduto(p) {
@@ -27,7 +30,7 @@ function obterPrecoCustoProduto(p) {
 }
 
 // ROTA: GET /api/dashboard/estatisticas?mes=YYYY-MM&periodo=7
-router.get('/estatisticas', auth, async (req, res) => {
+router.get('/estatisticas', async (req, res) => {
   try {
     const empresaUsuario = req.user?.empresa;
 

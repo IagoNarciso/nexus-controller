@@ -4,88 +4,8 @@ const { supabaseAdmin } = require('../config/supabase');
 const autenticarToken = require('../middlewares/auth');
 const PDFDocument = require('pdfkit');
 
-// Cache em memória para evitar consultar a tabela 'usuarios' em todas as requisições
-const cacheUsuarios = new Map();
-const TEMPO_CACHE_MS = 5 * 60 * 1000; // 5 minutos de validade
-
-// Função auxiliar otimizada para identificar o utilizador logado e a sua respetiva empresa
-async function obterDadosUsuario(req) {
-  const usuarioId = req.user?.id || req.user?.sub || req.user?.userId;
-  const usuarioEmail = req.user?.email;
-  const chaveCache = usuarioId || (usuarioEmail ? usuarioEmail.toLowerCase().trim() : null);
-
-  // 1. Retorno instantâneo (0ms): Verifica se o utilizador já está na memória do servidor
-  if (chaveCache && cacheUsuarios.has(chaveCache)) {
-    const itemCache = cacheUsuarios.get(chaveCache);
-    if (Date.now() - itemCache.timestamp < TEMPO_CACHE_MS) {
-      return itemCache.dados;
-    }
-    cacheUsuarios.delete(chaveCache);
-  }
-
-  // 2. Retorno sem consulta ao banco: Usa os metadados já validados no Token JWT
-  if (req.user?.user_metadata?.empresa || req.user?.empresa) {
-    const empresaToken = req.user?.user_metadata?.empresa || req.user?.empresa;
-    const usuarioJwt = {
-      id: usuarioId,
-      nome: req.user?.user_metadata?.nome || 'Utilizador Nexus',
-      email: usuarioEmail,
-      cargo: req.user?.user_metadata?.cargo || req.user?.cargo || 'admin',
-      empresa: empresaToken,
-      cnpj: req.user?.user_metadata?.cnpj || null
-    };
-    if (chaveCache) {
-      cacheUsuarios.set(chaveCache, { dados: usuarioJwt, timestamp: Date.now() });
-    }
-    return usuarioJwt;
-  }
-
-  // 3. Busca no banco pelo ID exato (apenas se não estiver em cache nem no JWT)
-  if (usuarioId) {
-    const { data: porId } = await supabaseAdmin
-      .from('usuarios')
-      .select('id, nome, email, cargo, empresa, cnpj')
-      .eq('id', usuarioId)
-      .maybeSingle();
-
-    if (porId && porId.empresa) {
-      cacheUsuarios.set(chaveCache, { dados: porId, timestamp: Date.now() });
-      return porId;
-    }
-  }
-
-  // 4. Fallback por E-mail
-  if (usuarioEmail) {
-    const { data: porEmail } = await supabaseAdmin
-      .from('usuarios')
-      .select('id, nome, email, cargo, empresa, cnpj')
-      .ilike('email', usuarioEmail.trim())
-      .maybeSingle();
-
-    if (porEmail && porEmail.empresa) {
-      cacheUsuarios.set(chaveCache, { dados: porEmail, timestamp: Date.now() });
-      return porEmail;
-    }
-  }
-
-  // 5. Fallback para a conta de demonstração
-  if (usuarioEmail && usuarioEmail.toLowerCase() === 'admin@nexusdemo.com') {
-    const usuarioDemo = {
-      id: usuarioId || '7d537a13-38d1-4447-a4f4-3a214a9be799',
-      nome: 'Admin Demonstração',
-      email: 'admin@nexusdemo.com',
-      cargo: 'admin',
-      empresa: 'Nexus Demo',
-      cnpj: null
-    };
-    if (chaveCache) {
-      cacheUsuarios.set(chaveCache, { dados: usuarioDemo, timestamp: Date.now() });
-    }
-    return usuarioDemo;
-  }
-
-  return null;
-}
+// Proteger todas as rotas de relatórios utilizando o middleware unificado
+router.use(autenticarToken);
 
 // Função auxiliar rigorosa para filtrar apenas os produtos aprovados/ativos (Idêntico ao Frontend)
 function filtrarProdutosValidos(produtosBrutos) {
@@ -97,7 +17,7 @@ function filtrarProdutosValidos(produtosBrutos) {
 }
 
 // Rota de Chat / Consultas Inteligentes para Relatórios
-router.post('/chat-analise', autenticarToken, async (req, res) => {
+router.post('/chat-analise', async (req, res) => {
   const { mensagem } = req.body;
 
   if (!mensagem || !mensagem.trim()) {
@@ -105,13 +25,12 @@ router.post('/chat-analise', autenticarToken, async (req, res) => {
   }
 
   try {
-    const usuario = await obterDadosUsuario(req);
+    const empresaNome = req.user?.empresa;
 
-    if (!usuario) {
+    if (!empresaNome) {
       return res.status(401).json({ resposta: 'Empresa do utilizador não identificada.' });
     }
 
-    const empresaNome = usuario.empresa || 'Nexus Controller';
     const textoQuery = mensagem.toLowerCase();
 
     if (textoQuery.includes('estoque baixo') || textoQuery.includes('critico') || textoQuery.includes('crítico')) {
@@ -204,15 +123,13 @@ router.post('/chat-analise', autenticarToken, async (req, res) => {
 });
 
 // Rota para Gerar e Descarregar o Relatório em PDF (Com Filtro Rigoroso de Produtos Ativos)
-router.get('/exportar-pdf', autenticarToken, async (req, res) => {
+router.get('/exportar-pdf', async (req, res) => {
   try {
-    const usuario = await obterDadosUsuario(req);
+    const empresaNome = req.user?.empresa;
 
-    if (!usuario) {
+    if (!empresaNome) {
       return res.status(401).json({ error: 'Empresa do utilizador não identificada.' });
     }
-
-    const empresaNome = usuario.empresa || 'Nexus Controller';
 
     // 1. Busca produtos da empresa e aplica o filtro estrito
     const { data: produtosBrutos } = await supabaseAdmin

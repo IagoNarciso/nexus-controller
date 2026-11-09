@@ -45,7 +45,7 @@ router.get('/', async (req, res) => {
     const { data, error } = await dbClient
       .from('produtos')
       .select('*')
-      .eq('empresa', empresa) // <-- ISOLAMENTO MULTI-EMPRESA
+      .eq('empresa', empresa) // <-- ISOLAMENTO MULTI-EMPRESA INSTANTÂNEO
       .order('created_at', { ascending: false });
 
     if (error) throw error;

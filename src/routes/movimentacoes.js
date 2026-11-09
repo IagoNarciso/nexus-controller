@@ -54,7 +54,7 @@ router.get('/', async (req, res) => {
     const dadosCompletos = (data || []).map(m => {
       if (!m.usuarios || !m.usuarios.nome) {
         m.usuarios = {
-          nome: req.user.nome || 'Iago Narciso',
+          nome: req.user.nome || 'Utilizador Nexus',
           cargo: req.user.cargo || 'Administrador'
         };
       }

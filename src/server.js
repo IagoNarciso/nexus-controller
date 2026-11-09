@@ -3,6 +3,9 @@ const path = require('path');
 const cors = require('cors');
 require('dotenv').config();
 
+// Importação dos limitadores de taxa (Rate Limiting) para segurança corporativa
+const { limiterLogin, limiterGeral } = require('./middlewares/rateLimiter');
+
 const app = express();
 
 app.use(cors());
@@ -10,6 +13,9 @@ app.use(express.json());
 
 // Sobe um nível a partir de 'src' para servir os ficheiros estáticos da pasta 'public'
 app.use(express.static(path.join(__dirname, '../public')));
+
+// Aplica o limitador geral de requisições a todas as rotas da API
+app.use('/api/', limiterGeral);
 
 // --- ESPIÃO DE ROTAS PARA DIAGNÓSTICO (Com caminhos absolutos seguros para a Vercel) ---
 const inspecionarRota = (nomeSubpasta) => {
@@ -32,8 +38,9 @@ const dashboardRoutes = inspecionarRota('dashboard');
 const fornecedoresRoutes = inspecionarRota('fornecedores');
 const relatoriosRoutes = inspecionarRota('relatorios');
 
-// ⚠️ CORREÇÃO CRUCIAL: Aponta /api/auth diretamente para o utilizadoresRoutes para processar o login com sucesso
-app.use('/api/auth', utilizadoresRoutes);
+// ⚠️ SEGURANÇA REFORÇADA: Aplica o limiterLogin especificamente na rota de autenticação/login
+app.use('/api/auth', limiterLogin, utilizadoresRoutes);
+
 app.use('/api/produtos', produtosRoutes);
 app.use('/api/movimentacoes', movimentacoesRoutes);
 app.use('/api/solicitacoes', solicitacoesRoutes);
