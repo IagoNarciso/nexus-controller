@@ -9,95 +9,12 @@ const dbClient = supabaseAdmin || supabase;
 // Proteger todas as rotas de movimentações
 router.use(authMiddleware);
 
-// Cache em memória para evitar consultar a tabela 'usuarios' em todas as requisições
-const cacheUsuarios = new Map();
-const TEMPO_CACHE_MS = 5 * 60 * 1000; // 5 minutos de validade
-
-// Função auxiliar otimizada para identificar o utilizador logado e a sua respetiva empresa
-async function obterDadosUsuario(req) {
-  const usuarioId = req.user?.id || req.user?.sub || req.user?.userId;
-  const usuarioEmail = req.user?.email;
-  const chaveCache = usuarioId || (usuarioEmail ? usuarioEmail.toLowerCase().trim() : null);
-
-  // 1. Retorno instantâneo (0ms): Verifica se o utilizador já está na memória do servidor
-  if (chaveCache && cacheUsuarios.has(chaveCache)) {
-    const itemCache = cacheUsuarios.get(chaveCache);
-    if (Date.now() - itemCache.timestamp < TEMPO_CACHE_MS) {
-      return itemCache.dados;
-    }
-    cacheUsuarios.delete(chaveCache);
-  }
-
-  // 2. Retorno sem consulta ao banco: Usa os metadados já validados no Token JWT
-  if (req.user?.user_metadata?.empresa || req.user?.empresa) {
-    const empresaToken = req.user?.user_metadata?.empresa || req.user?.empresa;
-    const usuarioJwt = {
-      id: usuarioId,
-      nome: req.user?.user_metadata?.nome || 'Utilizador Nexus',
-      email: usuarioEmail,
-      cargo: req.user?.user_metadata?.cargo || req.user?.cargo || 'admin',
-      empresa: empresaToken,
-      cnpj: req.user?.user_metadata?.cnpj || null
-    };
-    if (chaveCache) {
-      cacheUsuarios.set(chaveCache, { dados: usuarioJwt, timestamp: Date.now() });
-    }
-    return usuarioJwt;
-  }
-
-  // 3. Busca no banco pelo ID exato (apenas se não estiver em cache nem no JWT)
-  if (usuarioId) {
-    const { data: porId } = await dbClient
-      .from('usuarios')
-      .select('id, nome, email, cargo, empresa, cnpj')
-      .eq('id', usuarioId)
-      .maybeSingle();
-
-    if (porId && porId.empresa) {
-      cacheUsuarios.set(chaveCache, { dados: porId, timestamp: Date.now() });
-      return porId;
-    }
-  }
-
-  // 4. Fallback por E-mail
-  if (usuarioEmail) {
-    const { data: porEmail } = await dbClient
-      .from('usuarios')
-      .select('id, nome, email, cargo, empresa, cnpj')
-      .ilike('email', usuarioEmail.trim())
-      .maybeSingle();
-
-    if (porEmail && porEmail.empresa) {
-      cacheUsuarios.set(chaveCache, { dados: porEmail, timestamp: Date.now() });
-      return porEmail;
-    }
-  }
-
-  // 5. Fallback para a conta de demonstração
-  if (usuarioEmail && usuarioEmail.toLowerCase() === 'admin@nexusdemo.com') {
-    const usuarioDemo = {
-      id: usuarioId || '7d537a13-38d1-4447-a4f4-3a214a9be799',
-      nome: 'Admin Demonstração',
-      email: 'admin@nexusdemo.com',
-      cargo: 'admin',
-      empresa: 'Nexus Demo',
-      cnpj: null
-    };
-    if (chaveCache) {
-      cacheUsuarios.set(chaveCache, { dados: usuarioDemo, timestamp: Date.now() });
-    }
-    return usuarioDemo;
-  }
-
-  return null;
-}
-
 // 1. GET /api/movimentacoes - Listar histórico com garantia de responsável em todas as linhas
 router.get('/', async (req, res) => {
   try {
-    const usuario = await obterDadosUsuario(req);
+    const empresa = req.user?.empresa;
 
-    if (!usuario) {
+    if (!empresa) {
       return res.status(401).json({ error: 'Empresa do utilizador não identificada.' });
     }
 
@@ -128,17 +45,17 @@ router.get('/', async (req, res) => {
           cargo
         )
       `)
-      .eq('empresa', usuario.empresa)
+      .eq('empresa', empresa)
       .order('created_at', { ascending: false });
 
     if (error) throw error;
 
-    // Garante que se houver algum registo sem utilizador ligado, assume o nome do admin/utilizador atual da sessão
+    // Garante que se houver algum registo sem utilizador ligado, assume o nome atual da sessão
     const dadosCompletos = (data || []).map(m => {
       if (!m.usuarios || !m.usuarios.nome) {
         m.usuarios = {
-          nome: usuario.nome || 'Iago Narciso', // Fallback garantido para o responsável principal
-          cargo: usuario.cargo || 'Administrador'
+          nome: req.user.nome || 'Iago Narciso',
+          cargo: req.user.cargo || 'Administrador'
         };
       }
       return m;
@@ -154,16 +71,16 @@ router.get('/', async (req, res) => {
 // 2. GET /api/movimentacoes/nao-lidas - Contagem para a badge da empresa
 router.get('/nao-lidas', async (req, res) => {
   try {
-    const usuario = await obterDadosUsuario(req);
+    const empresa = req.user?.empresa;
 
-    if (!usuario) {
+    if (!empresa) {
       return res.status(401).json({ totalNaoLidas: 0 });
     }
 
     const { count, error } = await dbClient
       .from('movimentacoes')
       .select('id', { count: 'exact', head: true })
-      .eq('empresa', usuario.empresa) // <-- CONTA APENAS AS NÃO LIDAS DA MESMA EMPRESA
+      .eq('empresa', empresa)
       .eq('lida', false);
 
     if (error) throw error;
@@ -175,14 +92,14 @@ router.get('/nao-lidas', async (req, res) => {
   }
 });
 
-// 3. PATCH /api/movimentacoes/:id/visualizar - Marcar como lida (Restrito à empresa)
+// 3. PATCH /api/movimentacoes/:id/visualizar - Marcar como lida
 router.patch('/:id/visualizar', async (req, res) => {
   const { id } = req.params;
 
   try {
-    const usuario = await obterDadosUsuario(req);
+    const empresa = req.user?.empresa;
 
-    if (!usuario) {
+    if (!empresa) {
       return res.status(401).json({ error: 'Empresa do utilizador não identificada.' });
     }
 
@@ -190,7 +107,7 @@ router.patch('/:id/visualizar', async (req, res) => {
       .from('movimentacoes')
       .update({ lida: true })
       .eq('id', id)
-      .eq('empresa', usuario.empresa) // <-- GARANTE QUE PERTENCE À MESMA EMPRESA
+      .eq('empresa', empresa)
       .select()
       .maybeSingle();
 
@@ -216,9 +133,9 @@ router.post('/', async (req, res) => {
   }
 
   try {
-    const usuario = await obterDadosUsuario(req);
+    const usuario = req.user;
 
-    if (!usuario) {
+    if (!usuario || !usuario.empresa) {
       return res.status(401).json({ error: 'Empresa do utilizador não identificada.' });
     }
 
@@ -227,7 +144,7 @@ router.post('/', async (req, res) => {
       .from('produtos')
       .select('id, estoque, preco_venda, empresa')
       .eq('id', produto_id)
-      .eq('empresa', usuario.empresa) // <-- PERMITE MOVIMENTAR PRODUTOS DA EMPRESA
+      .eq('empresa', usuario.empresa)
       .maybeSingle();
 
     if (errorProduto || !produto) {
@@ -260,12 +177,12 @@ router.post('/', async (req, res) => {
       obsFinal = obsFinal ? `${obsFinal} (Desconto: R$ ${descFmt})` : `Desconto aplicado: R$ ${descFmt}`;
     }
 
-    // Regista a movimentação carimbando o ID do operador que executou e a Empresa
+    // Regista a movimentação carimbando o ID do operador e a Empresa
     const { data: movData, error: errorMov } = await dbClient
       .from('movimentacoes')
       .insert([{
         usuario_id: usuario.id,
-        empresa: usuario.empresa, // <-- CARIMBA A EMPRESA AUTOMATICAMENTE
+        empresa: usuario.empresa,
         cnpj: usuario.cnpj || null,
         produto_id,
         tipo,

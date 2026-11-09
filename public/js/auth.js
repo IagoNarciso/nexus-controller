@@ -1,88 +1,193 @@
-// --- INTERCEPTOR GLOBAL DE SESSÃO E TOKEN ---
-(function() {
-  // 1. Garante a recuperação do token do Cookie para o LocalStorage se necessário
-  let token = localStorage.getItem('token');
-  if (!token) {
+// --- INTERCEPTOR GLOBAL DE SESSÃO, TOKEN E DEDUPLICAÇÃO DE REQUISIÇÕES ---
+(function () {
+  // 1. Garante a recuperação rápida do token do Cookie para o LocalStorage se necessário
+  let tokenInicial = localStorage.getItem('token');
+  if (!tokenInicial) {
     const match = document.cookie.match(new RegExp('(^| )token=([^;]+)'));
     if (match) {
-      token = match[2];
-      localStorage.setItem('token', token);
+      tokenInicial = match[2];
+      localStorage.setItem('token', tokenInicial);
     }
   }
 
-  // 2. Se não houver token em lado nenhum, manda de volta para o login de forma segura
-  if (!token && !window.location.pathname.includes('login.html')) {
-    window.location.href = 'login.html';
+  // 2. Se não houver token e não estiver na tela de login, redireciona imediatamente
+  const isLoginPage = window.location.pathname.includes('login.html') || window.location.pathname === '/';
+  if (!tokenInicial && !isLoginPage) {
+    window.location.replace('login.html');
     return;
   }
 
-  // 3. Intercepta o fetch globalmente para injetar o token Bearer automaticamente em todas as chamadas à API
+  // Micro-cache em memória (4 segundos) e fila de requisições em andamento para evitar chamadas duplas no carregamento
+  const getCache = new Map();
+  const inFlightRequests = new Map();
+  const CACHE_TTL_MS = 4000;
+
   const originalFetch = window.fetch;
-  window.fetch = async function(url, options = {}) {
-    options.headers = options.headers || {};
-    
-    // Se for uma rota da API e tivermos o token, injeta no cabeçalho
-    if (typeof url === 'string' && url.includes('/api/') && token) {
+
+  window.fetch = async function (url, options = {}) {
+    const tokenAtual = localStorage.getItem('token');
+    const urlStr = typeof url === 'string' ? url : url.toString();
+    const isApiCall = urlStr.includes('/api/');
+    const method = (options.method || 'GET').toUpperCase();
+
+    // Injeta o token Bearer automaticamente em todas as chamadas à API
+    if (isApiCall && tokenAtual) {
+      options.headers = options.headers || {};
       if (options.headers instanceof Headers) {
-        options.headers.set('Authorization', `Bearer ${token}`);
+        options.headers.set('Authorization', `Bearer ${tokenAtual}`);
       } else {
-        options.headers['Authorization'] = `Bearer ${token}`;
+        options.headers['Authorization'] = `Bearer ${tokenAtual}`;
       }
     }
 
+    // Se for uma mutação (POST, PUT, PATCH, DELETE), limpa o micro-cache para garantir dados 100% frescos a seguir
+    if (isApiCall && method !== 'GET') {
+      getCache.clear();
+      inFlightRequests.clear();
+    }
+
+    // Deduplicação e Micro-Cache para chamadas GET da API (elimina pesquisas duplas no carregamento da página)
+    if (isApiCall && method === 'GET' && !options.noCache) {
+      const cached = getCache.get(urlStr);
+      if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+        return new Response(cached.bodyText, {
+          status: cached.status,
+          statusText: cached.statusText,
+          headers: cached.headers
+        });
+      }
+
+      // Se já existir uma requisição idêntica em andamento neste exato milissegundo, aguarda a mesma promessa
+      if (inFlightRequests.has(urlStr)) {
+        const sharedResult = await inFlightRequests.get(urlStr);
+        return new Response(sharedResult.bodyText, {
+          status: sharedResult.status,
+          statusText: sharedResult.statusText,
+          headers: sharedResult.headers
+        });
+      }
+
+      const fetchPromise = (async () => {
+        const response = await originalFetch(url, options);
+
+        if (response.status === 401 && !window.location.pathname.includes('login.html')) {
+          limparSessaoERedirecionar();
+        }
+
+        const bodyText = await response.text();
+        const snapshot = {
+          bodyText,
+          status: response.status,
+          statusText: response.statusText,
+          headers: new Headers(response.headers),
+          timestamp: Date.now()
+        };
+
+        if (response.ok) {
+          getCache.set(urlStr, snapshot);
+        }
+
+        return snapshot;
+      })();
+
+      inFlightRequests.set(urlStr, fetchPromise);
+
+      try {
+        const result = await fetchPromise;
+        return new Response(result.bodyText, {
+          status: result.status,
+          statusText: result.statusText,
+          headers: result.headers
+        });
+      } finally {
+        inFlightRequests.delete(urlStr);
+      }
+    }
+
+    // Execução normal para POST/PUT/DELETE ou chamadas externas
     const response = await originalFetch(url, options);
 
-    // Se o servidor retornar 401 (Unauthorized), limpa a sessão e redireciona para o login
     if (response.status === 401 && !window.location.pathname.includes('login.html')) {
-      console.warn("⚠️ Sessão expirada ou inválida (401). Redirecionando para o login...");
-      localStorage.removeItem('token');
-      localStorage.removeItem('nexus_user');
-      localStorage.removeItem('nexus_user_name');
-      localStorage.removeItem('nexus_user_role');
-      window.location.href = 'login.html';
+      limparSessaoERedirecionar();
     }
 
     return response;
   };
 })();
 
-// Sincronização automática do cabeçalho em qualquer página (Dashboard, Produtos, etc.)
-document.addEventListener('DOMContentLoaded', () => {
-  const nomeSalvo = localStorage.getItem('nexus_user_name');
-  const cargoSalvo = localStorage.getItem('nexus_user_role') || localStorage.getItem('nexus_user_nivel');
+function limparSessaoERedirecionar() {
+  localStorage.removeItem('token');
+  localStorage.removeItem('nexus_user');
+  localStorage.removeItem('nexus_user_name');
+  localStorage.removeItem('nexus_user_role');
+  localStorage.removeItem('nexus_user_nivel');
+  localStorage.removeItem('nexus_user_empresa');
+  document.cookie = 'token=; path=/; max-age=0; SameSite=Lax';
+  window.location.replace('login.html');
+}
 
+function normalizarCargoUI(cargoBruto) {
+  if (!cargoBruto) return 'Administrador';
+  const cargoLower = String(cargoBruto).toLowerCase().trim();
+  if (cargoLower === 'operador' || cargoLower === 'operator') return 'Operador';
+  if (cargoLower === 'admin' || cargoLower === 'administrador') return 'Administrador';
+  return String(cargoBruto).charAt(0).toUpperCase() + String(cargoBruto).slice(1);
+}
+
+function aplicarDadosUsuarioNaUI(nome, cargo, empresa) {
   const elUserName = document.getElementById('userName');
   const elUserRole = document.getElementById('userRole');
   const elUserAvatar = document.getElementById('userAvatar');
+  const elWelcomeName = document.getElementById('welcomeName');
+  const elEmpresaDestaque = document.getElementById('nomeEmpresaDestaque');
+  const elSolSolicitante = document.getElementById('solSolicitante');
 
-  if (elUserName && nomeSalvo) {
-    elUserName.textContent = nomeSalvo;
-  }
+  if (nome) {
+    if (elUserName) elUserName.textContent = nome;
+    if (elWelcomeName) elWelcomeName.textContent = nome.split(' ')[0];
+    if (elSolSolicitante && !elSolSolicitante.value) elSolSolicitante.value = nome;
 
-  if (elUserRole && cargoSalvo) {
-    const cargoLower = cargoSalvo.toLowerCase().trim();
-    let cargoFormatado = 'Administrador';
-    if (cargoLower === 'operador' || cargoLower === 'operator') {
-      cargoFormatado = 'Operador';
-    } else if (cargoLower === 'admin' || cargoLower === 'administrador') {
-      cargoFormatado = 'Administrador';
-    } else {
-      cargoFormatado = cargoSalvo.charAt(0).toUpperCase() + cargoSalvo.slice(1);
+    if (elUserAvatar) {
+      const iniciais = nome
+        .split(' ')
+        .filter(Boolean)
+        .map((n) => n[0])
+        .slice(0, 2)
+        .join('')
+        .toUpperCase();
+      elUserAvatar.textContent = iniciais || 'NX';
     }
-    elUserRole.textContent = cargoFormatado;
   }
 
-  if (elUserAvatar && nomeSalvo) {
-    const iniciais = nomeSalvo
-      .split(' ')
-      .filter(Boolean)
-      .map((n) => n[0])
-      .slice(0, 2)
-      .join('')
-      .toUpperCase();
-    elUserAvatar.textContent = iniciais;
+  if (cargo && elUserRole) {
+    elUserRole.textContent = normalizarCargoUI(cargo);
   }
 
+  if (empresa && elEmpresaDestaque) {
+    elEmpresaDestaque.textContent = empresa;
+  }
+}
+
+// Sincronização imediata (Zero-Latency) do cabeçalho e botões globais em qualquer página
+document.addEventListener('DOMContentLoaded', async () => {
+  // 1. Remove botões de tema duplicados caso o theme.js tenha injetado um extra
+  const botoesTema = document.querySelectorAll('#btnThemeToggle, #themeToggleBtn');
+  if (botoesTema.length > 1) {
+    for (let i = 1; i < botoesTema.length; i++) {
+      botoesTema[i].remove();
+    }
+  }
+
+  // 2. Vincula o Logout globalmente (evita código repetido nos outros JS)
+  const botoesLogout = document.querySelectorAll('#logoutBtn, #logoutBtnSidebar');
+  botoesLogout.forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      limparSessaoERedirecionar();
+    });
+  });
+
+  // 3. Preenche o E-mail salvo na tela de Login (Lembrar de mim)
   const emailSalvo = localStorage.getItem('nexus_lembrar_email');
   if (emailSalvo) {
     const inputEmail = document.getElementById('login-email');
@@ -90,9 +195,38 @@ document.addEventListener('DOMContentLoaded', () => {
     if (inputEmail) inputEmail.value = emailSalvo;
     if (checkLembrar) checkLembrar.checked = true;
   }
+
+  // 4. Hidrata o cabeçalho instantaneamente via LocalStorage (0ms de espera)
+  const nomeSalvo = localStorage.getItem('nexus_user_name');
+  const cargoSalvo = localStorage.getItem('nexus_user_role') || localStorage.getItem('nexus_user_nivel');
+  const empresaSalva = localStorage.getItem('nexus_user_empresa');
+
+  aplicarDadosUsuarioNaUI(nomeSalvo, cargoSalvo, empresaSalva);
+
+  // 5. Apenas consulta /api/utilizadores/perfil se faltar algum dado essencial no LocalStorage
+  const token = localStorage.getItem('token');
+  const isLoginPage = window.location.pathname.includes('login.html') || window.location.pathname === '/';
+
+  if (token && !isLoginPage && (!nomeSalvo || !cargoSalvo)) {
+    try {
+      const res = await fetch('/api/utilizadores/perfil');
+      if (res.ok) {
+        const perfil = await res.json();
+        const cargoFmt = normalizarCargoUI(perfil.cargo);
+        localStorage.setItem('nexus_user', JSON.stringify(perfil));
+        localStorage.setItem('nexus_user_name', perfil.nome || 'Utilizador');
+        localStorage.setItem('nexus_user_role', cargoFmt);
+        localStorage.setItem('nexus_user_nivel', cargoFmt);
+        localStorage.setItem('nexus_user_empresa', perfil.empresa || 'Nexus Controller');
+        aplicarDadosUsuarioNaUI(perfil.nome, cargoFmt, perfil.empresa);
+      }
+    } catch (err) {
+      // Silencioso para não bloquear a interface
+    }
+  }
 });
 
-// Função de Login Principal no Frontend (Com suporte a Lembrar de Mim)
+// Função de Login Principal no Frontend (Redirecionamento Instantâneo sem Delay)
 async function handleLoginComLembrar(event) {
   if (event) event.preventDefault();
 
@@ -120,29 +254,28 @@ async function handleLoginComLembrar(event) {
     });
 
     const resultado = await response.json();
-    console.log("Resposta recebida do login:", resultado);
 
     if (response.ok && (resultado.token || resultado.session?.access_token)) {
       const tokenToSave = resultado.token || resultado.session.access_token;
       const userObj = resultado.user || resultado.usuario || {};
-      
+
       const nomeFinal = resultado.nome || userObj.nome || userObj.user_metadata?.nome || emailInput.split('@')[0];
-      const cargoFinal = resultado.cargo || resultado.role || userObj.cargo || userObj.role || userObj.user_metadata?.cargo || 'Administrador';
+      const cargoFinal = normalizarCargoUI(
+        resultado.cargo || resultado.role || userObj.cargo || userObj.role || userObj.user_metadata?.cargo
+      );
+      const empresaFinal = resultado.empresa || userObj.empresa || userObj.user_metadata?.empresa || 'Nexus Controller';
 
       localStorage.setItem('token', tokenToSave);
       localStorage.setItem('nexus_user', JSON.stringify(userObj));
       localStorage.setItem('nexus_user_name', nomeFinal);
       localStorage.setItem('nexus_user_role', cargoFinal);
       localStorage.setItem('nexus_user_nivel', cargoFinal);
-      localStorage.setItem('nexus_user_empresa', resultado.empresa || userObj.empresa || 'Nexus Controller');
-      
+      localStorage.setItem('nexus_user_empresa', empresaFinal);
+
       document.cookie = `token=${tokenToSave}; path=/; max-age=86400; SameSite=Lax`;
 
-      console.log("Token, Nome e Cargo gravados com sucesso no Storage e Cookie!");
-
-      setTimeout(() => {
-        window.location.href = 'dashboard.html';
-      }, 150);
+      // Redirecionamento imediato (sem setTimeout desnecessário)
+      window.location.replace('dashboard.html');
     } else {
       if (alertMsg) {
         alertMsg.className = 'p-4 rounded-xl text-sm border font-medium bg-red-50 text-red-700 border-red-200';
@@ -217,7 +350,7 @@ async function handleRegister(event) {
       }
       setTimeout(() => {
         window.location.reload();
-      }, 2000);
+      }, 1000);
     } else {
       if (alertMsg) {
         alertMsg.className = 'p-4 rounded-xl text-sm border font-medium bg-red-50 text-red-700 border-red-200';
@@ -272,7 +405,7 @@ async function enviarRecuperacaoDireta(event) {
       }
       setTimeout(() => {
         fecharModalRecuperacao();
-      }, 2500);
+      }, 1500);
     } else {
       if (alertBox) {
         alertBox.className = 'rounded-xl p-3 text-xs bg-red-50 text-red-700 border border-red-200 mb-3';
@@ -338,7 +471,7 @@ function togglePassword(inputId, iconId) {
 async function loginDemo() {
   const emailInput = document.getElementById('login-email');
   const passwordInput = document.getElementById('login-password');
-  
+
   if (emailInput) emailInput.value = 'admin@nexusdemo.com';
   if (passwordInput) passwordInput.value = 'demo123';
 

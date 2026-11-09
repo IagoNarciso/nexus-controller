@@ -9,88 +9,6 @@ const dbClient = supabaseAdmin || supabase;
 // Proteger todas as rotas de produtos
 router.use(authMiddleware);
 
-// Cache em memória para evitar consultar a tabela 'usuarios' em todas as requisições
-const cacheUsuarios = new Map();
-const TEMPO_CACHE_MS = 5 * 60 * 1000; // 5 minutos de validade
-
-// Função auxiliar otimizada para identificar o utilizador logado e a sua respetiva empresa
-async function obterDadosUsuario(req) {
-  const usuarioId = req.user?.id || req.user?.sub || req.user?.userId;
-  const usuarioEmail = req.user?.email;
-  const chaveCache = usuarioId || (usuarioEmail ? usuarioEmail.toLowerCase().trim() : null);
-
-  // 1. Retorno instantâneo (0ms): Verifica se o utilizador já está na memória do servidor
-  if (chaveCache && cacheUsuarios.has(chaveCache)) {
-    const itemCache = cacheUsuarios.get(chaveCache);
-    if (Date.now() - itemCache.timestamp < TEMPO_CACHE_MS) {
-      return itemCache.dados;
-    }
-    cacheUsuarios.delete(chaveCache);
-  }
-
-  // 2. Retorno sem consulta ao banco: Usa os metadados já validados no Token JWT
-  if (req.user?.user_metadata?.empresa) {
-    const usuarioJwt = {
-      id: usuarioId,
-      nome: req.user.user_metadata.nome || 'Utilizador',
-      email: usuarioEmail,
-      cargo: req.user.user_metadata.cargo || 'admin',
-      empresa: req.user.user_metadata.empresa,
-      cnpj: req.user.user_metadata.cnpj || null
-    };
-    if (chaveCache) {
-      cacheUsuarios.set(chaveCache, { dados: usuarioJwt, timestamp: Date.now() });
-    }
-    return usuarioJwt;
-  }
-
-  // 3. Busca no banco pelo ID exato (apenas se não estiver em cache nem no JWT)
-  if (usuarioId) {
-    const { data: usuarioPorId } = await dbClient
-      .from('usuarios')
-      .select('id, nome, email, cargo, empresa, cnpj')
-      .eq('id', usuarioId)
-      .maybeSingle();
-
-    if (usuarioPorId && usuarioPorId.empresa) {
-      cacheUsuarios.set(chaveCache, { dados: usuarioPorId, timestamp: Date.now() });
-      return usuarioPorId;
-    }
-  }
-
-  // 4. Fallback robusto por E-mail
-  if (usuarioEmail) {
-    const { data: usuarioPorEmail } = await dbClient
-      .from('usuarios')
-      .select('id, nome, email, cargo, empresa, cnpj')
-      .ilike('email', usuarioEmail.trim())
-      .maybeSingle();
-
-    if (usuarioPorEmail && usuarioPorEmail.empresa) {
-      cacheUsuarios.set(chaveCache, { dados: usuarioPorEmail, timestamp: Date.now() });
-      return usuarioPorEmail;
-    }
-  }
-
-  // 5. Fallback direto de segurança para a conta demo oficial do TCC
-  if (usuarioEmail && usuarioEmail.toLowerCase() === 'admin@nexusdemo.com') {
-    const usuarioDemo = {
-      id: usuarioId || '7d537a13-38d1-4447-a4f4-3a214a9be799',
-      nome: 'Admin Demonstração',
-      email: 'admin@nexusdemo.com',
-      cargo: 'admin',
-      empresa: 'Nexus Demo',
-      cnpj: null
-    };
-    if (chaveCache) {
-      cacheUsuarios.set(chaveCache, { dados: usuarioDemo, timestamp: Date.now() });
-    }
-    return usuarioDemo;
-  }
-
-  return null;
-}
-
 // Helper para gerar SKU automático baseado na categoria
 function gerarSKU(categoria) {
   const prefixo = (categoria && categoria.trim().length >= 3)
@@ -100,7 +18,7 @@ function gerarSKU(categoria) {
   return `${prefixo}-${numeroAleatorio}`;
 }
 
-// Helper para extrair o preço de custo real do produto (priorizando sempre o custo sobre a venda)
+// Helper para extrair o preço de custo real do produto
 function obterCustoUnitario(produto) {
   if (!produto) return 0;
   const custo = parseFloat(
@@ -119,16 +37,15 @@ function obterCustoUnitario(produto) {
 // 1. GET /api/produtos - Listar produtos da empresa do utilizador logado
 router.get('/', async (req, res) => {
   try {
-    const usuario = await obterDadosUsuario(req);
-
-    if (!usuario) {
+    const empresa = req.user?.empresa;
+    if (!empresa) {
       return res.status(401).json({ error: 'Empresa do utilizador não identificada.' });
     }
 
     const { data, error } = await dbClient
       .from('produtos')
       .select('*')
-      .eq('empresa', usuario.empresa) // <-- ISOLAMENTO MULTI-EMPRESA
+      .eq('empresa', empresa) // <-- ISOLAMENTO MULTI-EMPRESA
       .order('created_at', { ascending: false });
 
     if (error) throw error;
@@ -143,16 +60,15 @@ router.get('/', async (req, res) => {
 // 1.1. GET /api/produtos/pendentes - Listar produtos que aguardam moderação
 router.get('/pendentes', async (req, res) => {
   try {
-    const usuario = await obterDadosUsuario(req);
-
-    if (!usuario) {
+    const empresa = req.user?.empresa;
+    if (!empresa) {
       return res.status(401).json({ error: 'Empresa do utilizador não identificada.' });
     }
 
     const { data, error } = await dbClient
       .from('produtos')
       .select('*')
-      .eq('empresa', usuario.empresa) // <-- FILTRA PELA EMPRESA
+      .eq('empresa', empresa)
       .eq('status', 'pendente')
       .order('created_at', { ascending: false });
 
@@ -168,16 +84,15 @@ router.get('/pendentes', async (req, res) => {
 // 1.2. GET /api/produtos/estoque-baixo - Listar produtos com estoque crítico (<= 12)
 router.get('/estoque-baixo', async (req, res) => {
   try {
-    const usuario = await obterDadosUsuario(req);
-
-    if (!usuario) {
+    const empresa = req.user?.empresa;
+    if (!empresa) {
       return res.status(401).json({ error: 'Empresa do utilizador não identificada.' });
     }
 
     const { data, error } = await dbClient
       .from('produtos')
       .select('*')
-      .eq('empresa', usuario.empresa) // <-- FILTRA PELA EMPRESA
+      .eq('empresa', empresa)
       .lte('estoque', 12)
       .order('estoque', { ascending: true });
 
@@ -190,7 +105,7 @@ router.get('/estoque-baixo', async (req, res) => {
   }
 });
 
-// 2. POST /api/produtos - Criar novo produto vinculado à empresa (Força estritamente o estado pendente)
+// 2. POST /api/produtos - Criar novo produto vinculado à empresa
 router.post('/', async (req, res) => {
   const { 
     nome, 
@@ -215,14 +130,10 @@ router.post('/', async (req, res) => {
   const qtdMinimaFinal = parseInt(quantidade_minima, 10) || 12;
 
   try {
-    const usuario = await obterDadosUsuario(req);
-
-    if (!usuario) {
+    const usuario = req.user;
+    if (!usuario || !usuario.empresa) {
       return res.status(401).json({ error: 'Empresa do utilizador não identificada.' });
     }
-
-    // Força obrigatoriamente o status como 'pendente', ignorando qualquer parâmetro externo
-    const statusFinal = 'pendente';
 
     const novoProdutoPayload = {
       nome: nome.trim(),
@@ -234,10 +145,10 @@ router.post('/', async (req, res) => {
       quantidade_minima: qtdMinimaFinal,
       fornecedor: fornecedor ? fornecedor.trim() : null,
       usuario_id: usuario.id,
-      empresa: usuario.empresa, // <-- HERANÇA OBRIGATÓRIA DA EMPRESA
+      empresa: usuario.empresa,
       cnpj: usuario.cnpj || null,
       ativo: true,
-      status: statusFinal 
+      status: 'pendente' 
     };
 
     const { data, error } = await dbClient
@@ -257,7 +168,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-// 3. PUT /api/produtos/:id - Editar produto existente (Restrito à mesma empresa)
+// 3. PUT /api/produtos/:id - Editar produto existente
 router.put('/:id', async (req, res) => {
   const { id } = req.params;
   const { 
@@ -274,9 +185,8 @@ router.put('/:id', async (req, res) => {
   } = req.body;
 
   try {
-    const usuario = await obterDadosUsuario(req);
-
-    if (!usuario) {
+    const empresa = req.user?.empresa;
+    if (!empresa) {
       return res.status(401).json({ error: 'Empresa do utilizador não identificada.' });
     }
 
@@ -299,7 +209,7 @@ router.put('/:id', async (req, res) => {
       .from('produtos')
       .update(updatePayload)
       .eq('id', id)
-      .eq('empresa', usuario.empresa) // <-- GARANTE QUE SÓ ATUALIZA PRODUTOS DA PRÓPRIA EMPRESA
+      .eq('empresa', empresa)
       .select();
 
     if (error) throw error;
@@ -310,13 +220,12 @@ router.put('/:id', async (req, res) => {
 
     const produtoEditado = data[0];
 
-    // Se o preço de custo foi atualizado, sincroniza também a movimentação de compra inicial deste produto
     if (updatePayload.preco_custo !== undefined && updatePayload.preco_custo > 0) {
       await dbClient
         .from('movimentacoes')
         .update({ valor_unitario: updatePayload.preco_custo })
         .eq('produto_id', id)
-        .eq('empresa', usuario.empresa)
+        .eq('empresa', empresa)
         .in('tipo', ['compra', 'entrada']);
     }
 
@@ -327,19 +236,18 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// 4. PATCH /api/produtos/:id/status - Aprovar ou Rejeitar produto (Moderação restrita à empresa)
+// 4. PATCH /api/produtos/:id/status - Aprovar ou Rejeitar produto
 router.patch('/:id/status', async (req, res) => {
   const { id } = req.params;
-  const { status } = req.body; // Espera 'aprovado' ou 'rejeitado'
+  const { status } = req.body;
 
   if (!['aprovado', 'rejeitado'].includes(status)) {
     return res.status(400).json({ error: 'Estado inválido. Utilize "aprovado" ou "rejeitado".' });
   }
 
   try {
-    const usuario = await obterDadosUsuario(req);
-
-    if (!usuario) {
+    const usuario = req.user;
+    if (!usuario || !usuario.empresa) {
       return res.status(401).json({ error: 'Empresa do utilizador não identificada.' });
     }
 
@@ -347,7 +255,7 @@ router.patch('/:id/status', async (req, res) => {
       .from('produtos')
       .update({ status, ultima_atualizacao: new Date().toISOString() })
       .eq('id', id)
-      .eq('empresa', usuario.empresa) // <-- ISOLAMENTO MULTI-EMPRESA
+      .eq('empresa', usuario.empresa)
       .select();
 
     if (error) throw error;
@@ -358,7 +266,6 @@ router.patch('/:id/status', async (req, res) => {
 
     const produtoAtualizado = data[0];
 
-    // Se aprovado, gera automaticamente o registo financeiro de compra/entrada USANDO O PREÇO DE CUSTO
     if (status === 'aprovado') {
       const quantidadeEstoque = parseInt(produtoAtualizado.estoque || produtoAtualizado.quantidade || 0, 10);
       const custoUnitarioCompra = obterCustoUnitario(produtoAtualizado);
@@ -373,7 +280,7 @@ router.patch('/:id/status', async (req, res) => {
               produto_id: produtoAtualizado.id,
               tipo: 'compra',
               quantidade: quantidadeEstoque,
-              valor_unitario: custoUnitarioCompra, // <-- CORRIGIDO: Usa o Preço de Custo e não o de Venda!
+              valor_unitario: custoUnitarioCompra,
               observacao: `Aprovação automática de entrada do produto: ${produtoAtualizado.nome}`,
               lida: false
             }
@@ -392,15 +299,14 @@ router.patch('/:id/status', async (req, res) => {
   }
 });
 
-// 5. PATCH /api/produtos/:id/ativo - Alternar ativo/inativo (Restrito à empresa)
+// 5. PATCH /api/produtos/:id/ativo - Alternar ativo/inativo
 router.patch('/:id/ativo', async (req, res) => {
   const { id } = req.params;
   const { ativo } = req.body;
 
   try {
-    const usuario = await obterDadosUsuario(req);
-
-    if (!usuario) {
+    const empresa = req.user?.empresa;
+    if (!empresa) {
       return res.status(401).json({ error: 'Empresa do utilizador não identificada.' });
     }
 
@@ -408,7 +314,7 @@ router.patch('/:id/ativo', async (req, res) => {
       .from('produtos')
       .update({ ativo, ultima_atualizacao: new Date().toISOString() })
       .eq('id', id)
-      .eq('empresa', usuario.empresa) // <-- ISOLAMENTO MULTI-EMPRESA
+      .eq('empresa', empresa)
       .select();
 
     if (error) throw error;
@@ -424,14 +330,13 @@ router.patch('/:id/ativo', async (req, res) => {
   }
 });
 
-// 6. DELETE /api/produtos/:id - Remover produto (Restrito à empresa)
+// 6. DELETE /api/produtos/:id - Remover produto
 router.delete('/:id', async (req, res) => {
   const { id } = req.params;
 
   try {
-    const usuario = await obterDadosUsuario(req);
-
-    if (!usuario) {
+    const empresa = req.user?.empresa;
+    if (!empresa) {
       return res.status(401).json({ error: 'Empresa do utilizador não identificada.' });
     }
 
@@ -439,7 +344,7 @@ router.delete('/:id', async (req, res) => {
       .from('produtos')
       .delete()
       .eq('id', id)
-      .eq('empresa', usuario.empresa) // <-- IMPEDE EXCLUIR PRODUTO DE OUTRA EMPRESA
+      .eq('empresa', empresa)
       .select();
 
     if (error) throw error;

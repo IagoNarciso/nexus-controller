@@ -6,104 +6,22 @@ const authMiddleware = require('../middlewares/auth');
 // Usa o supabaseAdmin para evitar bloqueios de RLS nas operações validadas pelo backend
 const dbClient = supabaseAdmin || supabase;
 
+// Proteger todas as rotas de fornecedores
 router.use(authMiddleware);
-
-// Cache em memória para evitar consultar a tabela 'usuarios' em todas as requisições
-const cacheUsuarios = new Map();
-const TEMPO_CACHE_MS = 5 * 60 * 1000; // 5 minutos de validade
-
-// Função auxiliar otimizada para identificar o utilizador logado e a sua respetiva empresa
-async function obterDadosUsuario(req) {
-  const usuarioId = req.user?.id || req.user?.sub || req.user?.userId;
-  const usuarioEmail = req.user?.email;
-  const chaveCache = usuarioId || (usuarioEmail ? usuarioEmail.toLowerCase().trim() : null);
-
-  // 1. Retorno instantâneo (0ms): Verifica se o utilizador já está na memória do servidor
-  if (chaveCache && cacheUsuarios.has(chaveCache)) {
-    const itemCache = cacheUsuarios.get(chaveCache);
-    if (Date.now() - itemCache.timestamp < TEMPO_CACHE_MS) {
-      return itemCache.dados;
-    }
-    cacheUsuarios.delete(chaveCache);
-  }
-
-  // 2. Retorno sem consulta ao banco: Usa os metadados já validados no Token JWT
-  if (req.user?.user_metadata?.empresa || req.user?.empresa) {
-    const empresaToken = req.user?.user_metadata?.empresa || req.user?.empresa;
-    const usuarioJwt = {
-      id: usuarioId,
-      nome: req.user?.user_metadata?.nome || 'Utilizador Nexus',
-      email: usuarioEmail,
-      cargo: req.user?.user_metadata?.cargo || req.user?.cargo || 'admin',
-      empresa: empresaToken,
-      cnpj: req.user?.user_metadata?.cnpj || null
-    };
-    if (chaveCache) {
-      cacheUsuarios.set(chaveCache, { dados: usuarioJwt, timestamp: Date.now() });
-    }
-    return usuarioJwt;
-  }
-
-  // 3. Busca no banco pelo ID exato (apenas se não estiver em cache nem no JWT)
-  if (usuarioId) {
-    const { data: porId } = await dbClient
-      .from('usuarios')
-      .select('id, nome, email, cargo, empresa, cnpj')
-      .eq('id', usuarioId)
-      .maybeSingle();
-
-    if (porId && porId.empresa) {
-      cacheUsuarios.set(chaveCache, { dados: porId, timestamp: Date.now() });
-      return porId;
-    }
-  }
-
-  // 4. Fallback por E-mail
-  if (usuarioEmail) {
-    const { data: porEmail } = await dbClient
-      .from('usuarios')
-      .select('id, nome, email, cargo, empresa, cnpj')
-      .ilike('email', usuarioEmail.trim())
-      .maybeSingle();
-
-    if (porEmail && porEmail.empresa) {
-      cacheUsuarios.set(chaveCache, { dados: porEmail, timestamp: Date.now() });
-      return porEmail;
-    }
-  }
-
-  // 5. Fallback para a conta de demonstração
-  if (usuarioEmail && usuarioEmail.toLowerCase() === 'admin@nexusdemo.com') {
-    const usuarioDemo = {
-      id: usuarioId || '7d537a13-38d1-4447-a4f4-3a214a9be799',
-      nome: 'Admin Demonstração',
-      email: 'admin@nexusdemo.com',
-      cargo: 'admin',
-      empresa: 'Nexus Demo',
-      cnpj: null
-    };
-    if (chaveCache) {
-      cacheUsuarios.set(chaveCache, { dados: usuarioDemo, timestamp: Date.now() });
-    }
-    return usuarioDemo;
-  }
-
-  return null;
-}
 
 // GET /api/fornecedores - Listar fornecedores apenas da empresa do utilizador logado
 router.get('/', async (req, res) => {
   try {
-    const usuario = await obterDadosUsuario(req);
+    const empresa = req.user?.empresa;
 
-    if (!usuario) {
+    if (!empresa) {
       return res.status(401).json({ error: 'Empresa do utilizador não identificada.' });
     }
 
     const { data, error } = await dbClient
       .from('fornecedores')
       .select('*')
-      .eq('empresa', usuario.empresa) // <-- ISOLAMENTO MULTI-EMPRESA
+      .eq('empresa', empresa) // <-- ISOLAMENTO MULTI-EMPRESA INSTANTÂNEO
       .order('nome', { ascending: true });
 
     if (error) throw error;
@@ -134,20 +52,21 @@ router.post('/', async (req, res) => {
   }
 
   try {
-    const usuario = await obterDadosUsuario(req);
+    const usuario = req.user;
 
-    if (!usuario) {
+    if (!usuario || !usuario.empresa) {
       return res.status(401).json({ error: 'Empresa do utilizador não identificada.' });
     }
 
     const { data, error } = await dbClient
       .from('fornecedores')
       .insert([{
-        usuario_id: usuario.id, // Regista quem cadastrou para auditoria
-        empresa: usuario.empresa, // <-- CARIMBA AUTOMATICAMENTE A EMPRESA DO UTILIZADOR LOGADO
+        usuario_id: usuario.id,
+        empresa: usuario.empresa, // <-- CARIMBA AUTOMATICAMENTE A EMPRESA
+        cnpj_empresa: usuario.cnpj || null,
         nome: nome.trim(),
         categoria: categoria || null,
-        cnpj: cnpj || null, // CNPJ do próprio fornecedor cadastrado no formulário
+        cnpj: cnpj || null,
         responsavel: responsavel || null,
         telefone: telefone || null,
         email: email || null,
@@ -186,13 +105,12 @@ router.put('/:id', async (req, res) => {
   } = req.body;
 
   try {
-    const usuario = await obterDadosUsuario(req);
+    const empresa = req.user?.empresa;
 
-    if (!usuario) {
+    if (!empresa) {
       return res.status(401).json({ error: 'Empresa do utilizador não identificada.' });
     }
 
-    // Monta o objeto de atualização dinamicamente apenas com o que vier preenchido
     const camposAtualizados = {};
     if (nome !== undefined) camposAtualizados.nome = nome;
     if (categoria !== undefined) camposAtualizados.categoria = categoria || null;
@@ -210,7 +128,7 @@ router.put('/:id', async (req, res) => {
       .from('fornecedores')
       .update(camposAtualizados)
       .eq('id', id)
-      .eq('empresa', usuario.empresa) // <-- GARANTE QUE SÓ ATUALIZA FORNECEDORES DA PRÓPRIA EMPRESA
+      .eq('empresa', empresa) // <-- GARANTE O ISOLAMENTO MULTI-EMPRESA
       .select()
       .maybeSingle();
 
@@ -232,9 +150,9 @@ router.delete('/:id', async (req, res) => {
   const { id } = req.params;
 
   try {
-    const usuario = await obterDadosUsuario(req);
+    const empresa = req.user?.empresa;
 
-    if (!usuario) {
+    if (!empresa) {
       return res.status(401).json({ error: 'Empresa do utilizador não identificada.' });
     }
 
@@ -242,7 +160,7 @@ router.delete('/:id', async (req, res) => {
       .from('fornecedores')
       .delete()
       .eq('id', id)
-      .eq('empresa', usuario.empresa) // <-- IMPEDE EXCLUIR FORNECEDOR DE OUTRA EMPRESA
+      .eq('empresa', empresa) // <-- IMPEDE EXCLUIR FORNECEDOR DE OUTRA EMPRESA
       .select()
       .maybeSingle();
 

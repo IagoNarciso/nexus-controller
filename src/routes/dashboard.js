@@ -6,85 +6,7 @@ const auth = require('../middlewares/auth');
 // Usa o supabaseAdmin para evitar bloqueios de RLS nas consultas filtradas por empresa
 const dbClient = supabaseAdmin || supabase;
 
-// Cache em memória para evitar consultar a tabela 'usuarios' repetidamente
-const cacheUsuarios = new Map();
-const TEMPO_CACHE_MS = 5 * 60 * 1000; // 5 minutos de validade
-
-// Função auxiliar otimizada para identificar o utilizador e a empresa
-async function obterDadosUsuario(req) {
-  const usuarioId = req.user?.id || req.user?.sub || req.user?.userId;
-  const usuarioEmail = req.user?.email;
-  const chaveCache = usuarioId || (usuarioEmail ? usuarioEmail.toLowerCase().trim() : null);
-
-  // 1. Retorno instantâneo (0ms): Verifica se o utilizador já está na memória
-  if (chaveCache && cacheUsuarios.has(chaveCache)) {
-    const itemCache = cacheUsuarios.get(chaveCache);
-    if (Date.now() - itemCache.timestamp < TEMPO_CACHE_MS) {
-      return itemCache.dados;
-    }
-    cacheUsuarios.delete(chaveCache);
-  }
-
-  // 2. Retorno sem banco: Metadados já validados no Token JWT
-  if (req.user?.user_metadata?.empresa || req.user?.empresa) {
-    const empresaToken = req.user?.user_metadata?.empresa || req.user?.empresa;
-    const usuarioJwt = {
-      id: usuarioId,
-      nome: req.user?.user_metadata?.nome || 'Utilizador Nexus',
-      email: usuarioEmail,
-      cargo: req.user?.user_metadata?.cargo || req.user?.cargo || 'admin',
-      empresa: empresaToken,
-      cnpj: req.user?.user_metadata?.cnpj || null
-    };
-    if (chaveCache) cacheUsuarios.set(chaveCache, { dados: usuarioJwt, timestamp: Date.now() });
-    return usuarioJwt;
-  }
-
-  // 3. Busca no banco pelo ID exato
-  if (usuarioId) {
-    const { data: porId } = await dbClient
-      .from('usuarios')
-      .select('id, nome, email, cargo, empresa, cnpj')
-      .eq('id', usuarioId)
-      .maybeSingle();
-
-    if (porId && porId.empresa) {
-      cacheUsuarios.set(chaveCache, { dados: porId, timestamp: Date.now() });
-      return porId;
-    }
-  }
-
-  // 4. Fallback por E-mail
-  if (usuarioEmail) {
-    const { data: porEmail } = await dbClient
-      .from('usuarios')
-      .select('id, nome, email, cargo, empresa, cnpj')
-      .ilike('email', usuarioEmail.trim())
-      .maybeSingle();
-
-    if (porEmail && porEmail.empresa) {
-      cacheUsuarios.set(chaveCache, { dados: porEmail, timestamp: Date.now() });
-      return porEmail;
-    }
-  }
-
-  // 5. Fallback da conta demo
-  if (usuarioEmail && usuarioEmail.toLowerCase() === 'admin@nexusdemo.com') {
-    const usuarioDemo = {
-      id: usuarioId || '7d537a13-38d1-4447-a4f4-3a214a9be799',
-      nome: 'Admin Demonstração',
-      email: 'admin@nexusdemo.com',
-      cargo: 'admin',
-      empresa: 'Nexus Demo'
-    };
-    if (chaveCache) cacheUsuarios.set(chaveCache, { dados: usuarioDemo, timestamp: Date.now() });
-    return usuarioDemo;
-  }
-
-  return null;
-}
-
-// Função auxiliar para extrair o preço de custo/aquisição do produto
+// Helper para extrair o preço de custo/aquisição do produto
 function obterPrecoCustoProduto(p) {
   if (!p) return 0;
   const possiveisCustos = [
@@ -107,8 +29,7 @@ function obterPrecoCustoProduto(p) {
 // ROTA: GET /api/dashboard/estatisticas?mes=YYYY-MM&periodo=7
 router.get('/estatisticas', auth, async (req, res) => {
   try {
-    const usuario = await obterDadosUsuario(req);
-    const empresaUsuario = usuario?.empresa;
+    const empresaUsuario = req.user?.empresa;
 
     if (!empresaUsuario) {
       return res.status(401).json({ error: 'Empresa do utilizador não identificada.' });
@@ -148,7 +69,6 @@ router.get('/estatisticas', auth, async (req, res) => {
         .lt('created_at', fimPeriodo);
     }
 
-    // Otimização: Só descarrega do banco os dados das movimentações necessários para o período do gráfico
     const dataLimiteGrafico = new Date(dataAtual.getFullYear(), dataAtual.getMonth() - qtdMeses + 1, 1).toISOString();
 
     const [resProdutos, resMovimentacoes, resSolicitacoes, resTodasMovimentacoes] = await Promise.all([
@@ -228,7 +148,6 @@ router.get('/estatisticas', auth, async (req, res) => {
     let totalUnidadesVendidas = 0;
     const vendasPorProduto = {};
 
-    // Mapas auxiliares para evitar duplicidade caso o produto tenha estoque inicial sem movimentação
     const entradasPorProdutoHistorico = {};
     const saidasPorProdutoHistorico = {};
 
@@ -250,7 +169,6 @@ router.get('/estatisticas', auth, async (req, res) => {
       const quantidadeOperacao = parseInt(m.quantidade || 0, 10);
       const valorUnitarioMov = parseFloat(m.valor_unitario || 0);
 
-      // Localiza o produto associado pelo ID ou pelo nome
       const prodAssociado =
         (m.produto_id && mapaProdutosPorId[String(m.produto_id)]) ||
         (m.produto_nome && mapaProdutosPorNome[String(m.produto_nome).trim().toLowerCase()]) ||
@@ -270,7 +188,6 @@ router.get('/estatisticas', auth, async (req, res) => {
         }
       } 
       else if (tipoOperacao === 'compra' || tipoOperacao === 'entrada') {
-        // Prioriza o preço de custo da compra (e não o preço de venda)
         const custoNoMovimento = parseFloat(m.preco_custo ?? m.custo ?? m.valor_custo ?? 0);
         const custoNoProduto = obterPrecoCustoProduto(prodAssociado);
 
@@ -285,14 +202,12 @@ router.get('/estatisticas', auth, async (req, res) => {
       }
     });
 
-    // Contabiliza o investimento de produtos criados no período que já entraram com estoque inicial direto
     produtos.forEach(p => {
       const prodId = String(p.id);
       const qtdAtual = Number(p.estoque ?? p.quantidade ?? 0);
       const entHist = entradasPorProdutoHistorico[prodId] || 0;
       const saiHist = saidasPorProdutoHistorico[prodId] || 0;
 
-      // Se o produto tem saldo que não veio de uma linha em 'movimentacoes', é estoque inicial de cadastro
       const estoqueInicialDireto = Math.max(0, qtdAtual + saiHist - entHist);
 
       if (estoqueInicialDireto > 0) {
@@ -319,7 +234,6 @@ router.get('/estatisticas', auth, async (req, res) => {
     const entradasValores = [];
     const saidasValores = [];
 
-    // Geração dinâmica dos meses com base no período selecionado (1, 3, 7 ou 12 meses)
     const anoAtualBase = dataAtual.getFullYear();
     const mesAtualBase = dataAtual.getMonth();
 
@@ -348,7 +262,6 @@ router.get('/estatisticas', auth, async (req, res) => {
       saidasValores.push(saiMes);
     }
 
-    // Retorna a chave dinâmica correspondente ao período solicitado pelo frontend
     const movimentacaoReal = {
       [qtdMeses]: {
         labels: mesesLabels,
@@ -389,6 +302,7 @@ router.get('/estatisticas', auth, async (req, res) => {
       qtdEstoqueBaixo,
       pedidosPendentes: solicitacoes.length,
       giroEstoque,
+      cobertruraMedia: coberturaMedia,
       coberturaMedia,
       saudeEstoque,
       taxaRuptura,
