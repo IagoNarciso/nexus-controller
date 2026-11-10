@@ -1,5 +1,5 @@
 /**
- * Exibe uma notificação Toast flutuante moderna
+ * Exibe uma notificação Toast flutuante padronizada idêntica à de Movimentações
  * @param {string} mensagem - Texto a ser exibido
  * @param {string} tipo - 'sucesso', 'erro' ou 'aviso'
  */
@@ -7,32 +7,32 @@ function mostrarToast(mensagem, tipo = 'sucesso') {
   const container = document.getElementById('toastContainer');
   if (!container) return;
 
-  // Configuração de cores baseada no design system do projeto
+  // Configuração visual idêntica ao padrão de movimentações do sistema
   const configs = {
     sucesso: {
-      bg: 'bg-emerald-50 dark:bg-emerald-900/40 border-emerald-500 text-emerald-800 dark:text-emerald-200',
-      icone: '✅'
+      bg: 'bg-emerald-600 text-white shadow-lg shadow-emerald-900/20',
+      icone: 'fa-circle-check'
     },
     erro: {
-      bg: 'bg-red-50 dark:bg-red-900/40 border-red-500 text-red-800 dark:text-red-200',
-      icone: '❌'
+      bg: 'bg-rose-600 text-white shadow-lg shadow-rose-900/20',
+      icone: 'fa-circle-exclamation'
     },
     aviso: {
-      bg: 'bg-amber-50 dark:bg-amber-900/40 border-amber-500 text-amber-800 dark:text-amber-200',
-      icone: '⚠️'
+      bg: 'bg-amber-600 text-white shadow-lg shadow-amber-900/20',
+      icone: 'fa-triangle-exclamation'
     }
   };
 
   const config = configs[tipo] || configs.sucesso;
 
-  // Cria o elemento visual do toast
+  // Cria o elemento visual do toast com o mesmo formato pílula/arredondado
   const toast = document.createElement('div');
-  toast.className = `pointer-events-auto flex items-center w-full max-w-sm p-4 rounded-xl border shadow-lg transition-all duration-300 transform translate-y-2 opacity-0 ${config.bg}`;
+  toast.className = `pointer-events-auto flex items-center px-4 py-3 rounded-2xl text-xs font-semibold transition-all duration-300 transform translate-y-2 opacity-0 ${config.bg}`;
   
   toast.innerHTML = `
-    <span class="text-lg mr-3">${config.icone}</span>
-    <div class="text-sm font-medium flex-1">${mensagem}</div>
-    <button onclick="this.parentElement.remove()" class="ml-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-bold text-lg cursor-pointer">&times;</button>
+    <i class="fa-solid ${config.icone} text-sm mr-2.5"></i>
+    <div class="flex-1">${mensagem}</div>
+    <button onclick="this.parentElement.remove()" class="ml-3 text-white/80 hover:text-white font-bold text-sm cursor-pointer">&times;</button>
   `;
 
   container.appendChild(toast);
