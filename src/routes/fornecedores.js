@@ -47,7 +47,7 @@ router.post('/', async (req, res) => {
     pedido_minimo 
   } = req.body;
 
-  if (!nome) {
+  if (!nome || !nome.trim()) {
     return res.status(400).json({ error: 'O campo Razão Social / Nome é obrigatório.' });
   }
 
@@ -58,28 +58,38 @@ router.post('/', async (req, res) => {
       return res.status(401).json({ error: 'Empresa do utilizador não identificada.' });
     }
 
+    // Objeto de inserção limpo e blindado para evitar Erro 500 por colunas ausentes
+    const novoFornecedor = {
+      empresa: usuario.empresa, // <-- Obrigatório para multi-tenant
+      nome: nome.trim(),
+      categoria: categoria || null,
+      cnpj: cnpj || null,
+      responsavel: responsavel || null,
+      telefone: telefone || null,
+      email: email || null,
+      cidade_estado: cidade_estado || null,
+      produtos_vinculados: parseInt(produtos_vinculados, 10) || 0,
+      prazo_medio: parseInt(prazo_medio, 10) || 1,
+      pedido_minimo: parseFloat(pedido_minimo) || 0,
+      ativo: true
+    };
+
+    // Adiciona o usuario_id apenas se houver propriedade válida no req.user
+    if (usuario.id) {
+      novoFornecedor.usuario_id = usuario.id;
+    }
+
     const { data, error } = await dbClient
       .from('fornecedores')
-      .insert([{
-        usuario_id: usuario.id,
-        empresa: usuario.empresa, // <-- CARIMBA AUTOMATICAMENTE A EMPRESA
-        cnpj_empresa: usuario.cnpj || null,
-        nome: nome.trim(),
-        categoria: categoria || null,
-        cnpj: cnpj || null,
-        responsavel: responsavel || null,
-        telefone: telefone || null,
-        email: email || null,
-        cidade_estado: cidade_estado || null,
-        produtos_vinculados: parseInt(produtos_vinculados, 10) || 0,
-        prazo_medio: parseInt(prazo_medio, 10) || 1,
-        pedido_minimo: parseFloat(pedido_minimo) || 0,
-        ativo: true
-      }])
+      .insert([novoFornecedor])
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('Erro detalhado do Supabase ao inserir fornecedor:', error);
+      throw error;
+    }
+
     return res.status(201).json({ message: 'Fornecedor cadastrado com sucesso!', fornecedor: data });
   } catch (err) {
     console.error('Erro ao cadastrar fornecedor:', err);
@@ -112,7 +122,7 @@ router.put('/:id', async (req, res) => {
     }
 
     const camposAtualizados = {};
-    if (nome !== undefined) camposAtualizados.nome = nome;
+    if (nome !== undefined) camposAtualizados.nome = nome.trim();
     if (categoria !== undefined) camposAtualizados.categoria = categoria || null;
     if (cnpj !== undefined) camposAtualizados.cnpj = cnpj || null;
     if (responsavel !== undefined) camposAtualizados.responsavel = responsavel || null;
