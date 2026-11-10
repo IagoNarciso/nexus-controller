@@ -402,9 +402,18 @@ async function alternarStatusFornecedor(id, novoStatus) {
 
     document.getElementById('modalDetalhesFornecedor')?.classList.add('hidden');
     await carregarFornecedores();
+    
+    // Notificação Toast de sucesso
+    if (typeof mostrarToast === 'function') {
+      mostrarToast(`Fornecedor ${novoStatus ? 'ativado' : 'desativado'} com sucesso!`, 'sucesso');
+    }
   } catch (err) {
     console.error('Erro ao atualizar status:', err);
-    alert(`Erro ao alterar o status: ${err.message}`);
+    if (typeof mostrarToast === 'function') {
+      mostrarToast(`Erro ao alterar o status: ${err.message}`, 'erro');
+    } else {
+      alert(`Erro ao alterar o status: ${err.message}`);
+    }
   } finally {
     isProcessandoAcaoFornecedor = false;
   }
@@ -434,9 +443,18 @@ async function excluirFornecedorDefinitivo(id) {
 
     document.getElementById('modalDetalhesFornecedor')?.classList.add('hidden');
     await carregarFornecedores();
+
+    // Notificação Toast de sucesso
+    if (typeof mostrarToast === 'function') {
+      mostrarToast('Fornecedor excluído com sucesso!', 'sucesso');
+    }
   } catch (err) {
     console.error('Erro ao excluir:', err);
-    alert('Erro ao excluir o fornecedor.');
+    if (typeof mostrarToast === 'function') {
+      mostrarToast('Erro ao excluir o fornecedor.', 'erro');
+    } else {
+      alert('Erro ao excluir o fornecedor.');
+    }
   } finally {
     isProcessandoAcaoFornecedor = false;
   }
@@ -476,7 +494,6 @@ function abrirEdicaoFornecedor(f) {
   form.onsubmit = async (e) => {
     e.preventDefault();
 
-    // Trava lógica imediata contra múltiplos cliques na edição
     if (isSubmittingFornecedor) return;
     isSubmittingFornecedor = true;
 
@@ -507,13 +524,25 @@ function abrirEdicaoFornecedor(f) {
 
       if (!res) return;
 
-      if (!res.ok) throw new Error('Erro ao atualizar fornecedor');
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.error || 'Erro ao atualizar fornecedor');
+      }
 
       modal.classList.add('hidden');
       await carregarFornecedores();
+
+      // Notificação Toast de sucesso na edição
+      if (typeof mostrarToast === 'function') {
+        mostrarToast('Fornecedor atualizado com sucesso!', 'sucesso');
+      }
     } catch (err) {
       console.error('Erro ao editar:', err);
-      alert('Erro ao atualizar o fornecedor.');
+      if (typeof mostrarToast === 'function') {
+        mostrarToast(err.message || 'Erro ao atualizar o fornecedor.', 'erro');
+      } else {
+        alert('Erro ao atualizar o fornecedor.');
+      }
     } finally {
       isSubmittingFornecedor = false;
       if (btnSubmit) {
@@ -552,7 +581,6 @@ function setupModalEvents() {
       form.onsubmit = async (e) => {
         e.preventDefault();
 
-        // Trava lógica imediata contra múltiplos cliques no cadastro
         if (isSubmittingFornecedor) return;
         isSubmittingFornecedor = true;
 
@@ -586,15 +614,28 @@ function setupModalEvents() {
 
           const data = await res.json();
           if (!res.ok) {
-            alert(data.error || 'Erro ao cadastrar fornecedor.');
+            if (typeof mostrarToast === 'function') {
+              mostrarToast(data.error || 'Erro ao cadastrar fornecedor.', 'erro');
+            } else {
+              alert(data.error || 'Erro ao cadastrar fornecedor.');
+            }
             return;
           }
 
           fechar();
           await carregarFornecedores();
+
+          // NOTIFICAÇÃO TOAST DE SUCESSO AO CADASTRAR FORNECEDOR!
+          if (typeof mostrarToast === 'function') {
+            mostrarToast('Fornecedor cadastrado com sucesso!', 'sucesso');
+          }
         } catch (err) {
           console.error('Erro ao cadastrar fornecedor:', err);
-          alert('Erro de comunicação com o servidor.');
+          if (typeof mostrarToast === 'function') {
+            mostrarToast('Erro de comunicação com o servidor.', 'erro');
+          } else {
+            alert('Erro de comunicação com o servidor.');
+          }
         } finally {
           isSubmittingFornecedor = false;
           if (btnSubmit) {
@@ -674,7 +715,7 @@ function setupCnpjMask() {
     if (valor.length > 12) valor = valor.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2}).*/, '$1.$2.$3/$4-$5');
     else if (valor.length > 8) valor = valor.replace(/^(\d{2})(\d{3})(\d{3})(\d{4}).*/, '$1.$2.$3/$4');
     else if (valor.length > 5) valor = valor.replace(/^(\d{2})(\d{3})(\d{3}).*/, '$1.$2.$3');
-    else if (valor.length > 2) valor = valor.replace(/^(\d{2})(\d{3}).*/, '$1.$2');
+    else if (valor.label > 2) valor = valor.replace(/^(\d{2})(\d{3}).*/, '$1.$2');
 
     e.target.value = valor;
   });
