@@ -31,6 +31,9 @@
 
 <body class="bg-slate-50 dark:bg-[#0B1512] text-slate-800 dark:text-slate-100 antialiased min-h-screen flex transition-colors">
 
+  <!-- CONTAINER DE NOTIFICAÇÕES TOAST (FLUTUANTE NO CANTO SUPERIOR DIREITO) -->
+  <div id="toastContainer" class="fixed top-5 right-5 z-50 flex flex-col space-y-3 pointer-events-none"></div>
+
   <!-- SIDEBAR -->
   <aside class="w-64 bg-white dark:bg-[#0E1A16] border-r border-slate-200 dark:border-[#1C2C26] flex flex-col justify-between hidden md:flex shrink-0">
     <div>
@@ -348,195 +351,195 @@
                   <span>Operadores</span>
                   <span id="countUserOperador" class="text-slate-400 font-normal">(0)</span>
                 </button>
-              </div>
             </div>
-
-            <button type="button" onclick="carregarUsuariosEmpresa()"
-              class="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-white dark:bg-[#121E1A] hover:bg-slate-50 dark:hover:bg-[#172722] text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold border border-slate-200 dark:border-[#1C2C26] shadow-2xs transition-colors cursor-pointer self-start lg:self-auto">
-              <i class="fa-solid fa-rotate text-xs text-slate-400"></i>
-              <span>Atualizar</span>
-            </button>
           </div>
 
-          <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
-              <thead>
-                <tr class="bg-slate-50/50 dark:bg-[#0E1A16] border-b border-slate-100 dark:border-[#1C2C26] text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                  <th class="py-3.5 px-6">Usuário</th>
-                  <th class="py-3.5 px-6">CPF / Nascimento</th>
-                  <th class="py-3.5 px-6">Empresa</th>
-                  <th class="py-3.5 px-6">Nível de Permissão</th>
-                  <th class="py-3.5 px-6">Status</th>
-                  <th class="py-3.5 px-6 text-right">Ações</th>
-                </tr>
-              </thead>
-              <tbody id="tabelaUsuariosEmpresaBody" class="divide-y divide-slate-100 dark:divide-[#1C2C26] text-xs text-slate-700 dark:text-slate-300">
-                <tr>
-                  <td colspan="6" class="py-10 text-center text-slate-400 font-medium text-xs">
-                    <i class="fa-solid fa-spinner fa-spin mr-2"></i> Carregando lista de usuários...
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+          <button type="button" onclick="carregarUsuariosEmpresa()"
+            class="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-white dark:bg-[#121E1A] hover:bg-slate-50 dark:hover:bg-[#172722] text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold border border-slate-200 dark:border-[#1C2C26] shadow-2xs transition-colors cursor-pointer self-start lg:self-auto">
+            <i class="fa-solid fa-rotate text-xs text-slate-400"></i>
+            <span>Atualizar</span>
+          </button>
         </div>
 
-        <div id="secaoSegurancaChave"
-          class="bg-white dark:bg-[#121E1A] rounded-2xl border border-slate-200/80 dark:border-[#1C2C26] shadow-xs overflow-hidden hidden">
-          <div class="p-6 border-b border-slate-100 dark:border-[#1C2C26] flex items-center justify-between">
-            <div>
-              <h2 class="text-sm font-bold text-slate-800 dark:text-slate-100">Segurança & Autorização de Senha</h2>
-              <p class="text-xs text-slate-400 mt-0.5">Gere uma chave de recuperação temporária para autorizar um funcionário a redefinir a palavra-passe.</p>
-            </div>
-            <div class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xs font-bold border border-emerald-500/20">
-              <i class="fa-solid fa-key"></i>
-            </div>
-          </div>
-
-          <div class="p-6 space-y-4 text-xs">
-            <div class="flex flex-col sm:flex-row items-center gap-4">
-              <button type="button" id="btnGerarChaveRecuperacao"
-                class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl shadow-xs transition-colors flex items-center space-x-2 shrink-0 cursor-pointer">
-                <i class="fa-solid fa-wand-magic-sparkles text-xs"></i>
-                <span>Gerar Chave de Recuperação</span>
-              </button>
-              <div class="flex-1 w-full">
-                <span id="codigoRecuperacaoGerado" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-[#14231E] border border-slate-200 dark:border-[#1C2C26] rounded-xl text-slate-700 dark:text-slate-200 font-mono text-center tracking-wider font-bold hidden block"></span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div id="secaoGerenciamentoUtilizadores"
-          class="bg-white dark:bg-[#121E1A] rounded-2xl border border-slate-200/80 dark:border-[#1C2C26] shadow-xs overflow-hidden">
-          
-          <div class="p-6 border-b border-slate-100 dark:border-[#1C2C26] flex items-center justify-between">
-            <div>
-              <h2 class="text-sm font-bold text-slate-800 dark:text-slate-100">Cadastrar Novo Utilizador</h2>
-              <p class="text-xs text-slate-400 mt-0.5">Cadastre novos administradores ou operadores para aceder ao sistema da sua empresa.</p>
-            </div>
-            <div class="w-8 h-8 rounded-lg bg-emerald-500/10 text-[#0F392B] dark:text-emerald-400 flex items-center justify-center text-xs font-bold border border-emerald-500/20">
-              <i class="fa-solid fa-user-plus"></i>
-            </div>
-          </div>
-
-          <form id="formNovoOperador" class="p-6 space-y-4 text-xs">
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Nome Completo *</label>
-                <input type="text" id="novoOpNome" required placeholder="Nome do operador"
-                  class="w-full px-3 py-2 border border-slate-200 dark:border-[#1C2C26] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0F392B] bg-white dark:bg-[#14231E] text-slate-800 dark:text-slate-100" />
-              </div>
-              <div>
-                <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">CPF *</label>
-                <input type="text" id="novoOpCpf" required placeholder="000.000.000-00"
-                  class="w-full px-3 py-2 border border-slate-200 dark:border-[#1C2C26] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0F392B] bg-white dark:bg-[#14231E] text-slate-800 dark:text-slate-100" />
-              </div>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Data de Nascimento *</label>
-                <input type="text" id="novoOpDataNascimento" required placeholder="DD/MM/AAAA"
-                  class="w-full px-3 py-2 border border-slate-200 dark:border-[#1C2C26] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0F392B] bg-white dark:bg-[#14231E] text-slate-800 dark:text-slate-100" />
-              </div>
-              <div>
-                <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">E-mail de Acesso *</label>
-                <input type="email" id="novoOpEmail" required placeholder="operador@nexus.com"
-                  class="w-full px-3 py-2 border border-slate-200 dark:border-[#1C2C26] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0F392B] bg-white dark:bg-[#14231E] text-slate-800 dark:text-slate-100" />
-              </div>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Nível de Permissão *</label>
-                <div class="relative">
-                  <input type="hidden" id="novoOpCargo" value="operador">
-                  
-                  <button type="button" id="btnDropdownCargo"
-                    class="w-full px-3 py-2 border border-slate-200 dark:border-[#1C2C26] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0F392B] bg-white dark:bg-[#14231E] text-slate-800 dark:text-slate-100 flex items-center justify-between text-left cursor-pointer">
-                    <span id="textoCargoSelecionado">Operador</span>
-                    <i class="fa-solid fa-chevron-down text-xs text-slate-400"></i>
-                  </button>
-
-                  <div id="menuDropdownCargo"
-                    class="absolute left-0 right-0 mt-1 bg-white dark:bg-[#121E1A] border border-slate-200 dark:border-[#1C2C26] rounded-xl shadow-xl hidden z-20 overflow-hidden p-1 space-y-0.5">
-                    <div data-value="operador" class="opcao-cargo px-3 py-2 text-xs rounded-lg hover:bg-slate-50 dark:hover:bg-[#1c2c26] cursor-pointer text-slate-800 dark:text-slate-100 font-medium transition-colors">Operador</div>
-                    <div data-value="administrador" class="opcao-cargo px-3 py-2 text-xs rounded-lg hover:bg-slate-50 dark:hover:bg-[#1c2c26] cursor-pointer text-slate-800 dark:text-slate-100 font-medium transition-colors">Administrador</div>
-                  </div>
-                </div>
-              </div>
-              <div>
-                <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Senha Temporária *</label>
-                <input type="password" id="novoOpSenha" required placeholder="Mínimo de 6 caracteres"
-                  class="w-full px-3 py-2 border border-slate-200 dark:border-[#1C2C26] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0F392B] bg-white dark:bg-[#14231E] text-slate-800 dark:text-slate-100" />
-              </div>
-            </div>
-
-            <div class="flex items-center justify-end space-x-3 pt-3">
-              <button type="submit"
-                class="px-5 py-2.5 bg-[#0F392B] hover:bg-[#0a271d] dark:hover:bg-[#144737] text-white font-semibold rounded-xl shadow-xs transition-colors border border-transparent dark:border-emerald-700/40 cursor-pointer">
-                Cadastrar Novo Utilizador
-              </button>
-            </div>
-          </form>
-
-          <div id="blocoExclusaoFuncionario" class="border-t border-slate-100 dark:border-[#1C2C26] bg-rose-50/30 dark:bg-rose-950/10 px-6 py-4">
-            <div class="flex items-center space-x-2.5">
-              <div class="w-7 h-7 rounded-lg bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center text-xs border border-rose-200 dark:border-rose-800/40">
-                <i class="fa-solid fa-user-xmark"></i>
-              </div>
-              <div>
-                <h3 class="text-sm font-bold text-slate-800 dark:text-slate-100">Exclusão de Funcionário</h3>
-                <p class="text-xs text-slate-400">Remova o acesso de um funcionário informando os dados cadastrais e confirmando com a sua senha de administrador.</p>
-              </div>
-            </div>
-          </div>
-
-          <form id="formExcluirOperador" class="p-6 space-y-4 text-xs">
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div>
-                <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Nome do Funcionário *</label>
-                <input type="text" id="excluirOpNome" required placeholder="Nome completo"
-                  class="w-full px-3 py-2 border border-slate-200 dark:border-[#1C2C26] rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500/50 bg-white dark:bg-[#14231E] text-slate-800 dark:text-slate-100" />
-              </div>
-              <div>
-                <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">CPF do Funcionário *</label>
-                <input type="text" id="excluirOpCpf" required placeholder="000.000.000-00"
-                  class="w-full px-3 py-2 border border-slate-200 dark:border-[#1C2C26] rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500/50 bg-white dark:bg-[#14231E] text-slate-800 dark:text-slate-100" />
-              </div>
-              <div>
-                <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">E-mail do Funcionário *</label>
-                <input type="email" id="excluirOpEmail" required placeholder="funcionario@nexus.com"
-                  class="w-full px-3 py-2 border border-slate-200 dark:border-[#1C2C26] rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500/50 bg-white dark:bg-[#14231E] text-slate-800 dark:text-slate-100" />
-              </div>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-100 dark:border-[#1C2C26]">
-              <div>
-                <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Senha do Administrador *</label>
-                <input type="password" id="excluirAdminSenha" required placeholder="Digite a sua senha atual"
-                  class="w-full px-3 py-2 border border-slate-200 dark:border-[#1C2C26] rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500/50 bg-white dark:bg-[#14231E] text-slate-800 dark:text-slate-100" />
-              </div>
-              <div>
-                <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Confirmar Senha do Administrador *</label>
-                <input type="password" id="excluirAdminConfirmaSenha" required placeholder="Repita a sua senha"
-                  class="w-full px-3 py-2 border border-slate-200 dark:border-[#1C2C26] rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500/50 bg-white dark:bg-[#14231E] text-slate-800 dark:text-slate-100" />
-              </div>
-            </div>
-
-            <div class="flex items-center justify-end space-x-3 pt-3">
-              <button type="submit"
-                class="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 dark:bg-rose-700 dark:hover:bg-rose-600 text-white font-semibold rounded-xl shadow-xs transition-colors border border-transparent dark:border-rose-500/30 flex items-center space-x-2 cursor-pointer">
-                <i class="fa-solid fa-trash-can text-xs"></i>
-                <span>Confirmar Exclusão</span>
-              </button>
-            </div>
-          </form>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-slate-50/50 dark:bg-[#0E1A16] border-b border-slate-100 dark:border-[#1C2C26] text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                <th class="py-3.5 px-6">Usuário</th>
+                <th class="py-3.5 px-6">CPF / Nascimento</th>
+                <th class="py-3.5 px-6">Empresa</th>
+                <th class="py-3.5 px-6">Nível de Permissão</th>
+                <th class="py-3.5 px-6">Status</th>
+                <th class="py-3.5 px-6 text-right">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="tabelaUsuariosEmpresaBody" class="divide-y divide-slate-100 dark:divide-[#1C2C26] text-xs text-slate-700 dark:text-slate-300">
+              <tr>
+                <td colspan="6" class="py-10 text-center text-slate-400 font-medium text-xs">
+                  <i class="fa-solid fa-spinner fa-spin mr-2"></i> Carregando lista de usuários...
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
 
-    </main>
+      <div id="secaoSegurancaChave"
+        class="bg-white dark:bg-[#121E1A] rounded-2xl border border-slate-200/80 dark:border-[#1C2C26] shadow-xs overflow-hidden hidden">
+        <div class="p-6 border-b border-slate-100 dark:border-[#1C2C26] flex items-center justify-between">
+          <div>
+            <h2 class="text-sm font-bold text-slate-800 dark:text-slate-100">Segurança & Autorização de Senha</h2>
+            <p class="text-xs text-slate-400 mt-0.5">Gere uma chave de recuperação temporária para autorizar um funcionário a redefinir a palavra-passe.</p>
+          </div>
+          <div class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xs font-bold border border-emerald-500/20">
+            <i class="fa-solid fa-key"></i>
+          </div>
+        </div>
+
+        <div class="p-6 space-y-4 text-xs">
+          <div class="flex flex-col sm:flex-row items-center gap-4">
+            <button type="button" id="btnGerarChaveRecuperacao"
+              class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl shadow-xs transition-colors flex items-center space-x-2 shrink-0 cursor-pointer">
+              <i class="fa-solid fa-wand-magic-sparkles text-xs"></i>
+              <span>Gerar Chave de Recuperação</span>
+            </button>
+            <div class="flex-1 w-full">
+              <span id="codigoRecuperacaoGerado" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-[#14231E] border border-slate-200 dark:border-[#1C2C26] rounded-xl text-slate-700 dark:text-slate-200 font-mono text-center tracking-wider font-bold hidden block"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="secaoGerenciamentoUtilizadores"
+        class="bg-white dark:bg-[#121E1A] rounded-2xl border border-slate-200/80 dark:border-[#1C2C26] shadow-xs overflow-hidden">
+        
+        <div class="p-6 border-b border-slate-100 dark:border-[#1C2C26] flex items-center justify-between">
+          <div>
+            <h2 class="text-sm font-bold text-slate-800 dark:text-slate-100">Cadastrar Novo Utilizador</h2>
+            <p class="text-xs text-slate-400 mt-0.5">Cadastre novos administradores ou operadores para aceder ao sistema da sua empresa.</p>
+          </div>
+          <div class="w-8 h-8 rounded-lg bg-emerald-500/10 text-[#0F392B] dark:text-emerald-400 flex items-center justify-center text-xs font-bold border border-emerald-500/20">
+            <i class="fa-solid fa-user-plus"></i>
+          </div>
+        </div>
+
+        <form id="formNovoOperador" class="p-6 space-y-4 text-xs">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Nome Completo *</label>
+              <input type="text" id="novoOpNome" required placeholder="Nome do operador"
+                class="w-full px-3 py-2 border border-slate-200 dark:border-[#1C2C26] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0F392B] bg-white dark:bg-[#14231E] text-slate-800 dark:text-slate-100" />
+            </div>
+            <div>
+              <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">CPF *</label>
+              <input type="text" id="novoOpCpf" required placeholder="000.000.000-00"
+                class="w-full px-3 py-2 border border-slate-200 dark:border-[#1C2C26] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0F392B] bg-white dark:bg-[#14231E] text-slate-800 dark:text-slate-100" />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Data de Nascimento *</label>
+              <input type="text" id="novoOpDataNascimento" required placeholder="DD/MM/AAAA"
+                class="w-full px-3 py-2 border border-slate-200 dark:border-[#1C2C26] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0F392B] bg-white dark:bg-[#14231E] text-slate-800 dark:text-slate-100" />
+            </div>
+            <div>
+              <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">E-mail de Acesso *</label>
+              <input type="email" id="novoOpEmail" required placeholder="operador@nexus.com"
+                class="w-full px-3 py-2 border border-slate-200 dark:border-[#1C2C26] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0F392B] bg-white dark:bg-[#14231E] text-slate-800 dark:text-slate-100" />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Nível de Permissão *</label>
+              <div class="relative">
+                <input type="hidden" id="novoOpCargo" value="operador">
+                
+                <button type="button" id="btnDropdownCargo"
+                  class="w-full px-3 py-2 border border-slate-200 dark:border-[#1C2C26] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0F392B] bg-white dark:bg-[#14231E] text-slate-800 dark:text-slate-100 flex items-center justify-between text-left cursor-pointer">
+                  <span id="textoCargoSelecionado">Operador</span>
+                  <i class="fa-solid fa-chevron-down text-xs text-slate-400"></i>
+                </button>
+
+                <div id="menuDropdownCargo"
+                  class="absolute left-0 right-0 mt-1 bg-white dark:bg-[#121E1A] border border-slate-200 dark:border-[#1C2C26] rounded-xl shadow-xl hidden z-20 overflow-hidden p-1 space-y-0.5">
+                  <div data-value="operador" class="opcao-cargo px-3 py-2 text-xs rounded-lg hover:bg-slate-50 dark:hover:bg-[#1c2c26] cursor-pointer text-slate-800 dark:text-slate-100 font-medium transition-colors">Operador</div>
+                  <div data-value="administrador" class="opcao-cargo px-3 py-2 text-xs rounded-lg hover:bg-slate-50 dark:hover:bg-[#1c2c26] cursor-pointer text-slate-800 dark:text-slate-100 font-medium transition-colors">Administrador</div>
+                </div>
+              </div>
+            </div>
+            <div>
+              <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Senha Temporária *</label>
+              <input type="password" id="novoOpSenha" required placeholder="Mínimo de 6 caracteres"
+                class="w-full px-3 py-2 border border-slate-200 dark:border-[#1C2C26] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0F392B] bg-white dark:bg-[#14231E] text-slate-800 dark:text-slate-100" />
+            </div>
+          </div>
+
+          <div class="flex items-center justify-end space-x-3 pt-3">
+            <button type="submit"
+              class="px-5 py-2.5 bg-[#0F392B] hover:bg-[#0a271d] dark:hover:bg-[#144737] text-white font-semibold rounded-xl shadow-xs transition-colors border border-transparent dark:border-emerald-700/40 cursor-pointer">
+              Cadastrar Novo Utilizador
+            </button>
+          </div>
+        </form>
+
+        <div id="blocoExclusaoFuncionario" class="border-t border-slate-100 dark:border-[#1C2C26] bg-rose-50/30 dark:bg-rose-950/10 px-6 py-4">
+          <div class="flex items-center space-x-2.5">
+            <div class="w-7 h-7 rounded-lg bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center text-xs border border-rose-200 dark:border-rose-800/40">
+              <i class="fa-solid fa-user-xmark"></i>
+            </div>
+            <div>
+              <h3 class="text-sm font-bold text-slate-800 dark:text-slate-100">Exclusão de Funcionário</h3>
+              <p class="text-xs text-slate-400">Remova o acesso de um funcionário informando os dados cadastrais e confirmando com a sua senha de administrador.</p>
+            </div>
+          </div>
+        </div>
+
+        <form id="formExcluirOperador" class="p-6 space-y-4 text-xs">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Nome do Funcionário *</label>
+              <input type="text" id="excluirOpNome" required placeholder="Nome completo"
+                class="w-full px-3 py-2 border border-slate-200 dark:border-[#1C2C26] rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500/50 bg-white dark:bg-[#14231E] text-slate-800 dark:text-slate-100" />
+            </div>
+            <div>
+              <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">CPF do Funcionário *</label>
+              <input type="text" id="excluirOpCpf" required placeholder="000.000.000-00"
+                class="w-full px-3 py-2 border border-slate-200 dark:border-[#1C2C26] rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500/50 bg-white dark:bg-[#14231E] text-slate-800 dark:text-slate-100" />
+            </div>
+            <div>
+              <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">E-mail do Funcionário *</label>
+              <input type="email" id="excluirOpEmail" required placeholder="funcionario@nexus.com"
+                class="w-full px-3 py-2 border border-slate-200 dark:border-[#1C2C26] rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500/50 bg-white dark:bg-[#14231E] text-slate-800 dark:text-slate-100" />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-100 dark:border-[#1C2C26]">
+            <div>
+              <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Senha do Administrador *</label>
+              <input type="password" id="excluirAdminSenha" required placeholder="Digite a sua senha atual"
+                class="w-full px-3 py-2 border border-slate-200 dark:border-[#1C2C26] rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500/50 bg-white dark:bg-[#14231E] text-slate-800 dark:text-slate-100" />
+            </div>
+            <div>
+              <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Confirmar Senha do Administrador *</label>
+              <input type="password" id="excluirAdminConfirmaSenha" required placeholder="Repita a sua senha"
+                class="w-full px-3 py-2 border border-slate-200 dark:border-[#1C2C26] rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500/50 bg-white dark:bg-[#14231E] text-slate-800 dark:text-slate-100" />
+            </div>
+          </div>
+
+          <div class="flex items-center justify-end space-x-3 pt-3">
+            <button type="submit"
+              class="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 dark:bg-rose-700 dark:hover:bg-rose-600 text-white font-semibold rounded-xl shadow-xs transition-colors border border-transparent dark:border-rose-500/30 flex items-center space-x-2 cursor-pointer">
+              <i class="fa-solid fa-trash-can text-xs"></i>
+              <span>Confirmar Exclusão</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+  </main>
   </div>
 
   <!-- MODAL DE SUPORTE -->
@@ -625,6 +628,7 @@
 
   <!-- Scripts -->
   <script src="js/configuracoes.js?v=2.5"></script>
+  <script src="js/toast.js"></script>
   <script src="js/auth.js"></script>
 </body>
 

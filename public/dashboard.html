@@ -38,6 +38,9 @@
 <body
   class="bg-slate-50 dark:bg-[#0B1512] text-slate-800 dark:text-slate-100 antialiased min-h-screen flex transition-colors">
 
+  <!-- CONTAINER DE NOTIFICAÇÕES TOAST (FLUTUANTE NO CANTO SUPERIOR DIREITO) -->
+  <div id="toastContainer" class="fixed top-5 right-5 z-50 flex flex-col space-y-3 pointer-events-none"></div>
+
   <!-- SIDEBAR -->
   <aside
     class="w-64 bg-white dark:bg-[#0E1A16] border-r border-slate-200 dark:border-[#1C2C26] flex flex-col justify-between hidden md:flex shrink-0">
@@ -778,6 +781,7 @@
 
   <!-- Scripts -->
   <script src="js/auth.js"></script>
+  <script src="js/toast.js"></script>
   <script src="js/dashboard.js"></script>
   <script src="js/chat-widget.js"></script>
 </body>
