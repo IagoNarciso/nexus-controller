@@ -50,6 +50,97 @@ function encerrarSessaoInvalida() {
   window.location.replace('login.html');
 }
 
+// Função centralizada e blindada para identificar se o utilizador logado é Operador
+function obterCargoRealUtilizador() {
+  let userObj = {};
+  try {
+    userObj = JSON.parse(
+      localStorage.getItem('nexus_user') ||
+      localStorage.getItem('user') ||
+      localStorage.getItem('usuario') ||
+      '{}'
+    );
+  } catch (e) {}
+
+  let jwtPayload = {};
+  try {
+    const token =
+      localStorage.getItem('token') ||
+      localStorage.getItem('access_token') ||
+      localStorage.getItem('nexus_token');
+    if (token && token.includes('.')) {
+      jwtPayload = JSON.parse(atob(token.split('.')[1]));
+    }
+  } catch (e) {}
+
+  // Coleta todas as possíveis fontes do cargo
+  const fontesCargo = [
+    userObj.cargo,
+    userObj.role,
+    userObj.nivel,
+    userObj.perfil,
+    userObj.user_metadata?.cargo,
+    userObj.user_metadata?.role,
+    userObj.user_metadata?.nivel,
+    jwtPayload.cargo,
+    jwtPayload.role,
+    jwtPayload.nivel,
+    jwtPayload.user_metadata?.cargo,
+    jwtPayload.user_metadata?.role,
+    localStorage.getItem('nexus_user_nivel'),
+    localStorage.getItem('user_role'),
+    localStorage.getItem('role'),
+    localStorage.getItem('nivel'),
+    localStorage.getItem('nexus_user_role')
+  ]
+    .filter(Boolean)
+    .map((c) => String(c).toLowerCase().trim());
+
+  // Verifica também se o e-mail logado consta como operador na lista da equipa em cache
+  const emailLogado = (
+    userObj.email ||
+    jwtPayload.email ||
+    localStorage.getItem('nexus_user_email') ||
+    ''
+  )
+    .toLowerCase()
+    .trim();
+
+  if (emailLogado) {
+    const listaEquipe =
+      Array.isArray(window.cacheUsuariosEmpresa) && window.cacheUsuariosEmpresa.length > 0
+        ? window.cacheUsuariosEmpresa
+        : obterUsuariosSalvosLocalmente();
+
+    const registoNaEquipe = listaEquipe.find(
+      (u) => String(u.email || '').toLowerCase().trim() === emailLogado
+    );
+
+    if (registoNaEquipe) {
+      const cargoNaEquipe = String(
+        registoNaEquipe.cargo || registoNaEquipe.role || registoNaEquipe.nivel || ''
+      )
+        .toLowerCase()
+        .trim();
+      if (cargoNaEquipe) {
+        fontesCargo.unshift(cargoNaEquipe);
+      }
+    }
+  }
+
+  // Se qualquer fonte legítima indicar operador, prioriza a restrição de Operador
+  const ehOperador = fontesCargo.some((c) => c === 'operador' || c === 'operator');
+  if (ehOperador) {
+    return 'Operador';
+  }
+
+  return 'Administrador';
+}
+
+function verificarSeEhOperador() {
+  return obterCargoRealUtilizador() === 'Operador';
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
   const token = 
     localStorage.getItem('token') || 
@@ -61,9 +152,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
+  aplicarControlePermissoes();
   carregarInfoUtilizador();
   carregarPreferenciasSalvas(); 
-  aplicarControlePermissoes(); 
   await carregarConfiguracoes();
   setupFormConfiguracoes();
   setupFormNovoOperador();
@@ -82,10 +173,14 @@ function setupAbasEBuscaUsuarios() {
     inputBusca.addEventListener('input', renderizarTabelaUsuariosEmpresa);
   }
 
-  const roleAtual = (localStorage.getItem('nexus_user_role') || 'Administrador').toLowerCase();
-  const isOperador = roleAtual === 'operador' || roleAtual === 'operator';
+  const isOperador = verificarSeEhOperador();
 
-  if (window.location.hash === '#usuarios' && !isOperador) {
+  if (isOperador) {
+    alternarAbaConfig('perfil');
+    return;
+  }
+
+  if (window.location.hash === '#usuarios') {
     alternarAbaConfig('usuarios');
   } else {
     carregarUsuariosEmpresa();
@@ -93,6 +188,11 @@ function setupAbasEBuscaUsuarios() {
 }
 
 function alternarAbaConfig(aba) {
+  // Trava de segurança: Operador nunca pode aceder à aba de usuários
+  if (aba === 'usuarios' && verificarSeEhOperador()) {
+    aba = 'perfil';
+  }
+
   const painelPerfil = document.getElementById('painelAbaPerfil');
   const painelUsuarios = document.getElementById('painelAbaUsuarios');
   const tabBtnPerfil = document.getElementById('tabBtnPerfil');
@@ -114,7 +214,10 @@ function alternarAbaConfig(aba) {
 
   if (aba === 'usuarios') {
     painelPerfil?.classList.add('hidden');
-    painelUsuarios?.classList.remove('hidden');
+    if (painelUsuarios) {
+      painelUsuarios.classList.remove('hidden');
+      painelUsuarios.style.display = '';
+    }
 
     if (tabBtnUsuarios) tabBtnUsuarios.className = classeAtivaTab;
     if (tabBtnPerfil) tabBtnPerfil.className = classeInativaTab;
@@ -127,13 +230,19 @@ function alternarAbaConfig(aba) {
     if (btnNovoUsuario) {
       btnNovoUsuario.classList.remove('hidden');
       btnNovoUsuario.classList.add('inline-flex');
+      btnNovoUsuario.style.display = '';
     }
     if (breadcrumbSubAba) breadcrumbSubAba.textContent = 'Usuários';
 
     window.history.replaceState(null, '', '#usuarios');
     carregarUsuariosEmpresa();
   } else {
-    painelUsuarios?.classList.add('hidden');
+    if (painelUsuarios) {
+      painelUsuarios.classList.add('hidden');
+      if (verificarSeEhOperador()) {
+        painelUsuarios.style.display = 'none';
+      }
+    }
     painelPerfil?.classList.remove('hidden');
 
     if (tabBtnPerfil) tabBtnPerfil.className = classeAtivaTab;
@@ -147,6 +256,7 @@ function alternarAbaConfig(aba) {
     if (btnNovoUsuario) {
       btnNovoUsuario.classList.add('hidden');
       btnNovoUsuario.classList.remove('inline-flex');
+      btnNovoUsuario.style.display = 'none';
     }
     if (breadcrumbSubAba) breadcrumbSubAba.textContent = 'Perfil & Preferências';
 
@@ -156,6 +266,7 @@ function alternarAbaConfig(aba) {
 window.alternarAbaConfig = alternarAbaConfig;
 
 function focarFormularioNovoUsuario() {
+  if (verificarSeEhOperador()) return;
   const inputNome = document.getElementById('novoOpNome');
   if (inputNome) {
     inputNome.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -165,6 +276,7 @@ function focarFormularioNovoUsuario() {
 window.focarFormularioNovoUsuario = focarFormularioNovoUsuario;
 
 function prepararExclusaoUsuario(nome, cpf, email) {
+  if (verificarSeEhOperador()) return;
   const elNome = document.getElementById('excluirOpNome');
   const elCpf = document.getElementById('excluirOpCpf');
   const elEmail = document.getElementById('excluirOpEmail');
@@ -197,6 +309,12 @@ function salvarUsuariosLocalmente(lista) {
 }
 
 async function carregarUsuariosEmpresa() {
+  // Se já sabemos que é Operador, não carrega nem exibe a lista de utilizadores
+  if (verificarSeEhOperador()) {
+    aplicarControlePermissoes();
+    return;
+  }
+
   let listaServidor = [];
 
   try {
@@ -218,11 +336,38 @@ async function carregarUsuariosEmpresa() {
   if (listaServidor.length > 0) {
     window.cacheUsuariosEmpresa = listaServidor;
     salvarUsuariosLocalmente(listaServidor);
+
+    // Verifica se o utilizador logado consta na lista da equipa como Operador
+    const emailLogado = (
+      document.getElementById('cfgEmail')?.value ||
+      localStorage.getItem('nexus_user_email') ||
+      ''
+    )
+      .toLowerCase()
+      .trim();
+
+    if (emailLogado) {
+      const meuRegisto = listaServidor.find(
+        (u) => String(u.email || '').toLowerCase().trim() === emailLogado
+      );
+      if (meuRegisto) {
+        const meuCargo = String(meuRegisto.cargo || meuRegisto.role || meuRegisto.nivel || '')
+          .toLowerCase()
+          .trim();
+        if (meuCargo === 'operador' || meuCargo === 'operator') {
+          localStorage.setItem('nexus_user_role', 'Operador');
+          localStorage.setItem('nexus_user_nivel', 'Operador');
+          carregarInfoUtilizador();
+          aplicarControlePermissoes();
+          return;
+        }
+      }
+    }
   } else {
     const empresaAtual = document.getElementById('cfgEmpresa')?.value || localStorage.getItem('nexus_user_empresa') || 'Nexus Controller';
     const nomeAtual = document.getElementById('cfgNome')?.value || localStorage.getItem('nexus_user_name') || 'Administrador';
     const emailAtual = document.getElementById('cfgEmail')?.value || localStorage.getItem('nexus_user_email') || 'admin@nexus.com';
-    const cargoAtual = localStorage.getItem('nexus_user_role') || 'Administrador';
+    const cargoAtual = obterCargoRealUtilizador();
 
     window.cacheUsuariosEmpresa = [{
       id: 'atual',
@@ -263,6 +408,7 @@ function atualizarContadoresUsuarios() {
 }
 
 function filtrarListaUsuariosPorCargo(cargo) {
+  if (verificarSeEhOperador()) return;
   filtroCargoUsuarioAtual = cargo;
 
   const btnTodos = document.getElementById('btnFiltroUserTodos');
@@ -283,6 +429,12 @@ window.filtrarListaUsuariosPorCargo = filtrarListaUsuariosPorCargo;
 function renderizarTabelaUsuariosEmpresa() {
   const tbody = document.getElementById('tabelaUsuariosEmpresaBody');
   if (!tbody) return;
+
+  if (verificarSeEhOperador()) {
+    tbody.innerHTML = '';
+    aplicarControlePermissoes();
+    return;
+  }
 
   const termo = (document.getElementById('inputBuscaUsuarios')?.value || '').toLowerCase().trim();
   const emailLogado = (document.getElementById('cfgEmail')?.value || localStorage.getItem('nexus_user_email') || '').toLowerCase().trim();
@@ -392,6 +544,7 @@ function renderizarTabelaUsuariosEmpresa() {
 }
 
 async function alternarStatusUsuario(id, novoStatus, nomeFuncionario) {
+  if (verificarSeEhOperador()) return;
   const acao = novoStatus ? 'ativar' : 'desativar';
   const confirmado = await mostrarConfirmacaoCustomizada(
     `Tem a certeza de que deseja ${acao} o acesso de "${nomeFuncionario}"?`
@@ -420,61 +573,59 @@ async function alternarStatusUsuario(id, novoStatus, nomeFuncionario) {
 window.alternarStatusUsuario = alternarStatusUsuario;
 
 function aplicarControlePermissoes() {
-  let userObj = {};
-  try {
-    userObj = JSON.parse(
-      localStorage.getItem('nexus_user') ||
-      localStorage.getItem('user') ||
-      localStorage.getItem('usuario') ||
-      '{}'
-    );
-  } catch (e) {}
-
-  let jwtPayload = {};
-  try {
-    const token =
-      localStorage.getItem('token') ||
-      localStorage.getItem('access_token') ||
-      localStorage.getItem('nexus_token');
-    if (token && token.includes('.')) {
-      jwtPayload = JSON.parse(atob(token.split('.')[1]));
-    }
-  } catch (e) {}
-
-  const rawRole =
-    localStorage.getItem('nexus_user_role') ||
-    localStorage.getItem('nexus_user_nivel') ||
-    localStorage.getItem('user_role') ||
-    localStorage.getItem('role') ||
-    localStorage.getItem('nivel') ||
-    userObj.role ||
-    userObj.nivel ||
-    userObj.cargo ||
-    userObj.perfil ||
-    jwtPayload.role ||
-    jwtPayload.nivel ||
-    jwtPayload.cargo ||
-    'Administrador';
-
-  const roleLower = String(rawRole).toLowerCase().trim();
-  const isOperador = roleLower === 'operador' || roleLower === 'operator';
+  const isOperador = verificarSeEhOperador();
 
   const tabBtnUsuarios = document.getElementById('tabBtnUsuarios');
   const sideLinkUsuarios = document.getElementById('sideLinkUsuarios');
+  const painelUsuarios = document.getElementById('painelAbaUsuarios');
+  const btnNovoUsuario = document.getElementById('btnIrParaNovoUsuario');
+  const badgeBanner = document.getElementById('badgeContadorUsuariosBanner');
   const secaoGerenciamento = document.getElementById('secaoGerenciamentoUtilizadores');
   const secaoChave = document.getElementById('secaoSegurancaChave');
 
   if (isOperador) {
-    if (secaoGerenciamento) secaoGerenciamento.style.display = 'none';
-    if (secaoChave) secaoChave.remove();
-    tabBtnUsuarios?.classList.add('hidden');
-    sideLinkUsuarios?.classList.add('hidden');
+    localStorage.setItem('nexus_user_role', 'Operador');
+
+    if (secaoGerenciamento) {
+      secaoGerenciamento.classList.add('hidden');
+      secaoGerenciamento.style.display = 'none';
+    }
+    if (secaoChave) {
+      secaoChave.remove();
+    }
+    if (tabBtnUsuarios) {
+      tabBtnUsuarios.classList.add('hidden');
+      tabBtnUsuarios.style.display = 'none';
+    }
+    if (sideLinkUsuarios) {
+      sideLinkUsuarios.classList.add('hidden');
+      sideLinkUsuarios.style.display = 'none';
+    }
+    if (painelUsuarios) {
+      painelUsuarios.classList.add('hidden');
+      painelUsuarios.style.display = 'none';
+    }
+    if (btnNovoUsuario) {
+      btnNovoUsuario.classList.add('hidden');
+      btnNovoUsuario.classList.remove('inline-flex');
+      btnNovoUsuario.style.display = 'none';
+    }
+    if (badgeBanner) {
+      badgeBanner.classList.add('hidden');
+    }
+
     alternarAbaConfig('perfil');
   } else {
     localStorage.setItem('nexus_user_role', 'Administrador');
     if (secaoChave) secaoChave.classList.remove('hidden');
-    tabBtnUsuarios?.classList.remove('hidden');
-    sideLinkUsuarios?.classList.remove('hidden');
+    if (tabBtnUsuarios) {
+      tabBtnUsuarios.classList.remove('hidden');
+      tabBtnUsuarios.style.display = '';
+    }
+    if (sideLinkUsuarios) {
+      sideLinkUsuarios.classList.remove('hidden');
+      sideLinkUsuarios.style.display = '';
+    }
   }
 }
 
@@ -518,22 +669,7 @@ function carregarInfoUtilizador() {
     userObj.email || 
     'utilizador@nexus.com';
 
-  const rawCargo = 
-    localStorage.getItem('nexus_user_role') || 
-    userObj.role || 
-    userObj.cargo || 
-    'Administrador';
-
-  const cargoLower = String(rawCargo).toLowerCase().trim();
-  let cargoUtilizador = 'Administrador';
-  if (cargoLower === 'operador' || cargoLower === 'operator') {
-    cargoUtilizador = 'Operador';
-  } else if (cargoLower === 'admin' || cargoLower === 'administrador') {
-    cargoUtilizador = 'Administrador';
-  } else {
-    cargoUtilizador = String(rawCargo).charAt(0).toUpperCase() + String(rawCargo).slice(1);
-  }
-
+  const cargoUtilizador = obterCargoRealUtilizador();
   localStorage.setItem('nexus_user_role', cargoUtilizador);
 
   const empresaUtilizador = localStorage.getItem('nexus_user_empresa') || 'Nexus Controller';
@@ -607,7 +743,15 @@ async function carregarConfiguracoes() {
       const nomeServidor = data.nome || localStorage.getItem('nexus_user_name') || 'Utilizador Nexus';
       const emailServidor = data.email || localStorage.getItem('nexus_user_email') || 'utilizador@nexus.com';
       
-      const rawCargoServidor = data.cargo || data.role || localStorage.getItem('nexus_user_role') || 'Administrador';
+      const rawCargoServidor =
+        data.cargo ||
+        data.role ||
+        data.nivel ||
+        data.perfil ||
+        data.user_metadata?.cargo ||
+        data.user_metadata?.role ||
+        obterCargoRealUtilizador();
+
       const cargoServidorLower = String(rawCargoServidor).toLowerCase().trim();
       let cargoServidor = 'Administrador';
       if (cargoServidorLower === 'operador' || cargoServidorLower === 'operator') {
@@ -615,7 +759,7 @@ async function carregarConfiguracoes() {
       } else if (cargoServidorLower === 'admin' || cargoServidorLower === 'administrador') {
         cargoServidor = 'Administrador';
       } else {
-        cargoServidor = String(rawCargoServidor).charAt(0).toUpperCase() + String(rawCargoServidor).slice(1);
+        cargoServidor = obterCargoRealUtilizador();
       }
 
       const empresaServidor = data.empresa || 'Nexus Controller';
@@ -630,6 +774,7 @@ async function carregarConfiguracoes() {
       localStorage.setItem('nexus_user_name', nomeServidor);
       localStorage.setItem('nexus_user_email', emailServidor);
       localStorage.setItem('nexus_user_role', cargoServidor);
+      localStorage.setItem('nexus_user_nivel', cargoServidor);
       localStorage.setItem('nexus_user_empresa', empresaServidor);
       localStorage.setItem('nexus_user_cnpj', cnpjServidor);
       localStorage.setItem('nexus_user_regiao', regiaoServidor);
@@ -644,18 +789,23 @@ async function carregarConfiguracoes() {
 }
 
 function mostrarNotificacaoToast(mensagem, tipo = 'sucesso') {
-  let container = document.getElementById('toastContainerNtf');
+  if (typeof mostrarToast === 'function') {
+    mostrarToast(mensagem, tipo);
+    return;
+  }
+
+  let container = document.getElementById('toastContainer') || document.getElementById('toastContainerNtf');
   if (!container) {
     container = document.createElement('div');
     container.id = 'toastContainerNtf';
-    container.className = 'fixed bottom-5 right-5 z-50 flex flex-col space-y-2';
+    container.className = 'fixed bottom-5 right-5 z-50 flex flex-col-reverse space-y-reverse space-y-2 pointer-events-none';
     document.body.appendChild(container);
   }
 
   const toast = document.createElement('div');
   const corBg = tipo === 'sucesso' ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white';
 
-  toast.className = `px-4 py-3 rounded-2xl shadow-xl text-xs font-semibold flex items-center space-x-2 transition-all transform translate-y-2 opacity-0 ${corBg}`;
+  toast.className = `pointer-events-auto px-4 py-3 rounded-2xl shadow-xl text-xs font-semibold flex items-center space-x-2 transition-all transform translate-y-2 opacity-0 ${corBg}`;
   toast.innerHTML = `
     <i class="fa-solid ${tipo === 'sucesso' ? 'fa-circle-check' : 'fa-circle-exclamation'} text-sm"></i>
     <span>${mensagem}</span>
@@ -753,6 +903,7 @@ function setupFormNovoOperador() {
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
+    if (verificarSeEhOperador()) return;
 
     const nome = document.getElementById('novoOpNome')?.value;
     const cpf = document.getElementById('novoOpCpf')?.value;
@@ -832,6 +983,7 @@ function setupFormExcluirOperador() {
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
+    if (verificarSeEhOperador()) return;
 
     const nome = document.getElementById('excluirOpNome')?.value.trim();
     const cpf = document.getElementById('excluirOpCpf')?.value.trim();
@@ -895,6 +1047,7 @@ function setupGerarChaveRecuperacao() {
 
   btnGerarChave.addEventListener('click', async (e) => {
     e.preventDefault();
+    if (verificarSeEhOperador()) return;
     try {
       const res = await fetchSeguraConfig('/api/auth/gerar-chave-recuperacao', { method: 'POST' });
       if (!res) return;
