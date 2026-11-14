@@ -404,6 +404,7 @@ async function carregarFornecedoresSugestao() {
 
 function atualizarDatalistsModal() {
   const datalistForn = document.getElementById('listaFornecedores');
+  const datalistCat = document.getElementById('listaCategorias');
 
   if (datalistForn) {
     const nomesDaApi = fornecedoresCache
@@ -414,6 +415,19 @@ function atualizarDatalistsModal() {
 
     datalistForn.innerHTML = todosFornecedores
       .map((forn) => `<option value="${forn.replace(/"/g, '&quot;')}"></option>`)
+      .join('');
+  }
+
+  // Preenche dinamicamente as sugestões de categorias existentes
+  if (datalistCat) {
+    const categoriasUnicas = [...new Set(
+      produtosCache
+        .map((p) => (p.categoria || '').trim())
+        .filter(Boolean)
+    )].sort();
+
+    datalistCat.innerHTML = categoriasUnicas
+      .map((cat) => `<option value="${cat.replace(/"/g, '&quot;')}"></option>`)
       .join('');
   }
 }
@@ -611,7 +625,6 @@ async function carregarProdutosPendentes() {
 
 // Configura o cabeçalho de "Selecionar todos" e remove o campo numérico antigo de Qtd
 function prepararInterfaceCheckboxesAprovacao(tbody) {
-  // 1. Substitui o campo "Qtd: 10" por um contador dinâmico de itens selecionados
   const inputQtd = document.getElementById('inputQtdLote');
   if (inputQtd) {
     const containerQtd = inputQtd.parentElement;
@@ -622,7 +635,6 @@ function prepararInterfaceCheckboxesAprovacao(tbody) {
     }
   }
 
-  // 2. Injeta o checkbox "Selecionar todos" na primeira coluna do cabeçalho (PRODUTO)
   if (!tbody) return;
   const tabela = tbody.closest('table');
   const primeiroTh = tabela?.querySelector('thead tr th:first-child');
@@ -646,7 +658,6 @@ function prepararInterfaceCheckboxesAprovacao(tbody) {
   }
 }
 
-// Atualiza o estado do checkbox mestre e o texto de quantos produtos estão marcados
 function atualizarEstadoSelecaoAprovacoes() {
   const todosCheckboxes = Array.from(document.querySelectorAll('.check-item-aprovacao'));
   const marcados = todosCheckboxes.filter((cb) => cb.checked);
@@ -864,7 +875,6 @@ async function moderarLoteProdutos(novoStatus) {
     return;
   }
 
-  // Coleta apenas os produtos marcados nos checkboxes
   const checkboxesMarcados = Array.from(document.querySelectorAll('.check-item-aprovacao:checked'));
   const idsSelecionados = checkboxesMarcados.map((cb) => String(cb.value));
 
